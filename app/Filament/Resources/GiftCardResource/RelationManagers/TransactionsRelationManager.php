@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\GiftCardResource\RelationManagers;
 
+use App\Exports\TransactionsExport;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -9,6 +10,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionsRelationManager extends RelationManager
 {
@@ -112,7 +114,42 @@ class TransactionsRelationManager extends RelationManager
                     ]),
             ])
             ->headerActions([
-                // No permitir crear desde aquí - se usa las acciones personalizadas
+                Tables\Actions\Action::make('export')
+                    ->label('Exportar Transacciones')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from')
+                            ->label('Desde')
+                            ->maxDate(now()),
+                        Forms\Components\DatePicker::make('date_to')
+                            ->label('Hasta')
+                            ->maxDate(now())
+                            ->default(now()),
+                        Forms\Components\Select::make('type')
+                            ->label('Tipo')
+                            ->options([
+                                'credit' => 'Carga',
+                                'debit' => 'Descuento',
+                                'adjustment' => 'Ajuste Manual',
+                            ])
+                            ->placeholder('Todos'),
+                        Forms\Components\Select::make('branch_id')
+                            ->label('Sucursal')
+                            ->relationship('branch', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Todas'),
+                    ])
+                    ->action(function (array $data) {
+                        $giftCard = $this->getOwnerRecord();
+                        $filename = 'transacciones_' . $giftCard->legacy_id . '_' . now()->format('Y-m-d') . '.xlsx';
+
+                        return Excel::download(
+                            new TransactionsExport($giftCard, $data),
+                            $filename
+                        );
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
