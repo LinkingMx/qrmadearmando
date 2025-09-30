@@ -69,6 +69,18 @@ class GiftCardResource extends Resource
                                     ->placeholder('Seleccionar fecha')
                                     ->prefixIcon('heroicon-m-calendar-days'),
                             ]),
+                        Forms\Components\Section::make('Códigos QR Generados')
+                            ->icon('heroicon-o-qr-code')
+                            ->schema([
+                                Forms\Components\View::make('filament.qr-codes')
+                                    ->visible(fn ($record) => $record !== null && $record->qr_image_path)
+                                    ->viewData(fn ($record) => [
+                                        'qrUrls' => $record ? $record->getQrCodeUrls() : ['uuid' => null, 'legacy' => null],
+                                        'legacyId' => $record?->legacy_id,
+                                        'uuid' => $record?->id,
+                                    ]),
+                            ])
+                            ->visible(fn ($record) => $record !== null),
                     ]),
             ]);
     }
@@ -100,6 +112,10 @@ class GiftCardResource extends Resource
                     ->date()
                     ->sortable()
                     ->placeholder('Sin fecha'),
+                Tables\Columns\ViewColumn::make('qr_codes')
+                    ->label('Códigos QR')
+                    ->view('filament.table-qr-codes')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime()
@@ -110,13 +126,46 @@ class GiftCardResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Eliminado')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->icon('heroicon-o-pencil-square'),
+                Tables\Actions\Action::make('download_uuid_qr')
+                    ->label('QR UUID')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->action(function (GiftCard $record) {
+                        $qrUrls = $record->getQrCodeUrls();
+                        if ($qrUrls['uuid']) {
+                            return response()->download(
+                                storage_path('app/public/qr-codes/' . basename($record->qr_image_path) . '_uuid.svg'),
+                                "QR_UUID_{$record->legacy_id}.svg"
+                            );
+                        }
+                    })
+                    ->visible(fn (GiftCard $record) => $record->qr_image_path),
+                Tables\Actions\Action::make('download_legacy_qr')
+                    ->label('QR Legacy')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->action(function (GiftCard $record) {
+                        $qrUrls = $record->getQrCodeUrls();
+                        if ($qrUrls['legacy']) {
+                            return response()->download(
+                                storage_path('app/public/qr-codes/' . basename($record->qr_image_path) . '_legacy.svg'),
+                                "QR_Legacy_{$record->legacy_id}.svg"
+                            );
+                        }
+                    })
+                    ->visible(fn (GiftCard $record) => $record->qr_image_path),
                 Tables\Actions\DeleteAction::make()
                     ->icon('heroicon-o-trash')
                     ->successNotification(
@@ -126,6 +175,10 @@ class GiftCardResource extends Resource
                             ->body("El QR Empleado '{$record->legacy_id}' ha sido eliminado correctamente.")
                             ->icon('heroicon-o-check-circle')
                     ),
+                Tables\Actions\ForceDeleteAction::make()
+                    ->icon('heroicon-o-x-circle'),
+                Tables\Actions\RestoreAction::make()
+                    ->icon('heroicon-o-arrow-uturn-left'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -138,6 +191,10 @@ class GiftCardResource extends Resource
                                 ->body('Los QR Empleados seleccionados han sido eliminados correctamente.')
                                 ->icon('heroicon-o-check-circle')
                         ),
+                    Tables\Actions\ForceDeleteBulkAction::make()
+                        ->icon('heroicon-o-x-circle'),
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->icon('heroicon-o-arrow-uturn-left'),
                 ]),
             ]);
     }
@@ -156,5 +213,13 @@ class GiftCardResource extends Resource
             'create' => Pages\CreateGiftCard::route('/create'),
             'edit' => Pages\EditGiftCard::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                \Illuminate\Database\Eloquent\SoftDeletingScope::class,
+            ]);
     }
 }
