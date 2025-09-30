@@ -1,7 +1,9 @@
 <?php
 
+use App\Exports\UsersTemplateExport;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -12,6 +14,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 });
+
+// Download routes for imports
+Route::get('/download/users-template', function () {
+    return Excel::download(new UsersTemplateExport(), 'plantilla_usuarios.xlsx');
+})->name('download.users-template')->middleware('auth');
+
+Route::get('/download/import-errors/{file}', function ($file) {
+    $path = storage_path('app/public/temp/' . $file);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->download($path)->deleteFileAfterSend();
+})->name('download.import-errors')->middleware('auth');
+
+Route::get('/download/import-passwords/{file}', function ($file) {
+    $path = storage_path('app/public/temp/' . $file);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->download($path)->deleteFileAfterSend();
+})->name('download.import-passwords')->middleware('auth');
+
+// Balance import routes
+Route::get('/download/balance-template', function () {
+    return Excel::download(new \App\Exports\BalanceTemplateExport(), 'plantilla_carga_saldos.xlsx');
+})->name('download.balance-template')->middleware('auth');
+
+Route::get('/download/balance-report/{file}', function ($file) {
+    $path = storage_path('app/public/temp/' . $file);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->download($path)->deleteFileAfterSend();
+})->name('download.balance-report')->middleware('auth');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
