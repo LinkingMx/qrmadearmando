@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Services\QrCodeService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GiftCard extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'legacy_id',
@@ -17,6 +19,7 @@ class GiftCard extends Model
         'status',
         'expiry_date',
         'qr_image_path',
+        'balance',
     ];
 
     protected function casts(): array
@@ -24,6 +27,7 @@ class GiftCard extends Model
         return [
             'status' => 'boolean',
             'expiry_date' => 'date',
+            'balance' => 'decimal:2',
         ];
     }
 
@@ -48,6 +52,11 @@ class GiftCard extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 
     public function generateQrCodes(): void

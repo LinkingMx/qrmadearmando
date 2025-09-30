@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\GiftCardResource\Pages;
 use App\Filament\Resources\GiftCardResource\RelationManagers;
 use App\Models\GiftCard;
+use App\Services\TransactionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -102,6 +103,11 @@ class GiftCardResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('Sin asignar'),
+                Tables\Columns\TextColumn::make('balance')
+                    ->label('Saldo')
+                    ->money('MXN')
+                    ->sortable()
+                    ->default(0),
                 Tables\Columns\IconColumn::make('status')
                     ->label('Estado')
                     ->boolean()
@@ -202,7 +208,7 @@ class GiftCardResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\TransactionsRelationManager::class,
         ];
     }
 
