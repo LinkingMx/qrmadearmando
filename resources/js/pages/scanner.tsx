@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { QRScanner } from '@/components/scanner/qr-scanner';
+import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
 import { GiftCardInfo } from '@/components/scanner/gift-card-info';
 import { DebitForm } from '@/components/scanner/debit-form';
 import { ReceiptModal } from '@/components/scanner/receipt-modal';
@@ -16,7 +16,7 @@ import {
 } from '@/types/scanner';
 import { BreadcrumbItem } from '@/types';
 import { ScanIcon, AlertCircleIcon, ArrowLeftIcon } from 'lucide-react';
-import axios from 'axios';
+import axios from '@/lib/axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -127,7 +127,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 <div className="grid gap-6 lg:grid-cols-2">
                     {/* Left Column - Scanner or Back Button */}
                     {mode === 'scanning' ? (
-                        <QRScanner
+                        <QRScannerSelector
                             onScan={handleScan}
                             onError={setError}
                             isActive={mode === 'scanning'}
