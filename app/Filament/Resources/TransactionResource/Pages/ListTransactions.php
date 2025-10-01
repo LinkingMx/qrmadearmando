@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TransactionResource\Pages;
 
+use App\Exports\BranchClosureExport;
 use App\Exports\TransactionsExport;
 use App\Filament\Resources\TransactionResource;
 use Filament\Actions;
@@ -16,6 +17,74 @@ class ListTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('branch_closure')
+                ->label('Corte de Lote')
+                ->icon('heroicon-o-calculator')
+                ->color('warning')
+                ->form([
+                    Forms\Components\Select::make('branch_id')
+                        ->label('Sucursal')
+                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->searchable()
+                        ->required()
+                        ->helperText('Seleccione la sucursal para generar el corte de lote'),
+                    Forms\Components\DatePicker::make('date')
+                        ->label('Fecha')
+                        ->default(now())
+                        ->maxDate(now())
+                        ->required()
+                        ->native(false),
+                    Forms\Components\Grid::make(2)
+                        ->schema([
+                            Forms\Components\TimePicker::make('time_from')
+                                ->label('Hora inicio')
+                                ->default('00:00')
+                                ->seconds(false)
+                                ->required(),
+                            Forms\Components\TimePicker::make('time_to')
+                                ->label('Hora fin')
+                                ->default('23:59')
+                                ->seconds(false)
+                                ->required(),
+                        ]),
+                    Forms\Components\Select::make('type')
+                        ->label('Tipo de Transacción')
+                        ->options([
+                            'credit' => 'Carga',
+                            'debit' => 'Descuento',
+                            'adjustment' => 'Ajuste Manual',
+                        ])
+                        ->placeholder('Todos')
+                        ->native(false),
+                    Forms\Components\Select::make('admin_user_id')
+                        ->label('Usuario Admin')
+                        ->options(\App\Models\User::pluck('name', 'id'))
+                        ->searchable()
+                        ->placeholder('Todos'),
+                ])
+                ->action(function (array $data) {
+                    $branch = \App\Models\Branch::find($data['branch_id']);
+
+                    if (!$branch) {
+                        \Filament\Notifications\Notification::make()
+                            ->danger()
+                            ->title('Error')
+                            ->body('Sucursal no encontrada')
+                            ->send();
+                        return;
+                    }
+
+                    // Format branch name for filename (remove spaces and special chars)
+                    $branchSlug = str_replace([' ', ',', '.'], '_', $branch->name);
+                    $date = \Carbon\Carbon::parse($data['date'])->format('Y-m-d');
+
+                    $filename = "corte_lote_{$branchSlug}_{$date}.xlsx";
+
+                    return Excel::download(
+                        new BranchClosureExport($branch, $data),
+                        $filename
+                    );
+                }),
             Actions\Action::make('export')
                 ->label('Exportar')
                 ->icon('heroicon-o-arrow-down-tray')
