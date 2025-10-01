@@ -1,8 +1,12 @@
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
+import { EmployeeCard } from '@/components/dashboard/employee-card';
+import { TransactionsTable } from '@/components/dashboard/transactions-table';
 import { dashboard } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
+import { type EmployeeDashboardProps } from '@/types/employee-dashboard';
 import { Head } from '@inertiajs/react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,25 +15,28 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+export default function Dashboard({ giftCard }: EmployeeDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                </div>
+            <div className="flex h-full flex-1 flex-col gap-4 md:gap-6 overflow-x-auto p-2 md:p-6">
+                {giftCard ? (
+                    <>
+                        {/* Employee Card with QR and Balance */}
+                        <EmployeeCard giftCard={giftCard} />
+
+                        {/* Transactions Table */}
+                        <TransactionsTable />
+                    </>
+                ) : (
+                    <Alert className="mx-2 md:mx-0">
+                        <InfoIcon />
+                        <AlertTitle>Bienvenido</AlertTitle>
+                        <AlertDescription>
+                            No tienes una tarjeta QR asignada. Contacta al administrador para obtener tu tarjeta de empleado.
+                        </AlertDescription>
+                    </Alert>
+                )}
             </div>
         </AppLayout>
     );

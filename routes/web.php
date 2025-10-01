@@ -10,9 +10,21 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\EmployeeDashboardController::class, 'index'])
+        ->name('dashboard');
+
+    Route::get('api/my-transactions', [\App\Http\Controllers\EmployeeDashboardController::class, 'transactions']);
+
+    // Scanner routes
+    Route::middleware('has.branch')->group(function () {
+        Route::get('scanner', [\App\Http\Controllers\ScannerController::class, 'index'])
+            ->name('scanner');
+
+        Route::prefix('api/scanner')->group(function () {
+            Route::post('lookup', [\App\Http\Controllers\ScannerController::class, 'lookupGiftCard']);
+            Route::post('process-debit', [\App\Http\Controllers\ScannerController::class, 'processDebit']);
+        });
+    });
 });
 
 // Download routes for imports
