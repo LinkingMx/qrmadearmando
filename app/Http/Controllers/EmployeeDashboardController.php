@@ -19,8 +19,10 @@ class EmployeeDashboardController extends Controller
             ->first();
 
         if (!$giftCard) {
-            return redirect()->route('dashboard')
-                ->with('error', 'No tienes una tarjeta QR asignada.');
+            return Inertia::render('dashboard', [
+                'giftCard' => null,
+                'error' => 'No tienes una tarjeta QR asignada.'
+            ]);
         }
 
         // Generate QR image path - prefer UUID QR

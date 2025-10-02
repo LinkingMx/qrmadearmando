@@ -287,12 +287,6 @@ export function QRScannerNative({ onScan, onError, isActive }: QRScannerNativePr
                     </Button>
                 </form>
 
-                <Alert>
-                    <AlertDescription>
-                        <strong>Nota:</strong> Esta versión usa la API nativa del navegador.
-                        La detección automática de QR es básica - use la búsqueda manual para mejores resultados.
-                    </AlertDescription>
-                </Alert>
 
                 {/* Diagnostic Information - Moved to bottom */}
                 <div className="border-t pt-6 space-y-4">

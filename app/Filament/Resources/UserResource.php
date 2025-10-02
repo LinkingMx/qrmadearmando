@@ -89,16 +89,25 @@ class UserResource extends Resource
                                             ->label('Contraseña')
                                             ->password()
                                             ->confirmed()
-                                            ->dehydrated(false)
+                                            ->minLength(8)
+                                            ->dehydrated(fn ($state) => filled($state))
+                                            ->required(fn (string $operation): bool => $operation === 'create')
                                             ->prefixIcon('heroicon-m-lock-closed')
-                                            ->helperText('Deja en blanco si no deseas cambiar la contraseña.')
+                                            ->live(onBlur: true)
+                                            ->helperText(fn (string $operation): string =>
+                                                $operation === 'create'
+                                                    ? 'Ingrese una contraseña segura (mínimo 8 caracteres).'
+                                                    : 'Deja en blanco si no deseas cambiar la contraseña.'
+                                            )
                                             ->validationMessages([
                                                 'confirmed' => 'Las contraseñas deben coincidir.',
+                                                'min' => 'La contraseña debe tener al menos 8 caracteres.',
                                             ]),
                                         Forms\Components\TextInput::make('password_confirmation')
                                             ->label('Confirmar Contraseña')
                                             ->password()
                                             ->dehydrated(false)
+                                            ->required(fn (string $operation): bool => $operation === 'create')
                                             ->prefixIcon('heroicon-m-lock-closed'),
                                     ]),
                                 Forms\Components\Select::make('branch_id')

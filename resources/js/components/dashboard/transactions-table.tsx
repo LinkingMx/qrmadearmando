@@ -22,7 +22,7 @@ import {
     ArrowDownIcon,
     EditIcon,
 } from 'lucide-react';
-import axios from 'axios';
+import axios from '@/lib/axios';
 
 export function TransactionsTable() {
     const [data, setData] = useState<TransactionsPagination | null>(null);

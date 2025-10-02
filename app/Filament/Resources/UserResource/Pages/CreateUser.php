@@ -18,10 +18,13 @@ class CreateUser extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Hashear la password al crear usuario
-        if (!empty($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
+        // Validar que la contraseña esté presente al crear
+        if (empty($data['password'])) {
+            throw new \Exception('La contraseña es requerida para crear un usuario.');
         }
+
+        // Hashear la password al crear usuario
+        $data['password'] = Hash::make($data['password']);
 
         // Remover password_confirmation
         unset($data['password_confirmation']);
