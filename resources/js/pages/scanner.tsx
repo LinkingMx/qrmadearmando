@@ -149,7 +149,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                         </div>
                     )}
 
-                    {/* Right Column - Gift Card Info + Debit Form */}
+                    {/* Right Column - Debit Form */}
                     {mode === 'viewing' && giftCard && (
                         <div className="space-y-4">
                             <DebitForm
