@@ -5,6 +5,7 @@ import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
 import { GiftCardInfo } from '@/components/scanner/gift-card-info';
 import { DebitForm } from '@/components/scanner/debit-form';
 import { ReceiptModal } from '@/components/scanner/receipt-modal';
+import { BranchTransactionList } from '@/components/scanner/branch-transaction-list';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -167,6 +168,14 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                     isOpen={showReceipt}
                     onClose={handleCloseReceipt}
                 />
+
+                {/* Transaction History Section */}
+                <div className="mt-8">
+                    <BranchTransactionList
+                        branchId={branch.id}
+                        branchName={branch.name}
+                    />
+                </div>
             </div>
         </AppLayout>
     );

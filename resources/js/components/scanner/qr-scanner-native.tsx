@@ -286,40 +286,6 @@ export function QRScannerNative({ onScan, onError, isActive }: QRScannerNativePr
                         Buscar QR
                     </Button>
                 </form>
-
-
-                {/* Diagnostic Information - Moved to bottom */}
-                <div className="border-t pt-6 space-y-4">
-                    <h3 className="text-lg font-semibold">Información de Diagnóstico</h3>
-
-                    {/* Status */}
-                    <Alert variant={status.includes('✅') ? "default" : status.includes('❌') ? "destructive" : "default"}>
-                        <AlertDescription>
-                            <div className="flex items-center justify-between">
-                                <span>{status}</span>
-                                {isScanning && (
-                                    <span className="text-xs opacity-70">
-                                        Intentos: {scanCount}
-                                    </span>
-                                )}
-                            </div>
-                        </AlertDescription>
-                    </Alert>
-
-                    {/* Real-time scanning info */}
-                    {isScanning && (
-                        <Alert>
-                            <CheckCircleIcon />
-                            <AlertDescription>
-                                <div className="text-sm space-y-1">
-                                    <div>📸 Resolución de video: {videoRef.current?.videoWidth || 0} x {videoRef.current?.videoHeight || 0}</div>
-                                    <div>🔄 Último escaneo: {lastScanAttempt || 'N/A'}</div>
-                                    <div>💡 <strong>Consejo:</strong> Mantenga el QR estable y bien iluminado</div>
-                                </div>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                </div>
             </CardContent>
         </Card>
     );

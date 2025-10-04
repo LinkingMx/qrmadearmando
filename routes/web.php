@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::prefix('api/scanner')->group(function () {
             Route::post('lookup', [\App\Http\Controllers\ScannerController::class, 'lookupGiftCard']);
             Route::post('process-debit', [\App\Http\Controllers\ScannerController::class, 'processDebit']);
+            Route::get('branch-transactions', [\App\Http\Controllers\ScannerController::class, 'branchTransactions']);
         });
     });
 });

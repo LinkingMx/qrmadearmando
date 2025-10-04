@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProcessDebitRequest;
 use App\Models\GiftCard;
+use App\Models\Transaction;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -163,5 +164,61 @@ class ScannerController extends Controller
                 'error' => 'Error al procesar la transacción. Por favor intente nuevamente.'
             ], 500);
         }
+    }
+
+    /**
+     * Get paginated transactions for the authenticated user's branch
+     */
+    public function branchTransactions(Request $request)
+    {
+        $branchId = auth()->user()->branch_id;
+
+        $transactions = Transaction::with(['giftCard.user', 'admin', 'branch'])
+            ->where('branch_id', $branchId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json([
+            'data' => $transactions->map(function ($transaction) {
+                // Generate folio same way as processDebit
+                $folio = 'TRX-' . $transaction->created_at->format('Ymd') . '-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+
+                // Generate reference same way as processDebit
+                $reference = 'REF-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+
+                return [
+                    'id' => $transaction->id,
+                    'folio' => $folio,
+                    'gift_card' => [
+                        'id' => $transaction->giftCard->id,
+                        'legacy_id' => $transaction->giftCard->legacy_id,
+                        'user' => $transaction->giftCard->user ? [
+                            'name' => $transaction->giftCard->user->name,
+                            'avatar' => $transaction->giftCard->user->avatar
+                                ? Storage::url($transaction->giftCard->user->avatar)
+                                : null,
+                        ] : null,
+                        'balance' => (float) $transaction->giftCard->balance,
+                        'status' => $transaction->giftCard->status,
+                    ],
+                    'amount' => (float) $transaction->amount,
+                    'balance_before' => (float) $transaction->balance_before,
+                    'balance_after' => (float) $transaction->balance_after,
+                    'reference' => $reference,
+                    'description' => $transaction->description,
+                    'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
+                    'branch_name' => $transaction->branch->name,
+                    'cashier_name' => $transaction->admin->name,
+                ];
+            }),
+            'meta' => [
+                'current_page' => $transactions->currentPage(),
+                'last_page' => $transactions->lastPage(),
+                'per_page' => $transactions->perPage(),
+                'total' => $transactions->total(),
+                'from' => $transactions->firstItem(),
+                'to' => $transactions->lastItem(),
+            ],
+        ]);
     }
 }
