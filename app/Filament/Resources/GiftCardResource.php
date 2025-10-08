@@ -46,10 +46,10 @@ class GiftCardResource extends Resource
                             ->schema([
                                 Forms\Components\TextInput::make('legacy_id')
                                     ->label('ID Legacy')
-                                    ->required()
                                     ->unique(ignoreRecord: true)
                                     ->placeholder('Ej: EMCAD20005')
                                     ->prefixIcon('heroicon-m-hashtag')
+                                    ->helperText('Se generará automáticamente si se deja vacío (formato: EMCAD000001)')
                                     ->maxLength(255),
                                 Forms\Components\Select::make('user_id')
                                     ->label('Usuario Asignado')

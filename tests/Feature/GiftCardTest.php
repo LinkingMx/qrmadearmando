@@ -272,3 +272,110 @@ test('relationships work correctly', function () {
     // Verificar relación GiftCard -> User
     expect($giftCard->user->id)->toBe($user->id);
 });
+
+test('auto-generates legacy_id when not provided', function () {
+    $giftCard = GiftCard::create([
+        'status' => true,
+    ]);
+
+    expect($giftCard->legacy_id)->not->toBeNull()
+        ->and($giftCard->legacy_id)->toStartWith('EMCAD')
+        ->and(strlen($giftCard->legacy_id))->toBe(11); // EMCAD + 6 dígitos
+});
+
+test('auto-generated legacy_id has correct format', function () {
+    $giftCard = GiftCard::create([
+        'status' => true,
+    ]);
+
+    // Verificar formato EMCAD000001
+    expect($giftCard->legacy_id)->toMatch('/^EMCAD\d{6}$/');
+});
+
+test('respects manually provided legacy_id', function () {
+    $customLegacyId = 'EMCAD99999';
+
+    $giftCard = GiftCard::create([
+        'legacy_id' => $customLegacyId,
+        'status' => true,
+    ]);
+
+    expect($giftCard->legacy_id)->toBe($customLegacyId);
+});
+
+test('auto-generated legacy_id is sequential', function () {
+    // Crear primer gift card con legacy_id conocido
+    $first = GiftCard::create([
+        'legacy_id' => 'EMCAD000100',
+        'status' => true,
+    ]);
+
+    // Crear segundo gift card sin legacy_id (debe auto-generarse)
+    $second = GiftCard::create([
+        'status' => true,
+    ]);
+
+    expect($second->legacy_id)->toBe('EMCAD000101');
+});
+
+test('auto-generated legacy_id handles gaps in sequence', function () {
+    // Crear gift cards con saltos en la secuencia
+    GiftCard::create(['legacy_id' => 'EMCAD000050', 'status' => true]);
+    GiftCard::create(['legacy_id' => 'EMCAD000055', 'status' => true]);
+
+    // El siguiente auto-generado debe ser 56 (siguiente al más alto)
+    $giftCard = GiftCard::create(['status' => true]);
+
+    expect($giftCard->legacy_id)->toBe('EMCAD000056');
+});
+
+test('auto-generated legacy_id works with soft deleted records', function () {
+    // Crear gift card base
+    $base = GiftCard::create([
+        'legacy_id' => 'EMCAD000200',
+        'status' => true,
+    ]);
+
+    // Crear y soft delete otro gift card
+    $deleted = GiftCard::create([
+        'legacy_id' => 'EMCAD000250',
+        'status' => true,
+    ]);
+    $deleted->delete(); // Soft delete
+
+    // El siguiente auto-generado debe ser 251 (considera soft deleted)
+    $giftCard = GiftCard::create(['status' => true]);
+
+    expect($giftCard->legacy_id)->toBe('EMCAD000251');
+});
+
+test('auto-generated legacy_id starts from 1 when database is empty', function () {
+    // Base de datos vacía (RefreshDatabase)
+    $giftCard = GiftCard::create(['status' => true]);
+
+    expect($giftCard->legacy_id)->toBe('EMCAD000001');
+});
+
+test('auto-generation generates QR codes correctly', function () {
+    $giftCard = GiftCard::create([
+        'status' => true,
+        // Sin legacy_id - debe auto-generarse
+    ]);
+
+    $uuid = $giftCard->id;
+
+    // Verificar que se auto-generó el legacy_id
+    expect($giftCard->legacy_id)->toMatch('/^EMCAD\d{6}$/');
+
+    // Verificar que se generaron los QR codes
+    Storage::disk('public')->assertExists("qr-codes/{$uuid}_uuid.svg");
+    Storage::disk('public')->assertExists("qr-codes/{$uuid}_legacy.svg");
+
+    // Verificar que los archivos QR no están vacíos
+    $uuidQrContent = Storage::disk('public')->get("qr-codes/{$uuid}_uuid.svg");
+    $legacyQrContent = Storage::disk('public')->get("qr-codes/{$uuid}_legacy.svg");
+
+    expect(strlen($uuidQrContent))->toBeGreaterThan(0)
+        ->and(strlen($legacyQrContent))->toBeGreaterThan(0)
+        ->and($giftCard->qr_image_path)->toContain($uuid);
+});
