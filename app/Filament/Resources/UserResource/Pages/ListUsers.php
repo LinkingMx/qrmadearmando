@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Exports\UsersExport;
 use App\Filament\Resources\UserResource;
 use App\Imports\UsersImport;
 use App\Services\UserImportService;
@@ -151,6 +152,44 @@ class ListUsers extends ListRecords
                 ->color('gray')
                 ->url(route('download.users-template'))
                 ->openUrlInNewTab(),
+            Actions\Action::make('export')
+                ->label('Exportar')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->form([
+                    Forms\Components\Select::make('branch_id')
+                        ->label('Sucursal')
+                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->searchable()
+                        ->placeholder('Todas'),
+                    Forms\Components\Select::make('email_verified')
+                        ->label('Estado Email')
+                        ->options([
+                            'yes' => 'Verificados',
+                            'no' => 'No verificados',
+                        ])
+                        ->placeholder('Todos')
+                        ->native(false),
+                    Forms\Components\Select::make('two_factor')
+                        ->label('Estado 2FA')
+                        ->options([
+                            'yes' => 'Activado',
+                            'no' => 'Desactivado',
+                        ])
+                        ->placeholder('Todos')
+                        ->native(false),
+                    Forms\Components\Toggle::make('has_gift_cards')
+                        ->label('Solo usuarios con QR asignados')
+                        ->default(false),
+                ])
+                ->action(function (array $data) {
+                    $filename = 'usuarios_' . now()->format('Y-m-d_His') . '.xlsx';
+
+                    return Excel::download(
+                        new UsersExport($data),
+                        $filename
+                    );
+                }),
             Actions\CreateAction::make(),
         ];
     }
