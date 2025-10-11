@@ -81,7 +81,7 @@ export function TransactionsTable() {
         switch (type) {
             case 'credit':
                 return (
-                    <Badge variant="default" className="gap-1 bg-green-600">
+                    <Badge variant="default" className="gap-1">
                         {getTypeIcon(type)}
                         {label}
                     </Badge>
@@ -95,7 +95,7 @@ export function TransactionsTable() {
                 );
             case 'adjustment':
                 return (
-                    <Badge variant="secondary" className="gap-1 bg-orange-600 text-white">
+                    <Badge variant="secondary" className="gap-1 bg-primary/80 text-primary-foreground">
                         {getTypeIcon(type)}
                         {label}
                     </Badge>
@@ -108,11 +108,11 @@ export function TransactionsTable() {
     const getAmountColor = (type: string) => {
         switch (type) {
             case 'credit':
-                return 'text-green-600 dark:text-green-500';
+                return 'text-primary';
             case 'debit':
-                return 'text-red-600 dark:text-red-500';
+                return 'text-destructive';
             case 'adjustment':
-                return 'text-orange-600 dark:text-orange-500';
+                return 'text-primary/80';
             default:
                 return '';
         }

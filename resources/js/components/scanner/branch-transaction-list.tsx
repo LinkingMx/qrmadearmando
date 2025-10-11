@@ -219,7 +219,7 @@ export function BranchTransactionList({
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Button
-                                                variant="outline"
+                                                variant="default"
                                                 size="sm"
                                                 onClick={() => handleReprint(tx)}
                                             >
@@ -260,7 +260,7 @@ export function BranchTransactionList({
                                         </div>
                                     </div>
                                     <Button
-                                        variant="outline"
+                                        variant="default"
                                         size="sm"
                                         className="w-full"
                                         onClick={() => handleReprint(tx)}

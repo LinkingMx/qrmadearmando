@@ -178,9 +178,6 @@ export function QRScannerNative({ onScan, onError, isActive }: QRScannerNativePr
                     <VideoIcon className="size-5" />
                     Scanner QR Nativo
                 </CardTitle>
-                <CardDescription>
-                    Scanner usando API nativa del navegador con detección básica
-                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Error Display */}

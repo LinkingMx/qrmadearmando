@@ -19,40 +19,17 @@ class ListGiftCards extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('export_qr')
-                ->label('Exportar QR a Excel')
-                ->icon('heroicon-o-arrow-down-tray')
-                ->color('info')
-                ->form([
-                    Forms\Components\Select::make('status')
-                        ->label('Estado')
-                        ->options([
-                            'active' => 'Activos',
-                            'inactive' => 'Inactivos',
-                        ])
-                        ->placeholder('Todos')
-                        ->native(false),
-                    Forms\Components\Select::make('has_balance')
-                        ->label('Saldo')
-                        ->options([
-                            'yes' => 'Con saldo',
-                            'no' => 'Sin saldo',
-                        ])
-                        ->placeholder('Todos')
-                        ->native(false),
-                ])
-                ->action(function (array $data) {
-                    $filename = 'qr_empleados_' . now()->format('Y-m-d_His') . '.xlsx';
-
-                    return Excel::download(
-                        new GiftCardsExport($data),
-                        $filename
-                    );
-                }),
+            Actions\Action::make('download_balance_template')
+                ->label('Descargar Plantilla')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->outlined()
+                ->url(route('download.balance-template'))
+                ->openUrlInNewTab(),
             Actions\Action::make('import_balances')
                 ->label('Carga Masiva de Saldos')
                 ->icon('heroicon-o-banknotes')
-                ->color('success')
+                ->color('primary')
                 ->form([
                     Forms\Components\Placeholder::make('instructions')
                         ->label('')
@@ -153,13 +130,38 @@ class ListGiftCards extends ListRecords
                             ->send();
                     }
                 }),
-            Actions\Action::make('download_balance_template')
-                ->label('Descargar Plantilla')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->url(route('download.balance-template'))
-                ->openUrlInNewTab(),
-            Actions\CreateAction::make(),
+            Actions\Action::make('export_qr')
+                ->label('Exportar QR a Excel')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('primary')
+                ->form([
+                    Forms\Components\Select::make('status')
+                        ->label('Estado')
+                        ->options([
+                            'active' => 'Activos',
+                            'inactive' => 'Inactivos',
+                        ])
+                        ->placeholder('Todos')
+                        ->native(false),
+                    Forms\Components\Select::make('has_balance')
+                        ->label('Saldo')
+                        ->options([
+                            'yes' => 'Con saldo',
+                            'no' => 'Sin saldo',
+                        ])
+                        ->placeholder('Todos')
+                        ->native(false),
+                ])
+                ->action(function (array $data) {
+                    $filename = 'qr_empleados_' . now()->format('Y-m-d_His') . '.xlsx';
+
+                    return Excel::download(
+                        new GiftCardsExport($data),
+                        $filename
+                    );
+                }),
+            Actions\CreateAction::make()
+                ->color('primary'),
         ];
     }
 }

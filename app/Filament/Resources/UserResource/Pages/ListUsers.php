@@ -19,10 +19,17 @@ class ListUsers extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('download_template')
+                ->label('Descargar Plantilla')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->outlined()
+                ->url(route('download.users-template'))
+                ->openUrlInNewTab(),
             Actions\Action::make('import')
                 ->label('Importar Usuarios')
                 ->icon('heroicon-o-arrow-up-tray')
-                ->color('info')
+                ->color('primary')
                 ->form([
                     Forms\Components\FileUpload::make('excel')
                         ->label('Archivo Excel')
@@ -146,16 +153,10 @@ class ListUsers extends ListRecords
                             ->send();
                     }
                 }),
-            Actions\Action::make('download_template')
-                ->label('Descargar Plantilla')
-                ->icon('heroicon-o-document-arrow-down')
-                ->color('gray')
-                ->url(route('download.users-template'))
-                ->openUrlInNewTab(),
             Actions\Action::make('export')
                 ->label('Exportar')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->color('success')
+                ->color('primary')
                 ->form([
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
@@ -190,7 +191,8 @@ class ListUsers extends ListRecords
                         $filename
                     );
                 }),
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->color('primary'),
         ];
     }
 

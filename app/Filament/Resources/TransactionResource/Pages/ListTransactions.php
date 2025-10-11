@@ -20,7 +20,7 @@ class ListTransactions extends ListRecords
             Actions\Action::make('branch_closure')
                 ->label('Corte de Lote')
                 ->icon('heroicon-o-calculator')
-                ->color('warning')
+                ->color('primary')
                 ->form([
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
@@ -88,7 +88,7 @@ class ListTransactions extends ListRecords
             Actions\Action::make('export')
                 ->label('Exportar')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->color('success')
+                ->color('primary')
                 ->form([
                     Forms\Components\Select::make('gift_card_id')
                         ->label('Tarjeta de Regalo')
@@ -136,7 +136,8 @@ class ListTransactions extends ListRecords
                         $filename
                     );
                 }),
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->color('primary'),
         ];
     }
 }

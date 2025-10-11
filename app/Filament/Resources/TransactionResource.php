@@ -236,12 +236,14 @@ class TransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                    ->modalHeading('Detalle de Transacción'),
+                    ->modalHeading('Detalle de Transacción')
+                    ->color('primary'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make()
+                        ->color('warning'),
                     Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ])

@@ -27,6 +27,7 @@ class GiftCardResource extends Resource
     protected static ?string $navigationLabel = 'QR Empleados';
     protected static ?string $pluralModelLabel = 'QR Empleados';
     protected static ?string $modelLabel = 'QR Empleado';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -102,6 +103,8 @@ class GiftCardResource extends Resource
                     ->label('Usuario')
                     ->searchable()
                     ->sortable()
+                    ->badge()
+                    ->color('primary')
                     ->placeholder('Sin asignar'),
                 Tables\Columns\TextColumn::make('balance')
                     ->label('Saldo')
@@ -117,7 +120,8 @@ class GiftCardResource extends Resource
                     ->label('Fecha de Expiración')
                     ->date()
                     ->sortable()
-                    ->placeholder('Sin fecha'),
+                    ->placeholder('Sin fecha')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\ViewColumn::make('qr_codes')
                     ->label('Códigos QR')
                     ->view('filament.table-qr-codes')
@@ -132,76 +136,23 @@ class GiftCardResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->label('Eliminado')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        '1' => 'Activos',
+                        '0' => 'Inactivos',
+                    ])
+                    ->placeholder('Todos'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->icon('heroicon-o-pencil-square'),
-                Tables\Actions\Action::make('download_uuid_qr')
-                    ->label('QR UUID')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->action(function (GiftCard $record) {
-                        $qrUrls = $record->getQrCodeUrls();
-                        if ($qrUrls['uuid']) {
-                            return response()->download(
-                                storage_path('app/public/qr-codes/' . basename($record->qr_image_path) . '_uuid.svg'),
-                                "QR_UUID_{$record->legacy_id}.svg"
-                            );
-                        }
-                    })
-                    ->visible(fn (GiftCard $record) => $record->qr_image_path),
-                Tables\Actions\Action::make('download_legacy_qr')
-                    ->label('QR Legacy')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('info')
-                    ->action(function (GiftCard $record) {
-                        $qrUrls = $record->getQrCodeUrls();
-                        if ($qrUrls['legacy']) {
-                            return response()->download(
-                                storage_path('app/public/qr-codes/' . basename($record->qr_image_path) . '_legacy.svg'),
-                                "QR_Legacy_{$record->legacy_id}.svg"
-                            );
-                        }
-                    })
-                    ->visible(fn (GiftCard $record) => $record->qr_image_path),
-                Tables\Actions\DeleteAction::make()
-                    ->icon('heroicon-o-trash')
-                    ->successNotification(
-                        fn (GiftCard $record) => Notification::make()
-                            ->success()
-                            ->title('QR Empleado eliminado exitosamente')
-                            ->body("El QR Empleado '{$record->legacy_id}' ha sido eliminado correctamente.")
-                            ->icon('heroicon-o-check-circle')
-                    ),
-                Tables\Actions\ForceDeleteAction::make()
-                    ->icon('heroicon-o-x-circle'),
-                Tables\Actions\RestoreAction::make()
-                    ->icon('heroicon-o-arrow-uturn-left'),
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->icon('heroicon-o-trash')
-                        ->successNotification(
-                            fn ($records) => Notification::make()
-                                ->success()
-                                ->title('QR Empleados eliminados exitosamente')
-                                ->body('Los QR Empleados seleccionados han sido eliminados correctamente.')
-                                ->icon('heroicon-o-check-circle')
-                        ),
-                    Tables\Actions\ForceDeleteBulkAction::make()
-                        ->icon('heroicon-o-x-circle'),
-                    Tables\Actions\RestoreBulkAction::make()
-                        ->icon('heroicon-o-arrow-uturn-left'),
-                ]),
+                // No bulk actions - QR Empleados can only be activated/deactivated
             ]);
     }
 
@@ -221,11 +172,25 @@ class GiftCardResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    // Removed soft delete query scope - QR Empleados cannot be deleted
+
+    public static function canDelete($record): bool
     {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                \Illuminate\Database\Eloquent\SoftDeletingScope::class,
-            ]);
+        return false;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
+
+    public static function canForceDelete($record): bool
+    {
+        return false;
+    }
+
+    public static function canForceDeleteAny(): bool
+    {
+        return false;
     }
 }

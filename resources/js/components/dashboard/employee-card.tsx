@@ -111,12 +111,12 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                         </div>
 
                         {/* Balance Section */}
-                        <div className="p-6 md:p-8 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-200 dark:border-green-900">
+                        <div className="p-6 md:p-8 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 border-2 border-primary/20 dark:border-primary/30">
                             <div className="space-y-2 md:space-y-3">
                                 <p className="text-sm font-medium text-muted-foreground text-center">
                                     Saldo Disponible
                                 </p>
-                                <p className="text-5xl md:text-6xl lg:text-7xl font-bold text-green-600 dark:text-green-500 tabular-nums text-center break-all">
+                                <p className="text-5xl md:text-6xl lg:text-7xl font-bold text-primary tabular-nums text-center break-all">
                                     ${giftCard.balance.toFixed(2)}
                                 </p>
                             </div>

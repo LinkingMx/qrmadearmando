@@ -27,18 +27,38 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandLogo(asset('logo.svg'))
+            ->brandLogoHeight('2rem')
+            ->homeUrl(fn () => route('filament.admin.resources.gift-cards.index'))
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => [
+                    '50' => '#f8f5f1',
+                    '100' => '#ebe4d9',
+                    '200' => '#d8cabb',
+                    '300' => '#c4af9c',
+                    '400' => '#b1947e',
+                    '500' => '#a48166',
+                    '600' => '#897053', // <-- Tu color base
+                    '700' => '#725c46',
+                    '800' => '#5c4a39',
+                    '900' => '#483a2d',
+                    '950' => '#2a221a',
+                ],
+                // Opcional: Para una mejor armonía, usamos una escala de grises cálida
+                'gray' => Color::Stone,
+                'danger' => Color::Red,
+                'warning' => Color::Orange,
+                'success' => Color::Green,
+                'info' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                // Dashboard removed - using QR Empleados as home
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                // Dashboard widgets removed
             ])
             ->middleware([
                 EncryptCookies::class,
