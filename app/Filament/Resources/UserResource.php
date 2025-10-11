@@ -118,6 +118,14 @@ class UserResource extends Resource
                                     ->placeholder('Seleccionar sucursal')
                                     ->prefixIcon('heroicon-m-building-office-2')
                                     ->columnSpanFull(),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Usuario Activo')
+                                    ->default(true)
+                                    ->helperText('Los usuarios inactivos no podrán iniciar sesión')
+                                    ->disabled(fn ($record) => $record && $record->id === auth()->id())
+                                    ->dehydrated(fn ($record) => !$record || $record->id !== auth()->id())
+                                    ->inline(false)
+                                    ->columnSpanFull(),
                             ])
                             ->columnSpan(2),
                     ]),
@@ -140,6 +148,14 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('Sin asignar'),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Estado')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable()
@@ -164,8 +180,50 @@ class UserResource extends Resource
                     ->relationship('branch', 'name')
                     ->searchable()
                     ->preload(),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Estado')
+                    ->placeholder('Todos los usuarios')
+                    ->trueLabel('Solo usuarios activos')
+                    ->falseLabel('Solo usuarios inactivos')
+                    ->native(false),
             ])
             ->actions([
+                Tables\Actions\Action::make('toggle_active')
+                    ->label(fn (User $record): string => $record->is_active ? 'Desactivar' : 'Activar')
+                    ->icon(fn (User $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn (User $record): string => $record->is_active ? 'danger' : 'success')
+                    ->hidden(fn (User $record): bool => $record->id === auth()->id())
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record): string => $record->is_active ? 'Desactivar Usuario' : 'Activar Usuario')
+                    ->modalDescription(fn (User $record): string => $record->is_active
+                        ? '¿Estás seguro de que deseas desactivar este usuario? No podrá iniciar sesión y todos sus QR codes serán desactivados hasta que sea reactivado.'
+                        : '¿Estás seguro de que deseas activar este usuario? Podrá iniciar sesión nuevamente y todos sus QR codes serán reactivados.')
+                    ->modalSubmitActionLabel(fn (User $record): string => $record->is_active ? 'Desactivar' : 'Activar')
+                    ->action(function (User $record) {
+                        if ($record->id === auth()->id()) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('No puedes desactivar tu propia cuenta')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $giftCardsCount = $record->giftCards()->count();
+                        $record->is_active = !$record->is_active;
+                        $record->save();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title($record->is_active
+                                ? 'Usuario activado correctamente'
+                                : 'Usuario desactivado correctamente')
+                            ->body($giftCardsCount > 0
+                                ? ($record->is_active
+                                    ? "{$giftCardsCount} QR code(s) activados"
+                                    : "{$giftCardsCount} QR code(s) desactivados")
+                                : 'Este usuario no tiene QR codes asignados')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make()
                     ->color('primary'),
             ])

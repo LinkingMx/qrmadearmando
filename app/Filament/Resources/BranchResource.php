@@ -73,28 +73,9 @@ class BranchResource extends Resource
                             ->body("La sucursal '{$record->name}' ha sido actualizada correctamente.")
                             ->icon('heroicon-o-check-circle')
                     ),
-                Tables\Actions\DeleteAction::make()
-                    ->icon('heroicon-o-trash')
-                    ->successNotification(
-                        fn (Branch $record) => Notification::make()
-                            ->success()
-                            ->title('Sucursal eliminada exitosamente')
-                            ->body("La sucursal '{$record->name}' ha sido eliminada correctamente.")
-                            ->icon('heroicon-o-check-circle')
-                    ),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->icon('heroicon-o-trash')
-                        ->successNotification(
-                            fn ($records) => Notification::make()
-                                ->success()
-                                ->title('Sucursales eliminadas exitosamente')
-                                ->body('Las sucursales seleccionadas han sido eliminadas correctamente.')
-                                ->icon('heroicon-o-check-circle')
-                        ),
-                ]),
+                // Eliminación masiva deshabilitada para sucursales
             ]);
     }
 

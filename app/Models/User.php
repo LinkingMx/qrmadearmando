@@ -26,6 +26,7 @@ class User extends Authenticatable
         'avatar',
         'password',
         'branch_id',
+        'is_active',
     ];
 
     /**
@@ -48,7 +49,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    protected static function booted()
+    {
+        static::updated(function ($user) {
+            // Verificar si el campo is_active cambió
+            if ($user->wasChanged('is_active')) {
+                // Sincronizar el estado de todos los gift cards del usuario
+                $user->giftCards()->update(['status' => $user->is_active]);
+            }
+        });
     }
 
     public function branch()
