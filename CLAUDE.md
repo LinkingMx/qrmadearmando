@@ -39,9 +39,11 @@ composer dev:ssr
 
 **Testing:**
 ```bash
-composer test           # Run all tests
-vendor/bin/pest         # Run Pest directly
-vendor/bin/pest --watch # Watch mode
+composer test                    # Run all tests
+vendor/bin/pest                  # Run Pest directly
+vendor/bin/pest --watch          # Watch mode
+vendor/bin/pest tests/Feature/   # Run specific directory
+vendor/bin/pest --filter testName # Run specific test
 ```
 
 **Frontend commands:**
@@ -88,8 +90,11 @@ php artisan filament:upgrade  # Run after composer install/update
 - `app/Http/Controllers/` - Controllers return `Inertia::render()` responses
   - `EmployeeDashboardController` - Employee transaction views
   - `ScannerController` - QR lookup and debit processing (requires `has.branch` middleware)
-- `app/Filament/Resources/` - Filament admin panel resources
-- `app/Services/QrCodeService` - QR code generation/deletion logic
+- `app/Filament/Resources/` - Filament admin panel resources (warm color theme)
+- `app/Services/` - Business logic services:
+  - `QrCodeService` - QR code generation/deletion logic
+  - `TransactionService` - Transaction processing with DB transactions and validation
+  - `UserImportService` - Excel-based user imports with error reporting
 - `routes/web.php` - Main app routes
 - `routes/auth.php` - Authentication routes (Laravel Fortify)
 - `routes/settings.php` - User settings routes
@@ -142,7 +147,8 @@ php artisan filament:upgrade  # Run after composer install/update
 
 **Gift Card System:**
 - Gift cards use UUID primary keys (`HasUuids` trait)
-- `legacy_id` field used for QR code content (user-facing identifier)
+- `legacy_id` field auto-generated in format "EMCAD" + 6 digits (e.g., EMCAD000001)
+- Two QR codes generated per card: one with UUID, one with legacy_id
 - QR codes auto-generated via model events (`created`, `updating`)
 - QR image files stored in `storage/app/public/qr_codes/`
 - Soft deletes enabled - QR files cleaned up on force delete
@@ -157,3 +163,13 @@ php artisan filament:upgrade  # Run after composer install/update
 - Laravel Fortify with full 2FA support (TOTP + recovery codes)
 - User model includes `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`
 - Branch assignment checked via `has.branch` middleware for scanner access
+
+**Transaction Processing:**
+- Use `TransactionService` for all balance operations (credit, debit, adjustment)
+- Wrapped in DB transactions with balance validation
+- Three transaction types:
+  - `credit` - Add balance (no branch required)
+  - `debit` - Subtract balance (branch required, used by scanner)
+  - `adjustment` - Add or subtract balance (branch required only for negative amounts)
+- All transactions record `balance_before` and `balance_after` snapshots
+- Debit transactions require branch_id and validate sufficient balance
