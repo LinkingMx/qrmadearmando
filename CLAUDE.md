@@ -20,6 +20,7 @@ This is a **gift card management system** with QR code scanning capabilities. Th
 **Testing**: Pest PHP 4.1
 **Database**: SQLite (development)
 **Admin Panel**: Filament 3 (amber theme, activity logging via filament-logger)
+**Permissions**: Filament Shield (Spatie Laravel Permissions integration)
 **Excel Imports/Exports**: maatwebsite/excel (user imports, balance loading)
 **QR Code Generation**: endroid/qr-code
 
@@ -85,12 +86,16 @@ php artisan filament:upgrade  # Run after composer install/update
 - `app/Models/` - Core domain models:
   - `GiftCard` - Uses UUIDs, soft deletes, auto-generates QR codes on create/update
   - `Transaction` - Tracks balance changes with before/after snapshots
-  - `Branch` - Locations with assigned employees
-  - `User` - Includes 2FA columns and branch assignment
+  - `Branch` - Locations with assigned employees (deletion disabled)
+  - `User` - Includes 2FA, branch assignment, and activation status with HasRoles trait
 - `app/Http/Controllers/` - Controllers return `Inertia::render()` responses
   - `EmployeeDashboardController` - Employee transaction views
   - `ScannerController` - QR lookup and debit processing (requires `has.branch` middleware)
 - `app/Filament/Resources/` - Filament admin panel resources (warm color theme)
+- `app/Filament/Pages/Auth/` - Custom authentication pages:
+  - `Login.php` - Custom login with active user validation
+- `app/Http/Middleware/` - Custom middleware:
+  - `EnsureUserIsActive` - Blocks inactive users from accessing the system
 - `app/Services/` - Business logic services:
   - `QrCodeService` - QR code generation/deletion logic
   - `TransactionService` - Transaction processing with DB transactions and validation
@@ -103,7 +108,10 @@ php artisan filament:upgrade  # Run after composer install/update
 - **Inertia.js**: No separate API - return `Inertia::render()` from controllers
 - **Laravel Wayfinder**: Type-safe routing - generates TypeScript actions in `@/actions/`
 - **SSR**: Production rendering via `resources/js/ssr.tsx`
-- **Middleware**: `has.branch` checks employee branch assignment for scanner access
+- **Middleware**:
+  - `has.branch` - Checks employee branch assignment for scanner access
+  - `EnsureUserIsActive` - Applied to both web and Filament stacks
+- **Filament Shield**: Role-based permissions integrated with Spatie Laravel Permissions
 
 **Data Flow:**
 1. Gift cards created with UUID primary keys, legacy IDs for QR codes
@@ -173,3 +181,24 @@ php artisan filament:upgrade  # Run after composer install/update
   - `adjustment` - Add or subtract balance (branch required only for negative amounts)
 - All transactions record `balance_before` and `balance_after` snapshots
 - Debit transactions require branch_id and validate sufficient balance
+
+**User Activation System:**
+- Users have `is_active` boolean field (default: true)
+- Inactive users cannot log in to frontend or admin panel
+- Custom Filament login page validates user activation status
+- `EnsureUserIsActive` middleware automatically logs out inactive users
+- Frontend login (Fortify) validates activation in `FortifyServiceProvider`
+- Admin can activate/deactivate users from Filament panel with toggle action
+- Users cannot deactivate their own account (validation in form and action)
+- Filter available to view only active or inactive users
+
+**QR Code Synchronization:**
+- When user is deactivated, all their gift cards are automatically deactivated
+- When user is reactivated, all their gift cards are automatically reactivated
+- Synchronization handled by User model `booted()` event listening for `is_active` changes
+- Feedback notification shows count of affected QR codes
+
+**Branch Protection:**
+- Branch deletion is completely disabled in Filament admin
+- No delete button in edit page, table actions, or bulk actions
+- Prevents accidental deletion of critical organizational data
