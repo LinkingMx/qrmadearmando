@@ -49,6 +49,16 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                                     alt="Código QR"
                                     className="w-full rounded-lg border-4 border-border shadow-lg bg-white p-3 md:p-4"
                                 />
+                                {/* Logo centrado sobre el QR */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="bg-white rounded-lg p-2 shadow-lg">
+                                        <img
+                                            src="/logo.svg"
+                                            alt="Logo"
+                                            className="w-12 h-12 md:w-16 md:h-16"
+                                        />
+                                    </div>
+                                </div>
                                 {!isActive && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
                                         <Badge variant="destructive" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
