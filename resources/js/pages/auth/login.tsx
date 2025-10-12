@@ -19,8 +19,8 @@ interface LoginProps {
 export default function Login({ status, canResetPassword }: LoginProps) {
     return (
         <AuthLayout
-            title="Iniciar sesión"
-            description="Ingrese su correo electrónico y contraseña para iniciar sesión"
+            title=""
+            description=""
         >
             <Head title="Iniciar sesión" />
 
