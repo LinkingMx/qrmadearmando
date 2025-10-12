@@ -45,11 +45,11 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                         {giftCard.qr_image_path ? (
                             <>
                                 {/* Logo arriba del QR */}
-                                <div className="flex justify-center">
+                                <div className="w-full flex justify-center">
                                     <img
                                         src="/logo.svg"
                                         alt="Logo"
-                                        className="w-16 h-16 md:w-20 md:h-20"
+                                        className="w-full h-auto"
                                     />
                                 </div>
 
