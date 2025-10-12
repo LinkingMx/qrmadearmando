@@ -108,7 +108,7 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                                 <p className="text-lg md:text-xl font-semibold text-foreground">
                                     {giftCard.user.name}
                                 </p>
-                                <Badge variant="outline" className="text-xs md:text-sm break-all">
+                                <Badge variant="default" className="text-xs md:text-sm break-all">
                                     {giftCard.user.email}
                                 </Badge>
                             </div>
