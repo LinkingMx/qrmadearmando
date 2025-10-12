@@ -34,7 +34,7 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                 {/* Grid Layout: QR Code + Info */}
                 <div className="flex flex-col gap-4 md:gap-6 md:grid md:grid-cols-[300px_1fr]">
                     {/* QR Code Section */}
-                    <div className="flex flex-col items-center gap-4 mx-auto w-full max-w-[280px] md:max-w-[300px]">
+                    <div className="flex flex-col items-center gap-8 mx-auto w-full max-w-[280px] md:max-w-[300px]">
                         {giftCard.qr_image_path ? (
                             <>
                                 {/* Logo arriba del QR */}
