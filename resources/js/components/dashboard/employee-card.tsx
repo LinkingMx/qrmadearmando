@@ -1,9 +1,8 @@
 import { EmployeeGiftCard } from '@/types/employee-dashboard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
-    CreditCardIcon,
     CalendarIcon,
     CheckCircle2Icon,
     XCircleIcon,
@@ -31,13 +30,7 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
 
     return (
         <Card className="w-full">
-            <CardHeader className="px-4 md:px-6">
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                    <CreditCardIcon className="size-5" />
-                    Mi Tarjeta QR Empleado
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6 px-4 md:px-6">
+            <CardContent className="space-y-4 md:space-y-6 px-4 md:px-6 pt-6">
                 {/* Grid Layout: QR Code + Info */}
                 <div className="flex flex-col gap-4 md:gap-6 md:grid md:grid-cols-[300px_1fr]">
                     {/* QR Code Section */}
