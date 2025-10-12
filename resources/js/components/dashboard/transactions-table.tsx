@@ -241,7 +241,7 @@ export function TransactionsTable() {
                             </p>
                             <div className="flex gap-2">
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
                                     onClick={handlePrevious}
                                     disabled={currentPage === 1 || loading}
@@ -250,7 +250,7 @@ export function TransactionsTable() {
                                     Anterior
                                 </Button>
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
                                     onClick={handleNext}
                                     disabled={currentPage === data.meta.last_page || loading}
