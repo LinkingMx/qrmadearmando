@@ -33,6 +33,23 @@ class CreateUser extends CreateRecord
     }
 
     /**
+     * Asignar rol por defecto después de crear el usuario
+     */
+    protected function afterCreate(): void
+    {
+        $user = $this->record;
+
+        // Si no tiene roles asignados, asignar el rol "Employee" por defecto
+        if ($user->roles()->count() === 0) {
+            $employeeRole = \Spatie\Permission\Models\Role::where('name', 'Employee')->first();
+
+            if ($employeeRole) {
+                $user->assignRole('Employee');
+            }
+        }
+    }
+
+    /**
      * Configurar redirección y notificación después de crear
      */
     protected function getRedirectUrl(): string

@@ -118,6 +118,16 @@ class UserResource extends Resource
                                     ->placeholder('Seleccionar sucursal')
                                     ->prefixIcon('heroicon-m-building-office-2')
                                     ->columnSpanFull(),
+                                Forms\Components\Select::make('roles')
+                                    ->label('Rol')
+                                    ->relationship('roles', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required()
+                                    ->placeholder('Seleccionar rol')
+                                    ->prefixIcon('heroicon-m-shield-check')
+                                    ->helperText('El rol por defecto para nuevos usuarios es Employee')
+                                    ->columnSpanFull(),
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Usuario Activo')
                                     ->default(true)
@@ -148,6 +158,11 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('Sin asignar'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Rol')
+                    ->badge()
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Estado')
                     ->boolean()
