@@ -54,7 +54,7 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                                     />
                                     {!isActive && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
-                                            <Badge variant="destructive" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
+                                            <Badge variant="default" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
                                                 Inactiva
                                             </Badge>
                                         </div>
