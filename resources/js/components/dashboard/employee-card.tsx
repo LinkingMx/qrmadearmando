@@ -43,30 +43,31 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                     {/* QR Code Section */}
                     <div className="flex flex-col items-center gap-4 mx-auto w-full max-w-[280px] md:max-w-[300px]">
                         {giftCard.qr_image_path ? (
-                            <div className="relative w-full">
-                                <img
-                                    src={giftCard.qr_image_path}
-                                    alt="Código QR"
-                                    className="w-full rounded-lg border-4 border-border shadow-lg bg-white p-3 md:p-4"
-                                />
-                                {/* Logo centrado sobre el QR */}
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="bg-white rounded-lg p-2 shadow-lg">
-                                        <img
-                                            src="/logo.svg"
-                                            alt="Logo"
-                                            className="w-12 h-12 md:w-16 md:h-16"
-                                        />
-                                    </div>
+                            <>
+                                {/* Logo arriba del QR */}
+                                <div className="flex justify-center">
+                                    <img
+                                        src="/logo.svg"
+                                        alt="Logo"
+                                        className="w-16 h-16 md:w-20 md:h-20"
+                                    />
                                 </div>
-                                {!isActive && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
-                                        <Badge variant="destructive" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
-                                            Inactiva
-                                        </Badge>
-                                    </div>
-                                )}
-                            </div>
+
+                                <div className="relative w-full">
+                                    <img
+                                        src={giftCard.qr_image_path}
+                                        alt="Código QR"
+                                        className="w-full rounded-lg border-4 border-border shadow-lg bg-white p-3 md:p-4"
+                                    />
+                                    {!isActive && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-lg">
+                                            <Badge variant="destructive" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
+                                                Inactiva
+                                            </Badge>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         ) : (
                             <div className="w-full aspect-square rounded-lg border-4 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center gap-4 bg-muted/20">
                                 <QrCodeIcon className="size-16 md:size-24 text-muted-foreground/50" />
