@@ -87,9 +87,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
     });
 
     test('should not show prompt if already dismissed within 14 days', async () => {
@@ -131,9 +134,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
     });
 
     test('should not show prompt if app is already installed', async () => {
@@ -189,9 +195,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
 
       await act(async () => {
         await result.current.install();
@@ -225,9 +234,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
 
       await act(async () => {
         await result.current.install();
@@ -259,9 +271,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
 
       await act(async () => {
         await result.current.install();
@@ -310,9 +325,12 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(event);
       });
 
-      await waitFor(() => {
-        expect(result.current.canInstall).toBe(true);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.canInstall).toBe(true);
+        },
+        { timeout: 500 }
+      );
 
       act(() => {
         result.current.dismiss();
@@ -356,10 +374,13 @@ describe('usePwaInstall', () => {
         window.dispatchEvent(new Event('appinstalled'));
       });
 
-      await waitFor(() => {
-        expect(result.current.isInstalled).toBe(true);
-        expect(result.current.canInstall).toBe(false);
-      });
+      await waitFor(
+        () => {
+          expect(result.current.isInstalled).toBe(true);
+          expect(result.current.canInstall).toBe(false);
+        },
+        { timeout: 500 }
+      );
     });
   });
 });

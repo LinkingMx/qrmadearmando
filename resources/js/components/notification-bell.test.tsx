@@ -34,6 +34,7 @@ describe('NotificationBell', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -253,9 +254,12 @@ describe('NotificationBell', () => {
       const button = screen.getByRole('button');
       fireEvent.click(button);
 
-      await waitFor(() => {
-        expect(mockSubscribe).toHaveBeenCalled();
-      });
+      await waitFor(
+        () => {
+          expect(mockSubscribe).toHaveBeenCalled();
+        },
+        { timeout: 500 }
+      );
     });
 
     test('should call unsubscribe when subscribed', async () => {
@@ -276,9 +280,12 @@ describe('NotificationBell', () => {
       const button = screen.getByRole('button');
       fireEvent.click(button);
 
-      await waitFor(() => {
-        expect(mockUnsubscribe).toHaveBeenCalled();
-      });
+      await waitFor(
+        () => {
+          expect(mockUnsubscribe).toHaveBeenCalled();
+        },
+        { timeout: 500 }
+      );
     });
   });
 
@@ -298,9 +305,12 @@ describe('NotificationBell', () => {
 
       render(<NotificationBell />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test error message')).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText('Test error message')).toBeInTheDocument();
+        },
+        { timeout: 500 }
+      );
     });
 
     test('should hide error toast after 5 seconds', async () => {
@@ -318,18 +328,24 @@ describe('NotificationBell', () => {
 
       render(<NotificationBell />);
 
-      await waitFor(() => {
-        expect(screen.getByText('Test error message')).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(screen.getByText('Test error message')).toBeInTheDocument();
+        },
+        { timeout: 500 }
+      );
 
       // Fast-forward 5 seconds
       vi.advanceTimersByTime(5000);
 
-      await waitFor(() => {
-        expect(
-          screen.queryByText('Test error message')
-        ).not.toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(
+            screen.queryByText('Test error message')
+          ).not.toBeInTheDocument();
+        },
+        { timeout: 500 }
+      );
     });
 
     test('should not display error toast when no error', () => {
