@@ -1,0 +1,300 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/**
+ * QR Made Armando - Filament Admin Theme
+ * Based on SELA Travel Design System
+ * Brand Colors:
+ * - Navy: #191731 (primary dark)
+ * - Cream: #EBDFC7 (primary light)
+ * - Gold: #C5A059 (accent/warning)
+ */
+
+:root {
+    /* Brand color variables */
+    --color-navy: #191731;
+    --color-cream: #EBDFC7;
+    --color-gold: #C5A059;
+    --color-navy-dark: #0D0F1A;
+    --color-navy-light: #2D2A45;
+}
+
+/* ============================================
+   DARK MODE STYLES (Default)
+   ============================================ */
+
+.dark {
+    /* Login page: Diagonal gradient */
+    .fi-simple-layout {
+        background: linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 100%);
+    }
+
+    /* Cards and sections: Semi-transparent WITHOUT blur to avoid stacking context issues */
+    /* Note: backdrop-filter creates stacking contexts that trap dropdowns/datepickers */
+    .fi-section,
+    .fi-card {
+        background-color: rgba(25, 23, 49, 0.9);
+        border: 1px solid rgba(235, 223, 199, 0.1);
+    }
+
+    /* Active navigation: 2px cream left border */
+    .fi-sidebar-item-active {
+        border-left: 2px solid var(--color-cream);
+        background-color: rgba(235, 223, 199, 0.08);
+    }
+
+    /* Sidebar navigation items hover */
+    .fi-sidebar-item:hover {
+        background-color: rgba(235, 223, 199, 0.05);
+    }
+
+    /* Table headers: Uppercase with letter-spacing */
+    .fi-ta-header-cell {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-cream);
+    }
+
+    /* Notifications: 3px cream left border */
+    .fi-notification {
+        border-left: 3px solid var(--color-cream);
+        background-color: rgba(25, 23, 49, 0.9);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Primary buttons: Smooth transition with elevated hover */
+    .fi-btn-primary {
+        background-color: var(--color-cream);
+        color: var(--color-navy);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .fi-btn-primary:hover {
+        background-color: #F5EFE6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(235, 223, 199, 0.3);
+    }
+
+    /* Focus rings with gold */
+    *:focus-visible {
+        outline: none;
+        ring: 2px;
+        ring-color: var(--color-gold);
+        ring-offset: 2px;
+        ring-offset-color: var(--color-navy);
+    }
+
+    /* Input focus states */
+    .fi-input:focus,
+    .fi-select:focus,
+    .fi-textarea:focus {
+        border-color: var(--color-gold);
+        box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+    }
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.fi-badge {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+
+/* ============================================
+   FORM SECTIONS
+   ============================================ */
+
+.dark .fi-section-header {
+    border-bottom: 1px solid rgba(235, 223, 199, 0.1);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.dark .fi-section-header-heading {
+    color: var(--color-cream);
+    font-weight: 600;
+}
+
+.dark .fi-section-header-description {
+    color: rgba(235, 223, 199, 0.7);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+.dark .fi-ta-row:hover {
+    background-color: rgba(235, 223, 199, 0.03);
+}
+
+.dark .fi-ta-row-selected {
+    background-color: rgba(197, 160, 89, 0.1);
+}
+
+/* ============================================
+   MODAL & DIALOGS
+   ============================================ */
+
+.dark .fi-modal-window {
+    background-color: var(--color-navy);
+    border: 1px solid rgba(235, 223, 199, 0.1);
+}
+
+/* ============================================
+   DROPDOWN MENUS
+   ============================================ */
+
+.dark .fi-dropdown-panel {
+    background-color: var(--color-navy);
+    border: 1px solid rgba(235, 223, 199, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.dark .fi-dropdown-item:hover {
+    background-color: rgba(235, 223, 199, 0.08);
+}
+
+/* ============================================
+   STATS WIDGETS
+   ============================================ */
+
+.dark .fi-wi-stats-overview-stat {
+    background-color: rgba(25, 23, 49, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(235, 223, 199, 0.1);
+}
+
+.dark .fi-wi-stats-overview-stat-value {
+    color: var(--color-cream);
+}
+
+/* ============================================
+   TOPBAR
+   ============================================ */
+
+.dark .fi-topbar {
+    background-color: rgba(13, 15, 26, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(235, 223, 199, 0.1);
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+
+.dark .fi-sidebar {
+    background-color: var(--color-navy-dark);
+    border-right: 1px solid rgba(235, 223, 199, 0.08);
+}
+
+.dark .fi-sidebar-group-label {
+    color: var(--color-gold);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+}
+
+/* ============================================
+   EMPTY STATES
+   ============================================ */
+
+.dark .fi-ta-empty-state {
+    color: rgba(235, 223, 199, 0.6);
+}
+
+.dark .fi-ta-empty-state-icon {
+    color: var(--color-gold);
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.dark .fi-pagination-item-active {
+    background-color: var(--color-cream);
+    color: var(--color-navy);
+}
+
+/* ============================================
+   LIGHT MODE STYLES
+   ============================================ */
+
+:root:not(.dark) {
+    /* Login page light mode */
+    .fi-simple-layout {
+        background: linear-gradient(135deg, #F8F6F1 0%, #EBDFC7 100%);
+    }
+
+    /* Cards with subtle shadow */
+    .fi-section,
+    .fi-card {
+        background-color: white;
+        border: 1px solid rgba(25, 23, 49, 0.1);
+        box-shadow: 0 1px 3px rgba(25, 23, 49, 0.05);
+    }
+
+    /* Active navigation in light mode */
+    .fi-sidebar-item-active {
+        border-left: 2px solid var(--color-navy);
+        background-color: rgba(25, 23, 49, 0.05);
+    }
+
+    /* Table headers light mode */
+    .fi-ta-header-cell {
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-navy);
+    }
+
+    /* Focus rings light mode */
+    *:focus-visible {
+        ring-color: var(--color-gold);
+        ring-offset-color: white;
+    }
+
+    /* Input focus light mode */
+    .fi-input:focus,
+    .fi-select:focus,
+    .fi-textarea:focus {
+        border-color: var(--color-gold);
+        box-shadow: 0 0 0 2px rgba(197, 160, 89, 0.2);
+    }
+}
+
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fi-section,
+.fi-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth transitions for interactive elements */
+.fi-btn,
+.fi-sidebar-item,
+.fi-dropdown-item,
+.fi-ta-row {
+    transition: all 0.15s ease-in-out;
+}

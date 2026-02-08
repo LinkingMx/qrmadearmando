@@ -20,8 +20,8 @@ class CreateGiftCard extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('QR Empleado creado exitosamente')
-            ->body("El QR Empleado '{$this->getRecord()->legacy_id}' ha sido creado correctamente.")
+            ->title('QR Code creado exitosamente')
+            ->body("El QR Code '{$this->getRecord()->legacy_id}' ha sido creado correctamente.")
             ->icon('heroicon-o-check-circle');
     }
 }
