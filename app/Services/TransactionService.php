@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\GiftCardScope;
+use App\Events\TransactionCreated;
 use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\Transaction;
@@ -17,7 +18,7 @@ class TransactionService
             throw new InvalidArgumentException('Amount must be greater than zero.');
         }
 
-        return DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore + $amount;
@@ -35,6 +36,10 @@ class TransactionService
                 'branch_id' => $branchId,
             ]);
         });
+
+        TransactionCreated::dispatch($transaction);
+
+        return $transaction;
     }
 
     public function debit(GiftCard $giftCard, float $amount, ?string $description = null, ?int $adminUserId = null, ?int $branchId = null): Transaction
@@ -50,7 +55,7 @@ class TransactionService
         // Validate gift card scope against the branch
         $this->validateScope($giftCard, $branchId);
 
-        return DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore - $amount;
@@ -72,6 +77,10 @@ class TransactionService
                 'branch_id' => $branchId,
             ]);
         });
+
+        TransactionCreated::dispatch($transaction);
+
+        return $transaction;
     }
 
     public function adjustment(GiftCard $giftCard, float $amount, ?string $description = null, ?int $adminUserId = null, ?int $branchId = null): Transaction
@@ -81,7 +90,7 @@ class TransactionService
             throw new InvalidArgumentException('Branch is required for adjustments that reduce balance.');
         }
 
-        return DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore + $amount;
@@ -103,6 +112,10 @@ class TransactionService
                 'branch_id' => $branchId,
             ]);
         });
+
+        TransactionCreated::dispatch($transaction);
+
+        return $transaction;
     }
 
     /**

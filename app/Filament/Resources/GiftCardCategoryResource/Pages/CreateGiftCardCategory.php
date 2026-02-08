@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\GiftCardCategoryResource\Pages;
 
 use App\Filament\Resources\GiftCardCategoryResource;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateGiftCardCategory extends CreateRecord
 {

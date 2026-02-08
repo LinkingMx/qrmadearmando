@@ -1,12 +1,12 @@
-import { GiftCard } from '@/types/scanner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GiftCard } from '@/types/scanner';
 import {
-    CreditCardIcon,
-    UserIcon,
     CalendarIcon,
     CheckCircle2Icon,
+    CreditCardIcon,
+    UserIcon,
     XCircleIcon,
 } from 'lucide-react';
 
@@ -26,8 +26,7 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
 
     const isActive = giftCard.status;
     const isExpired =
-        giftCard.expiry_date &&
-        new Date(giftCard.expiry_date) < new Date();
+        giftCard.expiry_date && new Date(giftCard.expiry_date) < new Date();
 
     return (
         <Card className="w-full">
@@ -39,7 +38,7 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Employee Info Section */}
-                <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50">
+                <div className="flex items-start gap-4 rounded-lg bg-muted/50 p-4">
                     <Avatar className="size-16">
                         <AvatarImage
                             src={giftCard.user?.avatar || undefined}
@@ -56,12 +55,14 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
 
                     <div className="flex-1 space-y-3">
                         <div>
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="mb-1 flex items-center gap-2">
                                 <span className="text-xl font-bold">
                                     {giftCard.legacy_id}
                                 </span>
                                 <Badge
-                                    variant={isActive ? 'default' : 'destructive'}
+                                    variant={
+                                        isActive ? 'default' : 'destructive'
+                                    }
                                     className="gap-1"
                                 >
                                     {isActive ? (
@@ -102,12 +103,12 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
                 </div>
 
                 {/* Balance Section */}
-                <div className="p-6 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-900">
-                    <div className="text-center space-y-2">
+                <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-900 dark:from-green-950/20 dark:to-emerald-950/20">
+                    <div className="space-y-2 text-center">
                         <p className="text-sm font-medium text-muted-foreground">
                             Saldo Disponible
                         </p>
-                        <p className="text-5xl font-bold text-green-600 dark:text-green-500 tabular-nums">
+                        <p className="text-5xl font-bold text-green-600 tabular-nums dark:text-green-500">
                             ${giftCard.balance.toFixed(2)}
                         </p>
                     </div>
@@ -115,7 +116,7 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
 
                 {/* QR Image Section */}
                 {giftCard.qr_image_path && (
-                    <div className="flex justify-center p-4 rounded-lg bg-muted/50">
+                    <div className="flex justify-center rounded-lg bg-muted/50 p-4">
                         <img
                             src={giftCard.qr_image_path}
                             alt="QR Code"
@@ -125,7 +126,7 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
                 )}
 
                 {/* UUID Info */}
-                <div className="text-xs text-muted-foreground text-center p-2 bg-muted/30 rounded font-mono">
+                <div className="rounded bg-muted/30 p-2 text-center font-mono text-xs text-muted-foreground">
                     UUID: {giftCard.id}
                 </div>
             </CardContent>

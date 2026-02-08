@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Exports\TransactionsExport;
 use App\Filament\Resources\TransactionResource\Pages;
-use App\Filament\Resources\TransactionResource\RelationManagers;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,7 +11,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionResource extends Resource
 {
@@ -67,7 +64,7 @@ class TransactionResource extends Resource
                     ->disabled(fn ($context) => $context === 'edit')
                     ->visible(fn ($context) => $context === 'create'),
                 Forms\Components\TextInput::make('amount')
-                    ->label(fn (Forms\Get $get) => match($get('type')) {
+                    ->label(fn (Forms\Get $get) => match ($get('type')) {
                         'credit' => 'Monto a Cargar',
                         'debit' => 'Monto a Descontar',
                         'adjustment' => 'Monto del Ajuste (+ o -)',
@@ -89,15 +86,13 @@ class TransactionResource extends Resource
                     ->relationship('branch', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(fn (Forms\Get $get) =>
+                    ->required(fn (Forms\Get $get) => $get('type') === 'debit' ||
+                        ($get('type') === 'adjustment' && $get('amount') < 0)
+                    )
+                    ->visible(fn (Forms\Get $get, $context) => $context === 'create' && (
                         $get('type') === 'debit' ||
                         ($get('type') === 'adjustment' && $get('amount') < 0)
                     )
-                    ->visible(fn (Forms\Get $get, $context) =>
-                        $context === 'create' && (
-                            $get('type') === 'debit' ||
-                            ($get('type') === 'adjustment' && $get('amount') < 0)
-                        )
                     )
                     ->helperText('Requerida para descuentos y ajustes que reducen saldo'),
                 Forms\Components\Textarea::make('description')

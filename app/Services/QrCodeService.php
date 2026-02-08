@@ -32,7 +32,7 @@ class QrCodeService
             margin: 10
         );
 
-        $writer = new SvgWriter();
+        $writer = new SvgWriter;
         $result = $writer->write($qrCode);
 
         Storage::disk('public')->put("qr-codes/{$filename}", $result->getString());
@@ -40,14 +40,14 @@ class QrCodeService
 
     private function ensureDirectoryExists(): void
     {
-        if (!Storage::disk('public')->exists('qr-codes')) {
+        if (! Storage::disk('public')->exists('qr-codes')) {
             Storage::disk('public')->makeDirectory('qr-codes');
         }
     }
 
     public function deleteQrCodes(?string $qrImagePath): void
     {
-        if (!$qrImagePath) {
+        if (! $qrImagePath) {
             return;
         }
 
@@ -57,13 +57,13 @@ class QrCodeService
         // Eliminar ambos archivos QR
         Storage::disk('public')->delete([
             "qr-codes/{$uuid}_uuid.svg",
-            "qr-codes/{$uuid}_legacy.svg"
+            "qr-codes/{$uuid}_legacy.svg",
         ]);
     }
 
     public function getQrCodeUrls(?string $qrImagePath): array
     {
-        if (!$qrImagePath) {
+        if (! $qrImagePath) {
             return ['uuid' => null, 'legacy' => null];
         }
 
@@ -71,7 +71,7 @@ class QrCodeService
 
         return [
             'uuid' => Storage::disk('public')->url("qr-codes/{$uuid}_uuid.svg"),
-            'legacy' => Storage::disk('public')->url("qr-codes/{$uuid}_legacy.svg")
+            'legacy' => Storage::disk('public')->url("qr-codes/{$uuid}_legacy.svg"),
         ];
     }
 }

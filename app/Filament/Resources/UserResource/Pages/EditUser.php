@@ -4,8 +4,8 @@ namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
 use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Hash;
 
 class EditUser extends EditRecord
@@ -21,7 +21,6 @@ class EditUser extends EditRecord
         ];
     }
 
-
     /**
      * Mutar los datos del formulario antes de guardar.
      * Esto es necesario para manejar la actualización de la contraseña.
@@ -29,7 +28,7 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Si password tiene valor, hashearlo
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             // Si está vacío, eliminarlo del array para no actualizarlo

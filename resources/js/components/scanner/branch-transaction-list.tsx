@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
-    BranchTransactionsResponse,
-    PaginationMeta,
-    Transaction,
-} from '@/types/scanner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import {
     Table,
     TableBody,
@@ -13,17 +15,21 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ReprintReceiptModal } from './reprint-receipt-modal';
+import axios from '@/lib/axios';
 import {
-    PrinterIcon,
-    ReceiptIcon,
+    BranchTransactionsResponse,
+    PaginationMeta,
+    Transaction,
+} from '@/types/scanner';
+import {
     AlertCircleIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    PrinterIcon,
+    ReceiptIcon,
 } from 'lucide-react';
-import axios from '@/lib/axios';
+import { useEffect, useState } from 'react';
+import { ReprintReceiptModal } from './reprint-receipt-modal';
 
 interface BranchTransactionListProps {
     branchId: number;
@@ -48,7 +54,7 @@ export function BranchTransactionList({
 
         try {
             const response = await axios.get<BranchTransactionsResponse>(
-                `/api/scanner/branch-transactions?page=${page}`
+                `/api/scanner/branch-transactions?page=${page}`,
             );
             setTransactions(response.data.data);
             setMeta(response.data.meta);
@@ -104,7 +110,7 @@ export function BranchTransactionList({
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div
                                 key={i}
-                                className="h-12 bg-muted/50 rounded animate-pulse"
+                                className="h-12 animate-pulse rounded bg-muted/50"
                             />
                         ))}
                     </div>
@@ -156,8 +162,8 @@ export function BranchTransactionList({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-center py-12">
-                        <ReceiptIcon className="size-16 mx-auto mb-4 text-muted-foreground/50" />
+                    <div className="py-12 text-center">
+                        <ReceiptIcon className="mx-auto mb-4 size-16 text-muted-foreground/50" />
                         <p className="text-muted-foreground">
                             No se han registrado transacciones en esta sucursal
                         </p>
@@ -181,16 +187,20 @@ export function BranchTransactionList({
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {/* Desktop Table */}
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="hidden overflow-x-auto md:block">
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[140px]">Folio</TableHead>
+                                    <TableHead className="w-[140px]">
+                                        Folio
+                                    </TableHead>
                                     <TableHead className="w-[140px]">
                                         Fecha/Hora
                                     </TableHead>
                                     <TableHead>Empleado</TableHead>
-                                    <TableHead className="w-[120px]">Tarjeta</TableHead>
+                                    <TableHead className="w-[120px]">
+                                        Tarjeta
+                                    </TableHead>
                                     <TableHead className="w-[100px] text-right">
                                         Monto
                                     </TableHead>
@@ -221,7 +231,9 @@ export function BranchTransactionList({
                                             <Button
                                                 variant="default"
                                                 size="sm"
-                                                onClick={() => handleReprint(tx)}
+                                                onClick={() =>
+                                                    handleReprint(tx)
+                                                }
                                             >
                                                 <PrinterIcon className="mr-2 h-4 w-4" />
                                                 Reimprimir
@@ -234,24 +246,25 @@ export function BranchTransactionList({
                     </div>
 
                     {/* Mobile Cards */}
-                    <div className="md:hidden space-y-3">
+                    <div className="space-y-3 md:hidden">
                         {transactions.map((tx) => (
                             <Card key={tx.id}>
-                                <CardContent className="p-4 space-y-3">
-                                    <div className="flex justify-between items-start">
+                                <CardContent className="space-y-3 p-4">
+                                    <div className="flex items-start justify-between">
                                         <div className="space-y-1">
-                                            <p className="text-xs text-muted-foreground font-mono">
+                                            <p className="font-mono text-xs text-muted-foreground">
                                                 {tx.folio}
                                             </p>
                                             <p className="font-medium">
-                                                {tx.gift_card.user?.name || 'N/A'}
+                                                {tx.gift_card.user?.name ||
+                                                    'N/A'}
                                             </p>
-                                            <p className="text-sm font-mono text-muted-foreground">
+                                            <p className="font-mono text-sm text-muted-foreground">
                                                 {tx.gift_card.legacy_id}
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-lg text-destructive">
+                                            <p className="text-lg font-bold text-destructive">
                                                 -${tx.amount.toFixed(2)}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
@@ -275,12 +288,12 @@ export function BranchTransactionList({
 
                     {/* Pagination */}
                     {meta && meta.last_page > 1 && (
-                        <div className="flex items-center justify-between pt-4 border-t">
+                        <div className="flex items-center justify-between border-t pt-4">
                             <div className="text-sm text-muted-foreground">
                                 {meta.from && meta.to ? (
                                     <>
-                                        Mostrando {meta.from} a {meta.to} de {meta.total}{' '}
-                                        transacciones
+                                        Mostrando {meta.from} a {meta.to} de{' '}
+                                        {meta.total} transacciones
                                     </>
                                 ) : (
                                     <>0 transacciones</>
@@ -290,14 +303,17 @@ export function BranchTransactionList({
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={meta.current_page === 1 || isLoading}
+                                    disabled={
+                                        meta.current_page === 1 || isLoading
+                                    }
                                     onClick={handlePreviousPage}
                                 >
-                                    <ChevronLeftIcon className="h-4 w-4 mr-1" />
+                                    <ChevronLeftIcon className="mr-1 h-4 w-4" />
                                     Anterior
                                 </Button>
                                 <div className="flex items-center px-3 text-sm">
-                                    Página {meta.current_page} de {meta.last_page}
+                                    Página {meta.current_page} de{' '}
+                                    {meta.last_page}
                                 </div>
                                 <Button
                                     variant="outline"
@@ -309,7 +325,7 @@ export function BranchTransactionList({
                                     onClick={handleNextPage}
                                 >
                                     Siguiente
-                                    <ChevronRightIcon className="h-4 w-4 ml-1" />
+                                    <ChevronRightIcon className="ml-1 h-4 w-4" />
                                 </Button>
                             </div>
                         </div>

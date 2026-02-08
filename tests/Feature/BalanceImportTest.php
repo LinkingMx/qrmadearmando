@@ -2,6 +2,8 @@
 
 use App\Imports\BalanceImport;
 use App\Models\Branch;
+use App\Models\Brand;
+use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,23 +18,38 @@ beforeEach(function () {
     // Create admin user
     $this->admin = User::factory()->create();
 
-    // Create branches
-    $this->branch = Branch::factory()->create(['name' => 'Sucursal Test']);
+    // Create shared hierarchy so gift cards and branch share the same chain
+    $this->chain = Chain::firstOrCreate(['name' => 'Test Chain']);
+    $this->brand = Brand::firstOrCreate(
+        ['chain_id' => $this->chain->id, 'name' => 'Test Brand'],
+    );
 
-    // Create gift cards
+    // Create branches
+    $this->branch = Branch::factory()->create([
+        'name' => 'Sucursal Test',
+        'brand_id' => $this->brand->id,
+    ]);
+
+    // Create gift cards with same chain
     $this->giftCard1 = GiftCard::factory()->create([
         'status' => true,
         'balance' => 1000,
+        'scope' => 'chain',
+        'chain_id' => $this->chain->id,
     ]);
 
     $this->giftCard2 = GiftCard::factory()->create([
         'status' => true,
         'balance' => 500,
+        'scope' => 'chain',
+        'chain_id' => $this->chain->id,
     ]);
 
     $this->giftCard3 = GiftCard::factory()->create([
         'status' => false, // Inactive
         'balance' => 100,
+        'scope' => 'chain',
+        'chain_id' => $this->chain->id,
     ]);
 });
 
@@ -287,8 +304,8 @@ test('accepts amounts with explicit plus sign', function () {
 // Helper function to create test Excel files
 function createTestExcel(array $data): string
 {
-    $filePath = storage_path('app/public/test_balance_import_' . uniqid() . '.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $filePath = storage_path('app/public/test_balance_import_'.uniqid().'.xlsx');
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {

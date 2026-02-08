@@ -53,10 +53,11 @@ export default function TwoFactor({
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <Badge variant="default">Habilitada</Badge>
                             <p className="text-muted-foreground">
-                                Con la autenticación de dos factores habilitada, se te
-                                solicitará un PIN seguro y aleatorio durante el inicio
-                                de sesión, que puedes obtener desde la aplicación
-                                compatible con TOTP en tu teléfono.
+                                Con la autenticación de dos factores habilitada,
+                                se te solicitará un PIN seguro y aleatorio
+                                durante el inicio de sesión, que puedes obtener
+                                desde la aplicación compatible con TOTP en tu
+                                teléfono.
                             </p>
 
                             <TwoFactorRecoveryCodes
@@ -83,10 +84,11 @@ export default function TwoFactor({
                         <div className="flex flex-col items-start justify-start space-y-4">
                             <Badge variant="destructive">Deshabilitada</Badge>
                             <p className="text-muted-foreground">
-                                Cuando habilites la autenticación de dos factores, se te
-                                solicitará un PIN seguro durante el inicio de sesión.
-                                Este PIN puede obtenerse desde una aplicación compatible
-                                con TOTP en tu teléfono.
+                                Cuando habilites la autenticación de dos
+                                factores, se te solicitará un PIN seguro durante
+                                el inicio de sesión. Este PIN puede obtenerse
+                                desde una aplicación compatible con TOTP en tu
+                                teléfono.
                             </p>
 
                             <div>

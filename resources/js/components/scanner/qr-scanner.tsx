@@ -1,11 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeResult } from 'html5-qrcode';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CameraIcon, SearchIcon, AlertCircleIcon, InfoIcon } from 'lucide-react';
+import {
+    Html5Qrcode,
+    Html5QrcodeCameraScanConfig,
+    Html5QrcodeResult,
+} from 'html5-qrcode';
+import {
+    AlertCircleIcon,
+    CameraIcon,
+    InfoIcon,
+    SearchIcon,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface QRScannerProps {
     onScan: (result: string) => void;
@@ -26,8 +41,10 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
     useEffect(() => {
         const checkCameraAvailability = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                stream.getTracks().forEach(track => track.stop());
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                });
+                stream.getTracks().forEach((track) => track.stop());
                 setHasCamera(true);
             } catch (err) {
                 setHasCamera(false);
@@ -93,7 +110,10 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             html5QrCodeRef.current = new Html5Qrcode(elementId);
             isInitializedRef.current = true;
 
-            const qrCodeSuccessCallback = (decodedText: string, result: Html5QrcodeResult) => {
+            const qrCodeSuccessCallback = (
+                decodedText: string,
+                result: Html5QrcodeResult,
+            ) => {
                 console.log('QR scanned successfully:', decodedText);
                 stopScanning();
                 onScan(decodedText);
@@ -109,9 +129,9 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             // Try different camera configurations
             const cameraConfigs = [
                 { facingMode: 'environment' }, // Back camera (preferred)
-                { facingMode: 'user' },        // Front camera
-                'environment',                  // String format back camera
-                'user'                         // String format front camera
+                { facingMode: 'user' }, // Front camera
+                'environment', // String format back camera
+                'user', // String format front camera
             ];
 
             let cameraStarted = false;
@@ -121,12 +141,16 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                         cameraConfig,
                         config,
                         qrCodeSuccessCallback,
-                        undefined
+                        undefined,
                     );
                     cameraStarted = true;
                     break;
                 } catch (cameraErr) {
-                    console.warn('Failed to start camera with config:', cameraConfig, cameraErr);
+                    console.warn(
+                        'Failed to start camera with config:',
+                        cameraConfig,
+                        cameraErr,
+                    );
                     continue;
                 }
             }
@@ -144,17 +168,35 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             if (err.message === 'CAMERA_NOT_AVAILABLE') {
                 errorMsg = 'No se detectó ninguna cámara en este dispositivo.';
             } else if (err.message === 'CAMERA_START_FAILED') {
-                errorMsg = 'No se pudo iniciar la cámara. Verifique que esté disponible y no esté siendo usada por otra aplicación.';
-            } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                errorMsg = 'Permisos de cámara denegados. Por favor permita el acceso a la cámara en su navegador.';
-            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                errorMsg = 'No se encontró ninguna cámara disponible en este dispositivo.';
-            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-                errorMsg = 'La cámara está siendo usada por otra aplicación. Por favor cierre otras aplicaciones que usen la cámara.';
-            } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
-                errorMsg = 'La configuración de cámara solicitada no es compatible con este dispositivo.';
+                errorMsg =
+                    'No se pudo iniciar la cámara. Verifique que esté disponible y no esté siendo usada por otra aplicación.';
+            } else if (
+                err.name === 'NotAllowedError' ||
+                err.name === 'PermissionDeniedError'
+            ) {
+                errorMsg =
+                    'Permisos de cámara denegados. Por favor permita el acceso a la cámara en su navegador.';
+            } else if (
+                err.name === 'NotFoundError' ||
+                err.name === 'DevicesNotFoundError'
+            ) {
+                errorMsg =
+                    'No se encontró ninguna cámara disponible en este dispositivo.';
+            } else if (
+                err.name === 'NotReadableError' ||
+                err.name === 'TrackStartError'
+            ) {
+                errorMsg =
+                    'La cámara está siendo usada por otra aplicación. Por favor cierre otras aplicaciones que usen la cámara.';
+            } else if (
+                err.name === 'OverconstrainedError' ||
+                err.name === 'ConstraintNotSatisfiedError'
+            ) {
+                errorMsg =
+                    'La configuración de cámara solicitada no es compatible con este dispositivo.';
             } else if (err.name === 'NotSupportedError') {
-                errorMsg = 'Este navegador no soporta el acceso a la cámara. Pruebe con Chrome, Firefox o Safari.';
+                errorMsg =
+                    'Este navegador no soporta el acceso a la cámara. Pruebe con Chrome, Firefox o Safari.';
             } else if (err.name === 'AbortError') {
                 errorMsg = 'El acceso a la cámara fue interrumpido.';
             }
@@ -181,7 +223,8 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                     Escanear QR Empleado
                 </CardTitle>
                 <CardDescription>
-                    Active la cámara para escanear el código QR o busque manualmente
+                    Active la cámara para escanear el código QR o busque
+                    manualmente
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -197,15 +240,18 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                     <div
                         id="qr-reader"
                         ref={qrReaderRef}
-                        className="w-full rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 min-h-[300px] flex items-center justify-center bg-muted/20"
+                        className="flex min-h-[300px] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/20"
                     >
                         {!isScanning && (
-                            <div className="text-center p-8">
-                                <CameraIcon className="size-16 mx-auto mb-4 text-muted-foreground/50" />
-                                <p className="text-muted-foreground text-sm">
-                                    {hasCamera === null && 'Verificando disponibilidad de cámara...'}
-                                    {hasCamera === true && 'Presione el botón para activar la cámara'}
-                                    {hasCamera === false && 'No se detectó cámara disponible'}
+                            <div className="p-8 text-center">
+                                <CameraIcon className="mx-auto mb-4 size-16 text-muted-foreground/50" />
+                                <p className="text-sm text-muted-foreground">
+                                    {hasCamera === null &&
+                                        'Verificando disponibilidad de cámara...'}
+                                    {hasCamera === true &&
+                                        'Presione el botón para activar la cámara'}
+                                    {hasCamera === false &&
+                                        'No se detectó cámara disponible'}
                                 </p>
                             </div>
                         )}
@@ -213,13 +259,15 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
 
                     {/* Camera status indicator */}
                     {hasCamera !== null && (
-                        <Alert variant={hasCamera ? "default" : "destructive"} className="mb-4">
+                        <Alert
+                            variant={hasCamera ? 'default' : 'destructive'}
+                            className="mb-4"
+                        >
                             <InfoIcon />
                             <AlertDescription>
                                 {hasCamera
                                     ? 'Cámara detectada. Puede activar el escáner.'
-                                    : 'No se detectó cámara. Use la búsqueda manual a continuación.'
-                                }
+                                    : 'No se detectó cámara. Use la búsqueda manual a continuación.'}
                             </AlertDescription>
                         </Alert>
                     )}
@@ -233,7 +281,9 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                                 disabled={hasCamera === false}
                             >
                                 <CameraIcon className="mr-2" />
-                                {hasCamera === false ? 'Cámara No Disponible' : 'Activar Cámara'}
+                                {hasCamera === false
+                                    ? 'Cámara No Disponible'
+                                    : 'Activar Cámara'}
                             </Button>
                         ) : (
                             <Button
@@ -262,7 +312,9 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
 
                 <form onSubmit={handleManualSearch} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="manual-search">Buscar por ID o UUID</Label>
+                        <Label htmlFor="manual-search">
+                            Buscar por ID o UUID
+                        </Label>
                         <Input
                             id="manual-search"
                             type="text"

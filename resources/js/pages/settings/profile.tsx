@@ -70,7 +70,9 @@ export default function Profile({
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="email">Correo electrónico</Label>
+                                    <Label htmlFor="email">
+                                        Correo electrónico
+                                    </Label>
 
                                     <Input
                                         id="email"
@@ -93,22 +95,24 @@ export default function Profile({
                                     auth.user.email_verified_at === null && (
                                         <div>
                                             <p className="-mt-4 text-sm text-muted-foreground">
-                                                Tu correo electrónico no está verificado.{' '}
+                                                Tu correo electrónico no está
+                                                verificado.{' '}
                                                 <Link
                                                     href={send()}
                                                     as="button"
                                                     className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
                                                 >
-                                                    Haz clic aquí para reenviar el
-                                                    correo de verificación.
+                                                    Haz clic aquí para reenviar
+                                                    el correo de verificación.
                                                 </Link>
                                             </p>
 
                                             {status ===
                                                 'verification-link-sent' && (
                                                 <div className="mt-2 text-sm font-medium text-green-600">
-                                                    Se ha enviado un nuevo enlace de verificación a
-                                                    tu correo electrónico.
+                                                    Se ha enviado un nuevo
+                                                    enlace de verificación a tu
+                                                    correo electrónico.
                                                 </div>
                                             )}
                                         </div>

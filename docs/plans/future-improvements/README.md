@@ -24,6 +24,12 @@ Cada mejora debe documentarse en un archivo `.md` independiente con:
 
 ## 📑 Mejoras Documentadas
 
+### [Filament v4 Migration](./filament-v4-migration.md)
+- **Status:** 📋 Planificado
+- **Priority:** 🔴 Alta
+- **Impact:** 🚀 Rendimiento 2-3x, MFA nativo, SPA mode, nuevos componentes
+- **Description:** Plan de migracion seguro de Filament v3.3.41 a v4.x. Incluye upgrade de plugins (shield rewrite, logger replacement), 7 fases con rollback plan, checklist de verificacion para 7 resources, 2 relation managers y 3 vistas custom.
+
 ### [Optimized Agent Teams](./optimized-agent-teams.md)
 - **Status:** 📋 Planificado
 - **Priority:** 🟡 Medium

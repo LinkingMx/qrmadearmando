@@ -2,13 +2,13 @@
 
 use App\Exports\UsersTemplateExport;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
+
     return redirect()->route('login');
 })->name('home');
 
@@ -17,6 +17,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard');
 
     Route::get('api/my-transactions', [\App\Http\Controllers\EmployeeDashboardController::class, 'transactions']);
+
+    // Push subscription routes
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('api/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'store']);
+        Route::delete('api/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy']);
+    });
 
     // Scanner routes
     Route::middleware('has.branch')->group(function () {
@@ -33,35 +39,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Download routes for imports
 Route::get('/download/users-template', function () {
-    return Excel::download(new UsersTemplateExport(), 'plantilla_usuarios.xlsx');
+    return Excel::download(new UsersTemplateExport, 'plantilla_usuarios.xlsx');
 })->name('download.users-template')->middleware('auth');
 
 Route::get('/download/import-errors/{file}', function ($file) {
-    $path = storage_path('app/public/temp/' . $file);
-    if (!file_exists($path)) {
+    $path = storage_path('app/public/temp/'.$file);
+    if (! file_exists($path)) {
         abort(404);
     }
+
     return response()->download($path)->deleteFileAfterSend();
 })->name('download.import-errors')->middleware('auth');
 
 Route::get('/download/import-passwords/{file}', function ($file) {
-    $path = storage_path('app/public/temp/' . $file);
-    if (!file_exists($path)) {
+    $path = storage_path('app/public/temp/'.$file);
+    if (! file_exists($path)) {
         abort(404);
     }
+
     return response()->download($path)->deleteFileAfterSend();
 })->name('download.import-passwords')->middleware('auth');
 
 // Balance import routes
 Route::get('/download/balance-template', function () {
-    return Excel::download(new \App\Exports\BalanceTemplateExport(), 'plantilla_carga_saldos.xlsx');
+    return Excel::download(new \App\Exports\BalanceTemplateExport, 'plantilla_carga_saldos.xlsx');
 })->name('download.balance-template')->middleware('auth');
 
 Route::get('/download/balance-report/{file}', function ($file) {
-    $path = storage_path('app/public/temp/' . $file);
-    if (!file_exists($path)) {
+    $path = storage_path('app/public/temp/'.$file);
+    if (! file_exists($path)) {
         abort(404);
     }
+
     return response()->download($path)->deleteFileAfterSend();
 })->name('download.balance-report')->middleware('auth');
 

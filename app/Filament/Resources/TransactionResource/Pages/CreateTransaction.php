@@ -5,7 +5,6 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 use App\Filament\Resources\TransactionResource;
 use App\Models\GiftCard;
 use App\Services\TransactionService;
-use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -19,7 +18,7 @@ class CreateTransaction extends CreateRecord
         $transactionService = app(TransactionService::class);
 
         try {
-            $transaction = match($data['type']) {
+            $transaction = match ($data['type']) {
                 'credit' => $transactionService->credit(
                     $giftCard,
                     $data['amount'],
@@ -62,6 +61,7 @@ class CreateTransaction extends CreateRecord
                 ->send();
 
             $this->halt();
+
             return [];
         }
     }

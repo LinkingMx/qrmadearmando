@@ -1,5 +1,5 @@
-import axios from 'axios';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 // Set base configuration
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -8,12 +8,13 @@ axios.defaults.withCredentials = true;
 // Get CSRF token from meta tag or cookie
 const token = document.head.querySelector('meta[name="csrf-token"]');
 if (token) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content');
+    axios.defaults.headers.common['X-CSRF-TOKEN'] =
+        token.getAttribute('content');
 } else {
     // Fallback: Get from cookie
     const csrfCookie = document.cookie
         .split(';')
-        .find(row => row.trim().startsWith('XSRF-TOKEN='));
+        .find((row) => row.trim().startsWith('XSRF-TOKEN='));
     if (csrfCookie) {
         const csrfToken = decodeURIComponent(csrfCookie.split('=')[1]);
         axios.defaults.headers.common['X-XSRF-TOKEN'] = csrfToken;
@@ -26,7 +27,7 @@ axios.interceptors.request.use(
         // Ensure we have the latest CSRF token from cookie
         const csrfCookie = document.cookie
             .split(';')
-            .find(row => row.trim().startsWith('XSRF-TOKEN='));
+            .find((row) => row.trim().startsWith('XSRF-TOKEN='));
         if (csrfCookie) {
             const csrfToken = decodeURIComponent(csrfCookie.split('=')[1]);
             config.headers['X-XSRF-TOKEN'] = csrfToken;
@@ -35,7 +36,7 @@ axios.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error);
-    }
+    },
 );
 
 // Response interceptor
@@ -63,7 +64,7 @@ axios.interceptors.response.use(
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 
 export default axios;

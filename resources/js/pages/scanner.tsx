@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
-import { GiftCardInfo } from '@/components/scanner/gift-card-info';
-import { DebitForm } from '@/components/scanner/debit-form';
-import { ReceiptModal } from '@/components/scanner/receipt-modal';
 import { BranchTransactionList } from '@/components/scanner/branch-transaction-list';
-import { Button } from '@/components/ui/button';
+import { DebitForm } from '@/components/scanner/debit-form';
+import { GiftCardInfo } from '@/components/scanner/gift-card-info';
+import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
+import { ReceiptModal } from '@/components/scanner/receipt-modal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
+import { BreadcrumbItem } from '@/types';
 import {
-    GiftCard,
     DebitFormData,
-    Transaction,
+    GiftCard,
     ScannerMode,
     ScannerPageProps,
+    Transaction,
 } from '@/types/scanner';
-import { BreadcrumbItem } from '@/types';
-import { ScanIcon, AlertCircleIcon, ArrowLeftIcon } from 'lucide-react';
-import axios from '@/lib/axios';
+import { Head } from '@inertiajs/react';
+import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -47,7 +47,8 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
             setMode('viewing');
         } catch (err: any) {
             const errorMsg =
-                err.response?.data?.error || 'Error al buscar el QR. Intente nuevamente.';
+                err.response?.data?.error ||
+                'Error al buscar el QR. Intente nuevamente.';
             setError(errorMsg);
         } finally {
             setIsProcessing(false);
@@ -104,13 +105,15 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
+                        <h1 className="flex items-center gap-3 text-3xl font-bold">
                             <ScanIcon className="size-8" />
                             Scanner QR Empleados
                         </h1>
                         <p className="text-muted-foreground">
-                            Sucursal: <span className="font-semibold">{branch.name}</span> •
-                            Usuario: <span className="font-semibold">{user.name}</span>
+                            Sucursal:{' '}
+                            <span className="font-semibold">{branch.name}</span>{' '}
+                            • Usuario:{' '}
+                            <span className="font-semibold">{user.name}</span>
                         </p>
                     </div>
                 </div>

@@ -81,7 +81,7 @@ class GiftCardResource extends Resource
                                     ->helperText('Se generará automáticamente si se deja vacío')
                                     ->maxLength(255),
                             ]),
-                        Forms\Components\Grid::make(2)
+                        Forms\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\Select::make('user_id')
                                     ->label('Usuario Asignado')
@@ -90,6 +90,12 @@ class GiftCardResource extends Resource
                                     ->preload()
                                     ->placeholder('Seleccionar usuario')
                                     ->prefixIcon('heroicon-m-user'),
+                                Forms\Components\TextInput::make('balance')
+                                    ->label('Saldo Inicial')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->prefix('$')
+                                    ->required(),
                                 Forms\Components\DatePicker::make('expiry_date')
                                     ->label('Fecha de Expiración')
                                     ->placeholder('Seleccionar fecha')

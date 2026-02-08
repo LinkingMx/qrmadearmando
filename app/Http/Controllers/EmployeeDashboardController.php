@@ -18,18 +18,18 @@ class EmployeeDashboardController extends Controller
             ->with('user')
             ->first();
 
-        if (!$giftCard) {
+        if (! $giftCard) {
             return Inertia::render('dashboard', [
                 'giftCard' => null,
-                'error' => 'No tienes una tarjeta QR asignada.'
+                'error' => 'No tienes una tarjeta QR asignada.',
             ]);
         }
 
         // Generate QR image path - prefer UUID QR
         $qrImagePath = null;
         if ($giftCard->qr_image_path) {
-            $uuidQrPath = 'qr-codes/' . $giftCard->id . '_uuid.svg';
-            $legacyQrPath = 'qr-codes/' . $giftCard->id . '_legacy.svg';
+            $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
+            $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
 
             if (Storage::disk('public')->exists($uuidQrPath)) {
                 $qrImagePath = Storage::url($uuidQrPath);
@@ -64,9 +64,9 @@ class EmployeeDashboardController extends Controller
     {
         $giftCard = GiftCard::where('user_id', auth()->id())->first();
 
-        if (!$giftCard) {
+        if (! $giftCard) {
             return response()->json([
-                'error' => 'No tienes una tarjeta QR asignada.'
+                'error' => 'No tienes una tarjeta QR asignada.',
             ], 404);
         }
 
@@ -104,7 +104,7 @@ class EmployeeDashboardController extends Controller
      */
     private function getTypeLabel(string $type): string
     {
-        return match($type) {
+        return match ($type) {
             'credit' => 'Carga',
             'debit' => 'Descuento',
             'adjustment' => 'Ajuste',

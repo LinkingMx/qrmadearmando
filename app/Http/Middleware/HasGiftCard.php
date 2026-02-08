@@ -19,7 +19,7 @@ class HasGiftCard
             // Check if user has a gift card assigned
             $hasGiftCard = \App\Models\GiftCard::where('user_id', auth()->id())->exists();
 
-            if (!$hasGiftCard) {
+            if (! $hasGiftCard) {
                 return redirect()->route('dashboard')
                     ->with('error', 'No tienes una tarjeta QR asignada. Contacta al administrador.');
             }

@@ -5,19 +5,20 @@ namespace App\Exports;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithEvents
+class UsersExport implements FromCollection, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     protected ?Collection $users = null;
+
     protected array $filters;
 
     public function __construct(array $filters = [])
@@ -31,11 +32,11 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             ->withCount('giftCards');
 
         // Apply filters
-        if (!empty($this->filters['branch_id'])) {
+        if (! empty($this->filters['branch_id'])) {
             $query->where('branch_id', $this->filters['branch_id']);
         }
 
-        if (!empty($this->filters['email_verified'])) {
+        if (! empty($this->filters['email_verified'])) {
             if ($this->filters['email_verified'] === 'yes') {
                 $query->whereNotNull('email_verified_at');
             } elseif ($this->filters['email_verified'] === 'no') {
@@ -43,7 +44,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             }
         }
 
-        if (!empty($this->filters['two_factor'])) {
+        if (! empty($this->filters['two_factor'])) {
             if ($this->filters['two_factor'] === 'yes') {
                 $query->whereNotNull('two_factor_confirmed_at');
             } elseif ($this->filters['two_factor'] === 'no') {
@@ -51,7 +52,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             }
         }
 
-        if (!empty($this->filters['has_gift_cards'])) {
+        if (! empty($this->filters['has_gift_cards'])) {
             $query->has('giftCards');
         }
 
@@ -113,7 +114,7 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 $lastRow = $sheet->getHighestRow();
@@ -215,8 +216,12 @@ class UsersExport implements FromCollection, WithHeadings, WithMapping, WithStyl
                     $verifiedCount = 0;
                     $twoFactorCount = 0;
                     foreach ($this->users as $user) {
-                        if ($user->email_verified_at) $verifiedCount++;
-                        if ($user->two_factor_confirmed_at) $twoFactorCount++;
+                        if ($user->email_verified_at) {
+                            $verifiedCount++;
+                        }
+                        if ($user->two_factor_confirmed_at) {
+                            $twoFactorCount++;
+                        }
                     }
 
                     $sheet->setCellValue("F{$summaryRow}", 'Verificados:');

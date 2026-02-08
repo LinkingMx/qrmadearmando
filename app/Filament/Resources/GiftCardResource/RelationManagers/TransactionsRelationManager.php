@@ -8,8 +8,6 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionsRelationManager extends RelationManager
@@ -143,7 +141,7 @@ class TransactionsRelationManager extends RelationManager
                     ])
                     ->action(function (array $data) {
                         $giftCard = $this->getOwnerRecord();
-                        $filename = 'transacciones_' . $giftCard->legacy_id . '_' . now()->format('Y-m-d') . '.xlsx';
+                        $filename = 'transacciones_'.$giftCard->legacy_id.'_'.now()->format('Y-m-d').'.xlsx';
 
                         return Excel::download(
                             new TransactionsExport($giftCard, $data),

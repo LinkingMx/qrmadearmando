@@ -65,12 +65,13 @@ class ListTransactions extends ListRecords
                 ->action(function (array $data) {
                     $branch = \App\Models\Branch::find($data['branch_id']);
 
-                    if (!$branch) {
+                    if (! $branch) {
                         \Filament\Notifications\Notification::make()
                             ->danger()
                             ->title('Error')
                             ->body('Sucursal no encontrada')
                             ->send();
+
                         return;
                     }
 
@@ -123,13 +124,13 @@ class ListTransactions extends ListRecords
                 ])
                 ->action(function (array $data) {
                     $giftCard = null;
-                    if (!empty($data['gift_card_id'])) {
+                    if (! empty($data['gift_card_id'])) {
                         $giftCard = \App\Models\GiftCard::find($data['gift_card_id']);
                     }
 
-                    $filename = 'transacciones_' .
-                        ($giftCard ? $giftCard->legacy_id . '_' : '') .
-                        now()->format('Y-m-d') . '.xlsx';
+                    $filename = 'transacciones_'.
+                        ($giftCard ? $giftCard->legacy_id.'_' : '').
+                        now()->format('Y-m-d').'.xlsx';
 
                     return Excel::download(
                         new TransactionsExport($giftCard, $data),

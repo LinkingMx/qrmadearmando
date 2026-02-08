@@ -19,9 +19,8 @@
 @theme {
     /* Font: Open Sans (professional and readable) */
     --font-sans:
-        'Open Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Open Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -29,8 +28,8 @@
 
     /* Brand color utilities */
     --color-navy: #191731;
-    --color-cream: #EBDFC7;
-    --color-gold: #C5A059;
+    --color-cream: #ebdfc7;
+    --color-gold: #c5a059;
 
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -81,63 +80,63 @@
    ============================================ */
 :root {
     /* Main backgrounds - soft cream tones */
-    --background: #F8F6F1;
+    --background: #f8f6f1;
     --foreground: #191731;
 
     /* Cards */
-    --card: #FFFFFF;
+    --card: #ffffff;
     --card-foreground: #191731;
 
     /* Popovers */
-    --popover: #FFFFFF;
+    --popover: #ffffff;
     --popover-foreground: #191731;
 
     /* Primary - Navy based for light mode */
-    --primary: #3D3870;
-    --primary-foreground: #FDFCFA;
+    --primary: #3d3870;
+    --primary-foreground: #fdfcfa;
 
     /* Secondary - Soft cream */
-    --secondary: #EFE9DD;
+    --secondary: #efe9dd;
     --secondary-foreground: #191731;
 
     /* Muted */
-    --muted: #F5EFE6;
-    --muted-foreground: #6B6660;
+    --muted: #f5efe6;
+    --muted-foreground: #6b6660;
 
     /* Accent */
-    --accent: #EFE9DD;
+    --accent: #efe9dd;
     --accent-foreground: #191731;
 
     /* Destructive */
-    --destructive: #DC2626;
-    --destructive-foreground: #FDFCFA;
+    --destructive: #dc2626;
+    --destructive-foreground: #fdfcfa;
 
     /* Borders and inputs */
-    --border: #E8E6E3;
-    --input: #E8E6E3;
+    --border: #e8e6e3;
+    --input: #e8e6e3;
 
     /* Ring - Gold for focus states */
-    --ring: #C5A059;
+    --ring: #c5a059;
 
     /* Charts - Brand color based */
     --chart-1: #191731;
-    --chart-2: #3D3870;
-    --chart-3: #C5A059;
-    --chart-4: #EBDFC7;
-    --chart-5: #6B6660;
+    --chart-2: #3d3870;
+    --chart-3: #c5a059;
+    --chart-4: #ebdfc7;
+    --chart-5: #6b6660;
 
     /* Radius */
     --radius: 0.625rem;
 
     /* Sidebar - Light cream */
-    --sidebar: #F5EFE6;
+    --sidebar: #f5efe6;
     --sidebar-foreground: #191731;
     --sidebar-primary: #191731;
-    --sidebar-primary-foreground: #FDFCFA;
-    --sidebar-accent: #EFE9DD;
+    --sidebar-primary-foreground: #fdfcfa;
+    --sidebar-accent: #efe9dd;
     --sidebar-accent-foreground: #191731;
-    --sidebar-border: #E8E6E3;
-    --sidebar-ring: #C5A059;
+    --sidebar-border: #e8e6e3;
+    --sidebar-ring: #c5a059;
 }
 
 /* ============================================
@@ -145,60 +144,60 @@
    ============================================ */
 .dark {
     /* Main backgrounds - deep navy */
-    --background: #0D0F1A;
-    --foreground: #EBDFC7;
+    --background: #0d0f1a;
+    --foreground: #ebdfc7;
 
     /* Cards - Navy */
     --card: #191731;
-    --card-foreground: #EBDFC7;
+    --card-foreground: #ebdfc7;
 
     /* Popovers */
     --popover: #191731;
-    --popover-foreground: #EBDFC7;
+    --popover-foreground: #ebdfc7;
 
     /* Primary - Cream for dark mode */
-    --primary: #EBDFC7;
+    --primary: #ebdfc7;
     --primary-foreground: #191731;
 
     /* Secondary */
-    --secondary: #2A2650;
-    --secondary-foreground: #EBDFC7;
+    --secondary: #2a2650;
+    --secondary-foreground: #ebdfc7;
 
     /* Muted */
-    --muted: #2A2650;
-    --muted-foreground: #9E9A94;
+    --muted: #2a2650;
+    --muted-foreground: #9e9a94;
 
     /* Accent */
-    --accent: #2A2650;
-    --accent-foreground: #EBDFC7;
+    --accent: #2a2650;
+    --accent-foreground: #ebdfc7;
 
     /* Destructive */
-    --destructive: #7F1D1D;
-    --destructive-foreground: #FCA5A5;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #fca5a5;
 
     /* Borders - Subtle navy */
-    --border: #2A2650;
-    --input: #2A2650;
+    --border: #2a2650;
+    --input: #2a2650;
 
     /* Ring - Gold for focus */
-    --ring: #C5A059;
+    --ring: #c5a059;
 
     /* Charts */
-    --chart-1: #EBDFC7;
-    --chart-2: #C5A059;
-    --chart-3: #3D3870;
-    --chart-4: #6B6660;
-    --chart-5: #9E9A94;
+    --chart-1: #ebdfc7;
+    --chart-2: #c5a059;
+    --chart-3: #3d3870;
+    --chart-4: #6b6660;
+    --chart-5: #9e9a94;
 
     /* Sidebar - Darker navy */
     --sidebar: #121024;
-    --sidebar-foreground: #EBDFC7;
-    --sidebar-primary: #EBDFC7;
+    --sidebar-foreground: #ebdfc7;
+    --sidebar-primary: #ebdfc7;
     --sidebar-primary-foreground: #191731;
-    --sidebar-accent: #2A2650;
-    --sidebar-accent-foreground: #EBDFC7;
-    --sidebar-border: #2A2650;
-    --sidebar-ring: #C5A059;
+    --sidebar-accent: #2a2650;
+    --sidebar-accent-foreground: #ebdfc7;
+    --sidebar-border: #2a2650;
+    --sidebar-ring: #c5a059;
 }
 
 @layer base {
@@ -217,16 +216,16 @@
 @layer utilities {
     /* Focus ring with gold */
     .focus-ring-gold {
-        @apply focus:outline-none focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2;
+        @apply focus:ring-2 focus:ring-[#C5A059] focus:ring-offset-2 focus:outline-none;
     }
 
     /* Brand gradient backgrounds */
     .bg-gradient-navy {
-        background: linear-gradient(135deg, #0D0F1A 0%, #191731 100%);
+        background: linear-gradient(135deg, #0d0f1a 0%, #191731 100%);
     }
 
     .bg-gradient-cream {
-        background: linear-gradient(135deg, #F8F6F1 0%, #EBDFC7 100%);
+        background: linear-gradient(135deg, #f8f6f1 0%, #ebdfc7 100%);
     }
 
     /* Glass effect for cards */

@@ -6,30 +6,38 @@ use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Services\TransactionService;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithStartRow;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
 
-class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithChunkReading, SkipsOnError
+class BalanceImport implements SkipsOnError, ToCollection, WithChunkReading, WithHeadingRow, WithStartRow
 {
     use SkipsErrors;
 
     protected TransactionService $transactionService;
+
     protected array $importErrors = [];
+
     protected array $processed = [];
+
     protected float $totalCredited = 0;
+
     protected float $totalDebited = 0;
+
     protected int $adminUserId;
+
     protected bool $allowMultiple;
+
     protected int $startRow;
+
     protected int $headingRow;
 
     public function __construct(int $adminUserId, bool $allowMultiple = true, int $startRow = 5, int $headingRow = 4)
     {
-        $this->transactionService = new TransactionService();
+        $this->transactionService = new TransactionService;
         $this->adminUserId = $adminUserId;
         $this->allowMultiple = $allowMultiple;
         $this->startRow = $startRow;
@@ -56,13 +64,14 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
 
             try {
                 // Validate required fields
-                if (empty($row['uuid']) || !isset($row['monto'])) {
+                if (empty($row['uuid']) || ! isset($row['monto'])) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'uuid' => $row['uuid'] ?? 'N/A',
                         'error' => 'UUID y monto son requeridos',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
@@ -70,37 +79,40 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                 $monto = trim($row['monto']);
 
                 // Check for multiple loads to same QR if not allowed
-                if (!$this->allowMultiple && in_array($uuid, $processedUuids)) {
+                if (! $this->allowMultiple && in_array($uuid, $processedUuids)) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'uuid' => $uuid,
                         'error' => 'UUID duplicado en el archivo (múltiples cargas no permitidas)',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
                 // Find GiftCard by UUID
                 $giftCard = GiftCard::where('id', $uuid)->first();
 
-                if (!$giftCard) {
+                if (! $giftCard) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'uuid' => $uuid,
                         'error' => 'QR Empleado no encontrado',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
                 // Check if GiftCard is active
-                if (!$giftCard->status) {
+                if (! $giftCard->status) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'uuid' => $uuid,
                         'error' => "QR Empleado inactivo ({$giftCard->legacy_id})",
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
@@ -113,13 +125,14 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                 // Remove leading + if present (keeps -)
                 $amountStr = ltrim($amountStr, '+');
 
-                if (!is_numeric($amountStr)) {
+                if (! is_numeric($amountStr)) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'uuid' => $uuid,
                         'error' => "Monto inválido: '{$monto}'. Use números positivos para cargar (500 o +500) y negativos para descontar (-200)",
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
@@ -132,6 +145,7 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                         'error' => 'El monto no puede ser cero',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
@@ -141,7 +155,7 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
 
                 // Handle branch for debits
                 $branchId = null;
-                if (!$isCredit) {
+                if (! $isCredit) {
                     if (empty($row['sucursal'])) {
                         $this->importErrors[] = [
                             'row' => $rowNumber,
@@ -149,6 +163,7 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                             'error' => 'Sucursal es requerida para descuentos (montos negativos)',
                             'data' => $row->toArray(),
                         ];
+
                         continue;
                     }
 
@@ -156,13 +171,14 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                         ->orWhere('id', $row['sucursal'])
                         ->first();
 
-                    if (!$branch) {
+                    if (! $branch) {
                         $this->importErrors[] = [
                             'row' => $rowNumber,
                             'uuid' => $uuid,
                             'error' => "Sucursal '{$row['sucursal']}' no encontrada",
                             'data' => $row->toArray(),
                         ];
+
                         continue;
                     }
 
@@ -170,9 +186,9 @@ class BalanceImport implements ToCollection, WithHeadingRow, WithStartRow, WithC
                 }
 
                 // Get description or generate default
-                $description = !empty($row['descripcion'])
-                    ? 'Carga masiva: ' . $row['descripcion']
-                    : 'Carga masiva del ' . now()->format('d/m/Y');
+                $description = ! empty($row['descripcion'])
+                    ? 'Carga masiva: '.$row['descripcion']
+                    : 'Carga masiva del '.now()->format('d/m/Y');
 
                 // Refresh gift card to get latest balance
                 $giftCard->refresh();

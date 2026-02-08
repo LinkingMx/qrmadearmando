@@ -1,13 +1,13 @@
-import { Transaction } from '@/types/scanner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Transaction } from '@/types/scanner';
 import { PrinterIcon, XIcon } from 'lucide-react';
 
 interface ReprintReceiptModalProps {
@@ -120,14 +120,14 @@ export function ReprintReceiptModal({
 
     const receiptContent = (
         <div className="receipt-content px-2">
-            <div className="text-center space-y-2 py-3">
-                <div className="text-base sm:text-xl font-bold leading-tight">
+            <div className="space-y-2 py-3 text-center">
+                <div className="text-base leading-tight font-bold sm:text-xl">
                     ════════════════
                 </div>
-                <h2 className="text-sm sm:text-base font-bold uppercase leading-tight px-2">
+                <h2 className="px-2 text-sm leading-tight font-bold uppercase sm:text-base">
                     Comprobante de Transacción
                 </h2>
-                <div className="text-base sm:text-xl font-bold leading-tight">
+                <div className="text-base leading-tight font-bold sm:text-xl">
                     ════════════════
                 </div>
             </div>
@@ -136,22 +136,26 @@ export function ReprintReceiptModal({
                 {/* Branch and Date Info */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">
+                        <span className="shrink-0 text-muted-foreground">
                             Sucursal:
                         </span>
-                        <span className="font-medium text-right break-words max-w-[60%]">
+                        <span className="max-w-[60%] text-right font-medium break-words">
                             {transaction.branch_name}
                         </span>
                     </div>
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">Fecha:</span>
-                        <span className="font-medium text-right text-[11px] sm:text-xs">
+                        <span className="shrink-0 text-muted-foreground">
+                            Fecha:
+                        </span>
+                        <span className="text-right text-[11px] font-medium sm:text-xs">
                             {transaction.created_at}
                         </span>
                     </div>
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">Cajero:</span>
-                        <span className="font-medium text-right break-words max-w-[60%]">
+                        <span className="shrink-0 text-muted-foreground">
+                            Cajero:
+                        </span>
+                        <span className="max-w-[60%] text-right font-medium break-words">
                             {transaction.cashier_name}
                         </span>
                     </div>
@@ -162,16 +166,18 @@ export function ReprintReceiptModal({
                 {/* Card Info */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">Tarjeta:</span>
-                        <span className="font-bold text-right break-all max-w-[60%]">
+                        <span className="shrink-0 text-muted-foreground">
+                            Tarjeta:
+                        </span>
+                        <span className="max-w-[60%] text-right font-bold break-all">
                             {transaction.gift_card.legacy_id}
                         </span>
                     </div>
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">
+                        <span className="shrink-0 text-muted-foreground">
                             Empleado:
                         </span>
-                        <span className="font-medium text-right break-words max-w-[60%]">
+                        <span className="max-w-[60%] text-right font-medium break-words">
                             {transaction.gift_card.user?.name || 'Sin asignar'}
                         </span>
                     </div>
@@ -180,29 +186,29 @@ export function ReprintReceiptModal({
                 <Separator />
 
                 {/* Transaction Details */}
-                <div className="space-y-2 bg-muted/50 p-2.5 sm:p-3 rounded-lg">
-                    <div className="flex justify-between items-center gap-2">
-                        <span className="text-[11px] sm:text-xs text-muted-foreground shrink-0">
+                <div className="space-y-2 rounded-lg bg-muted/50 p-2.5 sm:p-3">
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="shrink-0 text-[11px] text-muted-foreground sm:text-xs">
                             Saldo anterior:
                         </span>
-                        <span className="font-mono font-medium text-xs sm:text-sm">
+                        <span className="font-mono text-xs font-medium sm:text-sm">
                             ${transaction.balance_before.toFixed(2)}
                         </span>
                     </div>
-                    <div className="flex justify-between items-center gap-2 text-destructive">
-                        <span className="text-[11px] sm:text-xs font-medium shrink-0">
+                    <div className="flex items-center justify-between gap-2 text-destructive">
+                        <span className="shrink-0 text-[11px] font-medium sm:text-xs">
                             Descuento:
                         </span>
-                        <span className="font-mono font-bold text-sm sm:text-base">
+                        <span className="font-mono text-sm font-bold sm:text-base">
                             -${transaction.amount.toFixed(2)}
                         </span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between items-center gap-2 text-green-600 dark:text-green-500">
-                        <span className="text-[11px] sm:text-xs font-medium shrink-0">
+                    <div className="flex items-center justify-between gap-2 text-green-600 dark:text-green-500">
+                        <span className="shrink-0 text-[11px] font-medium sm:text-xs">
                             Saldo actual:
                         </span>
-                        <span className="font-mono font-bold text-base sm:text-lg">
+                        <span className="font-mono text-base font-bold sm:text-lg">
                             ${transaction.balance_after.toFixed(2)}
                         </span>
                     </div>
@@ -213,17 +219,19 @@ export function ReprintReceiptModal({
                 {/* Reference and Description */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground shrink-0">
+                        <span className="shrink-0 text-muted-foreground">
                             Referencia:
                         </span>
-                        <span className="font-medium text-right break-all max-w-[60%]">
+                        <span className="max-w-[60%] text-right font-medium break-all">
                             {transaction.reference}
                         </span>
                     </div>
                     {transaction.description && (
                         <div>
-                            <span className="text-muted-foreground">Descripción:</span>
-                            <p className="font-medium mt-1 break-words">
+                            <span className="text-muted-foreground">
+                                Descripción:
+                            </span>
+                            <p className="mt-1 font-medium break-words">
                                 {transaction.description}
                             </p>
                         </div>
@@ -233,14 +241,14 @@ export function ReprintReceiptModal({
                 <Separator />
 
                 {/* Folio */}
-                <div className="text-center py-2">
-                    <div className="text-base sm:text-xl font-bold leading-tight">
+                <div className="py-2 text-center">
+                    <div className="text-base leading-tight font-bold sm:text-xl">
                         ════════════════
                     </div>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 break-all px-2">
+                    <p className="mt-1.5 px-2 text-[10px] break-all text-muted-foreground sm:text-xs">
                         Folio: {transaction.folio}
                     </p>
-                    <div className="text-base sm:text-xl font-bold mt-1.5 leading-tight">
+                    <div className="mt-1.5 text-base leading-tight font-bold sm:text-xl">
                         ════════════════
                     </div>
                 </div>
@@ -251,7 +259,7 @@ export function ReprintReceiptModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-w-md w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Reimprimir Comprobante</DialogTitle>
                     </DialogHeader>
@@ -259,7 +267,7 @@ export function ReprintReceiptModal({
                     {/* Receipt Content - Visible */}
                     {receiptContent}
 
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <DialogFooter className="flex-col gap-2 sm:flex-row">
                         <Button
                             onClick={handlePrint}
                             variant="default"
@@ -312,7 +320,9 @@ export function ReprintReceiptModal({
 
                     <div className="flex">
                         <span className="label">Tarjeta:</span>
-                        <span className="bold">{transaction.gift_card.legacy_id}</span>
+                        <span className="bold">
+                            {transaction.gift_card.legacy_id}
+                        </span>
                     </div>
                     <div className="flex">
                         <span className="label">Empleado:</span>
@@ -330,14 +340,14 @@ export function ReprintReceiptModal({
                                 ${transaction.balance_before.toFixed(2)}
                             </span>
                         </div>
-                        <div className="flex text-red">
+                        <div className="text-red flex">
                             <span className="bold">Descuento:</span>
                             <span className="bold text-lg">
                                 -${transaction.amount.toFixed(2)}
                             </span>
                         </div>
                         <div className="separator"></div>
-                        <div className="flex text-green">
+                        <div className="text-green flex">
                             <span className="bold">Saldo actual:</span>
                             <span className="bold text-xl">
                                 ${transaction.balance_after.toFixed(2)}

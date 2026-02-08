@@ -1,7 +1,7 @@
+import { useAppearance } from '@/hooks/use-appearance';
 import { home } from '@/routes';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
-import { useAppearance } from '@/hooks/use-appearance';
 
 interface AuthLayoutProps {
     name?: string;
@@ -28,7 +28,11 @@ export default function AuthSimpleLayout({
                         >
                             <div className="mb-4 flex items-center justify-center">
                                 <img
-                                    src={isDark ? '/logo_light.webp' : '/logo_dark.webp'}
+                                    src={
+                                        isDark
+                                            ? '/logo_light.webp'
+                                            : '/logo_dark.webp'
+                                    }
                                     alt="Logo"
                                     className="h-16 w-auto"
                                 />

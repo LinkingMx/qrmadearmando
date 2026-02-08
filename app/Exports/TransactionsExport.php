@@ -6,33 +6,26 @@ use App\Models\GiftCard;
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Sheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class TransactionsExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    WithTitle,
-    WithStyles,
-    WithColumnWidths,
-    WithEvents,
-    WithCustomStartCell
+class TransactionsExport implements FromCollection, WithColumnWidths, WithCustomStartCell, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected ?GiftCard $giftCard;
+
     protected Collection $transactions;
+
     protected array $filters;
+
     protected $headerRowCount = 0;
 
     public function __construct(?GiftCard $giftCard = null, array $filters = [])
@@ -44,7 +37,7 @@ class TransactionsExport implements
 
     public function startCell(): string
     {
-        return 'A' . ($this->headerRowCount + 1);
+        return 'A'.($this->headerRowCount + 1);
     }
 
     protected function calculateHeaderRowCount(): void
@@ -61,7 +54,7 @@ class TransactionsExport implements
             $rows++; // Empty row
         }
 
-        if (!empty($this->filters['date_from']) || !empty($this->filters['date_to'])) {
+        if (! empty($this->filters['date_from']) || ! empty($this->filters['date_to'])) {
             $rows++; // Período
         }
 
@@ -78,23 +71,23 @@ class TransactionsExport implements
             : Transaction::with(['giftCard', 'branch', 'admin']);
 
         // Apply filters
-        if (!empty($this->filters['date_from'])) {
+        if (! empty($this->filters['date_from'])) {
             $query->whereDate('created_at', '>=', $this->filters['date_from']);
         }
 
-        if (!empty($this->filters['date_to'])) {
+        if (! empty($this->filters['date_to'])) {
             $query->whereDate('created_at', '<=', $this->filters['date_to']);
         }
 
-        if (!empty($this->filters['type'])) {
+        if (! empty($this->filters['type'])) {
             $query->where('type', $this->filters['type']);
         }
 
-        if (!empty($this->filters['branch_id'])) {
+        if (! empty($this->filters['branch_id'])) {
             $query->where('branch_id', $this->filters['branch_id']);
         }
 
-        if (!empty($this->filters['admin_user_id'])) {
+        if (! empty($this->filters['admin_user_id'])) {
             $query->where('admin_user_id', $this->filters['admin_user_id']);
         }
 
@@ -112,7 +105,7 @@ class TransactionsExport implements
             'Sucursal',
             'Cargo',
             'Abono',
-            'Saldo'
+            'Saldo',
         ];
     }
 
@@ -126,15 +119,15 @@ class TransactionsExport implements
             $this->formatType($transaction->type),
             $transaction->description ?? '-',
             $transaction->branch?->name ?? '-',
-            !$isCredit ? number_format($transaction->amount, 2) : '',
+            ! $isCredit ? number_format($transaction->amount, 2) : '',
             $isCredit ? number_format($transaction->amount, 2) : '',
-            number_format($transaction->balance_after, 2)
+            number_format($transaction->balance_after, 2),
         ];
     }
 
     protected function formatType(string $type): string
     {
-        return match($type) {
+        return match ($type) {
             'credit' => 'Carga',
             'debit' => 'Descuento',
             'adjustment' => 'Ajuste',
@@ -170,7 +163,7 @@ class TransactionsExport implements
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 // Add header information FIRST
@@ -240,7 +233,7 @@ class TransactionsExport implements
 
         if ($this->giftCard) {
             // Section title
-            $sheet->setCellValue("A{$row}", "INFORMACIÓN DE LA TARJETA");
+            $sheet->setCellValue("A{$row}", 'INFORMACIÓN DE LA TARJETA');
             $sheet->mergeCells("A{$row}:G{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
             $sheet->getStyle("A{$row}")
@@ -251,28 +244,28 @@ class TransactionsExport implements
             $row++;
 
             // Gift Card ID
-            $sheet->setCellValue("A{$row}", "ID Tarjeta:");
+            $sheet->setCellValue("A{$row}", 'ID Tarjeta:');
             $sheet->setCellValue("B{$row}", $this->giftCard->legacy_id);
             $sheet->mergeCells("B{$row}:C{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setBold(true);
             $row++;
 
             // Employee name
-            $sheet->setCellValue("A{$row}", "Empleado:");
+            $sheet->setCellValue("A{$row}", 'Empleado:');
             $sheet->setCellValue("B{$row}", $this->giftCard->user?->name ?? 'Sin asignar');
             $sheet->mergeCells("B{$row}:D{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setBold(true);
             $row++;
 
             // Current balance
-            $sheet->setCellValue("A{$row}", "Saldo Actual:");
-            $sheet->setCellValue("B{$row}", '$' . number_format($this->giftCard->balance, 2));
+            $sheet->setCellValue("A{$row}", 'Saldo Actual:');
+            $sheet->setCellValue("B{$row}", '$'.number_format($this->giftCard->balance, 2));
             $sheet->getStyle("A{$row}")->getFont()->setBold(true);
             $sheet->getStyle("B{$row}")->getFont()->setSize(12)->getColor()->setRGB('16A34A');
             $row++;
 
             // Status
-            $sheet->setCellValue("A{$row}", "Estado:");
+            $sheet->setCellValue("A{$row}", 'Estado:');
             $sheet->setCellValue("B{$row}", $this->giftCard->status ? 'Activa' : 'Inactiva');
             $sheet->getStyle("A{$row}")->getFont()->setBold(true);
             $row++;
@@ -282,10 +275,10 @@ class TransactionsExport implements
         }
 
         // Date range
-        if (!empty($this->filters['date_from']) || !empty($this->filters['date_to'])) {
+        if (! empty($this->filters['date_from']) || ! empty($this->filters['date_to'])) {
             $dateFrom = $this->filters['date_from'] ?? 'Inicio';
             $dateTo = $this->filters['date_to'] ?? 'Hoy';
-            $sheet->setCellValue("A{$row}", "Período:");
+            $sheet->setCellValue("A{$row}", 'Período:');
             $sheet->setCellValue("B{$row}", "{$dateFrom} - {$dateTo}");
             $sheet->mergeCells("B{$row}:D{$row}");
             $sheet->getStyle("A{$row}")->getFont()->setBold(true);
@@ -293,8 +286,8 @@ class TransactionsExport implements
         }
 
         // Generated by
-        $sheet->setCellValue("A{$row}", "Generado:");
-        $sheet->setCellValue("B{$row}", now()->format('d/m/Y H:i') . ' por ' . (auth()->user()->name ?? 'Sistema'));
+        $sheet->setCellValue("A{$row}", 'Generado:');
+        $sheet->setCellValue("B{$row}", now()->format('d/m/Y H:i').' por '.(auth()->user()->name ?? 'Sistema'));
         $sheet->mergeCells("B{$row}:G{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $sheet->getStyle("B{$row}")->getFont()->setSize(9)->getColor()->setRGB('64748B');
@@ -306,15 +299,15 @@ class TransactionsExport implements
 
     protected function addTotalsRow($sheet, int $row): void
     {
-        $totalCargos = $this->transactions->filter(function($t) {
+        $totalCargos = $this->transactions->filter(function ($t) {
             return $t->type === 'debit' || ($t->type === 'adjustment' && $t->amount < 0);
         })->sum('amount');
 
-        $totalAbonos = $this->transactions->filter(function($t) {
+        $totalAbonos = $this->transactions->filter(function ($t) {
             return $t->type === 'credit' || ($t->type === 'adjustment' && $t->amount > 0);
         })->sum('amount');
 
-        $sheet->setCellValue("A{$row}", "TOTALES:");
+        $sheet->setCellValue("A{$row}", 'TOTALES:');
         $sheet->setCellValue("E{$row}", number_format($totalCargos, 2));
         $sheet->setCellValue("F{$row}", number_format($totalAbonos, 2));
 

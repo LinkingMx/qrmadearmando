@@ -6,32 +6,28 @@ use App\Models\Branch;
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithCustomStartCell;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class BranchClosureExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    WithTitle,
-    WithStyles,
-    WithColumnWidths,
-    WithEvents,
-    WithCustomStartCell
+class BranchClosureExport implements FromCollection, WithColumnWidths, WithCustomStartCell, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected Branch $branch;
+
     protected Collection $transactions;
+
     protected array $filters;
+
     protected array $stats;
+
     protected int $headerRowCount = 0;
 
     public function __construct(Branch $branch, array $filters = [])
@@ -45,7 +41,7 @@ class BranchClosureExport implements
 
     public function startCell(): string
     {
-        return 'A' . ($this->headerRowCount + 1);
+        return 'A'.($this->headerRowCount + 1);
     }
 
     protected function loadTransactions(): void
@@ -54,7 +50,7 @@ class BranchClosureExport implements
             ->where('branch_id', $this->branch->id);
 
         // Date and time filters
-        if (!empty($this->filters['date'])) {
+        if (! empty($this->filters['date'])) {
             $date = $this->filters['date'];
             $timeFrom = $this->filters['time_from'] ?? '00:00';
             $timeTo = $this->filters['time_to'] ?? '23:59';
@@ -66,11 +62,11 @@ class BranchClosureExport implements
         }
 
         // Optional filters
-        if (!empty($this->filters['type'])) {
+        if (! empty($this->filters['type'])) {
             $query->where('type', $this->filters['type']);
         }
 
-        if (!empty($this->filters['admin_user_id'])) {
+        if (! empty($this->filters['admin_user_id'])) {
             $query->where('admin_user_id', $this->filters['admin_user_id']);
         }
 
@@ -171,7 +167,7 @@ class BranchClosureExport implements
             'Descripción',
             'Cargo',
             'Abono',
-            'Saldo'
+            'Saldo',
         ];
     }
 
@@ -186,15 +182,15 @@ class BranchClosureExport implements
             $transaction->giftCard->user?->name ?? 'Sin asignar',
             $this->formatType($transaction->type),
             $transaction->description ?? '-',
-            !$isCredit ? number_format($transaction->amount, 2) : '',
+            ! $isCredit ? number_format($transaction->amount, 2) : '',
             $isCredit ? number_format($transaction->amount, 2) : '',
-            number_format($transaction->balance_after, 2)
+            number_format($transaction->balance_after, 2),
         ];
     }
 
     protected function formatType(string $type): string
     {
-        return match($type) {
+        return match ($type) {
             'credit' => 'Carga',
             'debit' => 'Descuento',
             'adjustment' => 'Ajuste',
@@ -229,7 +225,7 @@ class BranchClosureExport implements
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 // Add header information FIRST
@@ -311,7 +307,7 @@ class BranchClosureExport implements
         $row++;
 
         // Section: INFORMACIÓN DE LA SUCURSAL
-        $sheet->setCellValue("A{$row}", "INFORMACIÓN DE LA SUCURSAL");
+        $sheet->setCellValue("A{$row}", 'INFORMACIÓN DE LA SUCURSAL');
         $sheet->mergeCells("A{$row}:H{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("A{$row}")
@@ -323,7 +319,7 @@ class BranchClosureExport implements
         $row++;
 
         // Sucursal
-        $sheet->setCellValue("A{$row}", "Sucursal:");
+        $sheet->setCellValue("A{$row}", 'Sucursal:');
         $sheet->setCellValue("B{$row}", $this->branch->name);
         $sheet->mergeCells("B{$row}:D{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
@@ -331,7 +327,7 @@ class BranchClosureExport implements
 
         // Fecha
         $date = $this->filters['date'] ?? now()->format('Y-m-d');
-        $sheet->setCellValue("A{$row}", "Fecha:");
+        $sheet->setCellValue("A{$row}", 'Fecha:');
         $sheet->setCellValue("B{$row}", \Carbon\Carbon::parse($date)->format('d/m/Y'));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
@@ -339,20 +335,20 @@ class BranchClosureExport implements
         // Horario
         $timeFrom = $this->filters['time_from'] ?? '00:00';
         $timeTo = $this->filters['time_to'] ?? '23:59';
-        $sheet->setCellValue("A{$row}", "Horario:");
+        $sheet->setCellValue("A{$row}", 'Horario:');
         $sheet->setCellValue("B{$row}", "{$timeFrom} - {$timeTo}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 
         // Generado por
-        $sheet->setCellValue("A{$row}", "Generado por:");
+        $sheet->setCellValue("A{$row}", 'Generado por:');
         $sheet->setCellValue("B{$row}", auth()->user()->name ?? 'Sistema');
         $sheet->mergeCells("B{$row}:D{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 
         // Fecha de generación
-        $sheet->setCellValue("A{$row}", "Fecha de generación:");
+        $sheet->setCellValue("A{$row}", 'Fecha de generación:');
         $sheet->setCellValue("B{$row}", now()->format('d/m/Y H:i'));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
@@ -361,7 +357,7 @@ class BranchClosureExport implements
         $row++;
 
         // Section: RESUMEN DEL PERÍODO
-        $sheet->setCellValue("A{$row}", "RESUMEN DEL PERÍODO");
+        $sheet->setCellValue("A{$row}", 'RESUMEN DEL PERÍODO');
         $sheet->mergeCells("A{$row}:H{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("A{$row}")
@@ -373,34 +369,34 @@ class BranchClosureExport implements
         $row++;
 
         // Total de Transacciones
-        $sheet->setCellValue("A{$row}", "Total de Transacciones:");
+        $sheet->setCellValue("A{$row}", 'Total de Transacciones:');
         $sheet->setCellValue("B{$row}", $this->stats['total_transactions']);
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 
         // QR Únicos Operados
-        $sheet->setCellValue("A{$row}", "QR Únicos Operados:");
+        $sheet->setCellValue("A{$row}", 'QR Únicos Operados:');
         $sheet->setCellValue("B{$row}", $this->stats['unique_qrs']);
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 
         // Total Cargos (Débitos)
-        $sheet->setCellValue("A{$row}", "Total Cargos (Débitos):");
-        $sheet->setCellValue("B{$row}", '$' . number_format($this->stats['total_debits'], 2));
+        $sheet->setCellValue("A{$row}", 'Total Cargos (Débitos):');
+        $sheet->setCellValue("B{$row}", '$'.number_format($this->stats['total_debits'], 2));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB('DC2626');
         $row++;
 
         // Total Abonos (Créditos)
-        $sheet->setCellValue("A{$row}", "Total Abonos (Créditos):");
-        $sheet->setCellValue("B{$row}", '$' . number_format($this->stats['total_credits'], 2));
+        $sheet->setCellValue("A{$row}", 'Total Abonos (Créditos):');
+        $sheet->setCellValue("B{$row}", '$'.number_format($this->stats['total_credits'], 2));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB('16A34A');
         $row++;
 
         // Diferencia Neta
-        $sheet->setCellValue("A{$row}", "Diferencia Neta:");
-        $sheet->setCellValue("B{$row}", '$' . number_format($this->stats['net_difference'], 2));
+        $sheet->setCellValue("A{$row}", 'Diferencia Neta:');
+        $sheet->setCellValue("B{$row}", '$'.number_format($this->stats['net_difference'], 2));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $sheet->getStyle("B{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB($this->stats['net_difference'] >= 0 ? '16A34A' : 'DC2626');
@@ -410,27 +406,27 @@ class BranchClosureExport implements
         $row++;
 
         // Por Tipo de Transacción
-        $sheet->setCellValue("A{$row}", "Por Tipo de Transacción:");
+        $sheet->setCellValue("A{$row}", 'Por Tipo de Transacción:');
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setItalic(true);
         $row++;
 
         // Cargas
-        $sheet->setCellValue("A{$row}", "  • Cargas:");
-        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['credit']['count']} transacciones - \$" . number_format($this->stats['by_type']['credit']['amount'], 2));
+        $sheet->setCellValue("A{$row}", '  • Cargas:');
+        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['credit']['count']} transacciones - \$".number_format($this->stats['by_type']['credit']['amount'], 2));
         $sheet->mergeCells("B{$row}:D{$row}");
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB('16A34A');
         $row++;
 
         // Descuentos
-        $sheet->setCellValue("A{$row}", "  • Descuentos:");
-        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['debit']['count']} transacciones - \$" . number_format($this->stats['by_type']['debit']['amount'], 2));
+        $sheet->setCellValue("A{$row}", '  • Descuentos:');
+        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['debit']['count']} transacciones - \$".number_format($this->stats['by_type']['debit']['amount'], 2));
         $sheet->mergeCells("B{$row}:D{$row}");
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB('DC2626');
         $row++;
 
         // Ajustes
-        $sheet->setCellValue("A{$row}", "  • Ajustes:");
-        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['adjustment']['count']} transacciones - \$" . number_format($this->stats['by_type']['adjustment']['amount'], 2));
+        $sheet->setCellValue("A{$row}", '  • Ajustes:');
+        $sheet->setCellValue("B{$row}", "{$this->stats['by_type']['adjustment']['count']} transacciones - \$".number_format($this->stats['by_type']['adjustment']['amount'], 2));
         $sheet->mergeCells("B{$row}:D{$row}");
         $sheet->getStyle("B{$row}")->getFont()->getColor()->setRGB('F59E0B');
         $row++;
@@ -439,7 +435,7 @@ class BranchClosureExport implements
         $row++;
 
         // Section: DETALLE DE TRANSACCIONES
-        $sheet->setCellValue("A{$row}", "DETALLE DE TRANSACCIONES");
+        $sheet->setCellValue("A{$row}", 'DETALLE DE TRANSACCIONES');
         $sheet->mergeCells("A{$row}:H{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("A{$row}")
@@ -460,7 +456,7 @@ class BranchClosureExport implements
         $row++;
 
         // TOTALES FINALES section
-        $sheet->setCellValue("A{$row}", "TOTALES FINALES");
+        $sheet->setCellValue("A{$row}", 'TOTALES FINALES');
         $sheet->mergeCells("A{$row}:H{$row}");
         $sheet->getStyle("A{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("A{$row}")
@@ -472,19 +468,19 @@ class BranchClosureExport implements
         $row++;
 
         // Totals row
-        $sheet->setCellValue("E{$row}", "CARGO:");
+        $sheet->setCellValue("E{$row}", 'CARGO:');
         $sheet->setCellValue("F{$row}", number_format($this->stats['total_debits'], 2));
         $sheet->getStyle("E{$row}")->getFont()->setBold(true);
         $sheet->getStyle("F{$row}")->getFont()->setBold(true)->getColor()->setRGB('DC2626');
         $row++;
 
-        $sheet->setCellValue("E{$row}", "ABONO:");
+        $sheet->setCellValue("E{$row}", 'ABONO:');
         $sheet->setCellValue("G{$row}", number_format($this->stats['total_credits'], 2));
         $sheet->getStyle("E{$row}")->getFont()->setBold(true);
         $sheet->getStyle("G{$row}")->getFont()->setBold(true)->getColor()->setRGB('16A34A');
         $row++;
 
-        $sheet->setCellValue("E{$row}", "NETO:");
+        $sheet->setCellValue("E{$row}", 'NETO:');
         $sheet->setCellValue("H{$row}", number_format($this->stats['net_difference'], 2));
         $sheet->getStyle("E{$row}")->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle("H{$row}")->getFont()->setBold(true)->setSize(12);

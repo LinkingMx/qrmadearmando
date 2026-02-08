@@ -63,14 +63,14 @@ class ListUsers extends ListRecords
                 ])
                 ->action(function (array $data) {
                     try {
-                        $importService = new UserImportService();
+                        $importService = new UserImportService;
 
                         // Handle ZIP photos if provided
-                        if ($data['photo_mode'] === 'zip' && !empty($data['zip'])) {
+                        if ($data['photo_mode'] === 'zip' && ! empty($data['zip'])) {
                             $zipFile = $data['zip'];
-                            $zipPath = storage_path('app/public/' . $zipFile);
+                            $zipPath = storage_path('app/public/'.$zipFile);
 
-                            if (!file_exists($zipPath)) {
+                            if (! file_exists($zipPath)) {
                                 throw new \Exception('Archivo ZIP no encontrado.');
                             }
 
@@ -87,13 +87,13 @@ class ListUsers extends ListRecords
                             Notification::make()
                                 ->info()
                                 ->title('Fotos extraídas')
-                                ->body(count($importService->getExtractedPhotoNames()) . ' fotos encontradas en el ZIP')
+                                ->body(count($importService->getExtractedPhotoNames()).' fotos encontradas en el ZIP')
                                 ->send();
                         }
 
                         // Import users from Excel
                         $import = new UsersImport($importService, $data['update_existing']);
-                        Excel::import($import, storage_path('app/public/' . $data['excel']));
+                        Excel::import($import, storage_path('app/public/'.$data['excel']));
 
                         // Clean up temporary files
                         $importService->cleanup();
@@ -121,13 +121,13 @@ class ListUsers extends ListRecords
                             Notification::make()
                                 ->success()
                                 ->title('Importación exitosa')
-                                ->body("Se importaron {$stats['created']} usuarios correctamente" .
+                                ->body("Se importaron {$stats['created']} usuarios correctamente".
                                        ($stats['updated'] > 0 ? " y se actualizaron {$stats['updated']}" : ''))
                                 ->send();
                         }
 
                         // Show generated passwords if any
-                        $createdWithPasswords = array_filter($import->getCreated(), fn($u) => !empty($u['password']));
+                        $createdWithPasswords = array_filter($import->getCreated(), fn ($u) => ! empty($u['password']));
                         if (count($createdWithPasswords) > 0) {
                             $passwordReport = $this->generatePasswordReport($createdWithPasswords);
 
@@ -184,7 +184,7 @@ class ListUsers extends ListRecords
                         ->default(false),
                 ])
                 ->action(function (array $data) {
-                    $filename = 'usuarios_' . now()->format('Y-m-d_His') . '.xlsx';
+                    $filename = 'usuarios_'.now()->format('Y-m-d_His').'.xlsx';
 
                     return Excel::download(
                         new UsersExport($data),
@@ -199,14 +199,14 @@ class ListUsers extends ListRecords
     protected function generateErrorReport(UsersImport $import): string
     {
         $errors = $import->getErrors();
-        $filename = 'errores_importacion_' . now()->format('Y-m-d_His') . '.xlsx';
-        $path = storage_path('app/public/temp/' . $filename);
+        $filename = 'errores_importacion_'.now()->format('Y-m-d_His').'.xlsx';
+        $path = storage_path('app/public/temp/'.$filename);
 
-        if (!file_exists(dirname($path))) {
+        if (! file_exists(dirname($path))) {
             mkdir(dirname($path), 0755, true);
         }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -220,12 +220,12 @@ class ListUsers extends ListRecords
         // Data
         $row = 2;
         foreach ($errors as $error) {
-            $sheet->setCellValue('A' . $row, $error['row']);
-            $sheet->setCellValue('B' . $row, $error['error']);
-            $sheet->setCellValue('C' . $row, $error['data']['nombre'] ?? '');
-            $sheet->setCellValue('D' . $row, $error['data']['email'] ?? '');
-            $sheet->setCellValue('E' . $row, $error['data']['sucursal'] ?? '');
-            $sheet->setCellValue('F' . $row, $error['data']['foto'] ?? '');
+            $sheet->setCellValue('A'.$row, $error['row']);
+            $sheet->setCellValue('B'.$row, $error['error']);
+            $sheet->setCellValue('C'.$row, $error['data']['nombre'] ?? '');
+            $sheet->setCellValue('D'.$row, $error['data']['email'] ?? '');
+            $sheet->setCellValue('E'.$row, $error['data']['sucursal'] ?? '');
+            $sheet->setCellValue('F'.$row, $error['data']['foto'] ?? '');
             $row++;
         }
 
@@ -237,14 +237,14 @@ class ListUsers extends ListRecords
 
     protected function generatePasswordReport(array $users): string
     {
-        $filename = 'contrasenas_generadas_' . now()->format('Y-m-d_His') . '.xlsx';
-        $path = storage_path('app/public/temp/' . $filename);
+        $filename = 'contrasenas_generadas_'.now()->format('Y-m-d_His').'.xlsx';
+        $path = storage_path('app/public/temp/'.$filename);
 
-        if (!file_exists(dirname($path))) {
+        if (! file_exists(dirname($path))) {
             mkdir(dirname($path), 0755, true);
         }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -255,9 +255,9 @@ class ListUsers extends ListRecords
         // Data
         $row = 2;
         foreach ($users as $user) {
-            $sheet->setCellValue('A' . $row, $user['name']);
-            $sheet->setCellValue('B' . $row, $user['email']);
-            $sheet->setCellValue('C' . $row, $user['password']);
+            $sheet->setCellValue('A'.$row, $user['name']);
+            $sheet->setCellValue('B'.$row, $user['email']);
+            $sheet->setCellValue('C'.$row, $user['password']);
             $row++;
         }
 

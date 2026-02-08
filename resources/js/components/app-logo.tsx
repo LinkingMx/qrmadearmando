@@ -12,15 +12,11 @@ export default function AppLogo() {
             {isCollapsed ? (
                 // Collapsed: Show favicon icon
                 <div className="flex aspect-square size-8 items-center justify-center">
-                    <img
-                        src="/favicon.svg?v=2"
-                        alt="Logo"
-                        className="size-8"
-                    />
+                    <img src="/favicon.svg?v=2" alt="Logo" className="size-8" />
                 </div>
             ) : (
                 // Expanded: Show full logo (light logo for dark mode, dark logo for light mode)
-                <div className="flex items-center gap-2 w-full">
+                <div className="flex w-full items-center gap-2">
                     <img
                         src={isDark ? '/logo_light.webp' : '/logo_dark.webp'}
                         alt="QR Costeño"

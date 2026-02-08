@@ -19,12 +19,12 @@ class Login extends BaseLogin
 
             $user = User::where('email', $data['email'])->first();
 
-            if (!$user || !Hash::check($data['password'], $user->password)) {
+            if (! $user || ! Hash::check($data['password'], $user->password)) {
                 $this->throwFailureValidationException();
             }
 
             // Validar si el usuario está activo
-            if (!$user->is_active) {
+            if (! $user->is_active) {
                 Notification::make()
                     ->title('Cuenta desactivada')
                     ->body('Tu cuenta ha sido desactivada. Contacta al administrador.')

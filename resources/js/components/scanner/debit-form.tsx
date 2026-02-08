@@ -1,11 +1,17 @@
-import { useState } from 'react';
-import { DebitFormData, GiftCard } from '@/types/scanner';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { MinusCircleIcon, AlertCircleIcon, Loader2Icon } from 'lucide-react';
+import { DebitFormData, GiftCard } from '@/types/scanner';
+import { AlertCircleIcon, Loader2Icon, MinusCircleIcon } from 'lucide-react';
+import { useState } from 'react';
 
 interface DebitFormProps {
     giftCard: GiftCard;
@@ -14,7 +20,12 @@ interface DebitFormProps {
     isProcessing: boolean;
 }
 
-export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitFormProps) {
+export function DebitForm({
+    giftCard,
+    onSubmit,
+    onCancel,
+    isProcessing,
+}: DebitFormProps) {
     const [amount, setAmount] = useState('');
     const [reference, setReference] = useState('');
     const [description, setDescription] = useState('');
@@ -83,10 +94,11 @@ export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitF
                     {/* Amount Input */}
                     <div className="space-y-2">
                         <Label htmlFor="amount">
-                            Monto a descontar <span className="text-destructive">*</span>
+                            Monto a descontar{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-semibold">
+                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-lg font-semibold text-muted-foreground">
                                 $
                             </span>
                             <Input
@@ -98,13 +110,15 @@ export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitF
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="h-14 text-2xl font-bold pl-8 tabular-nums"
+                                className="h-14 pl-8 text-2xl font-bold tabular-nums"
                                 aria-invalid={!!errors.amount}
                                 disabled={isProcessing}
                             />
                         </div>
                         {errors.amount && (
-                            <p className="text-sm text-destructive">{errors.amount}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.amount}
+                            </p>
                         )}
                         {amount && !errors.amount && (
                             <p className="text-sm text-muted-foreground">
@@ -116,7 +130,8 @@ export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitF
                     {/* Reference Input */}
                     <div className="space-y-2">
                         <Label htmlFor="reference">
-                            Referencia <span className="text-destructive">*</span>
+                            Referencia{' '}
+                            <span className="text-destructive">*</span>
                         </Label>
                         <Input
                             id="reference"
@@ -130,13 +145,17 @@ export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitF
                             disabled={isProcessing}
                         />
                         {errors.reference && (
-                            <p className="text-sm text-destructive">{errors.reference}</p>
+                            <p className="text-sm text-destructive">
+                                {errors.reference}
+                            </p>
                         )}
                     </div>
 
                     {/* Description Input */}
                     <div className="space-y-2">
-                        <Label htmlFor="description">Descripción (opcional)</Label>
+                        <Label htmlFor="description">
+                            Descripción (opcional)
+                        </Label>
                         <Input
                             id="description"
                             type="text"
@@ -159,14 +178,14 @@ export function DebitForm({ giftCard, onSubmit, onCancel, isProcessing }: DebitF
                         variant="outline"
                         onClick={onCancel}
                         disabled={isProcessing}
-                        className="flex-1 h-12 text-base"
+                        className="h-12 flex-1 text-base"
                     >
                         Cancelar
                     </Button>
                     <Button
                         type="submit"
                         disabled={isProcessing || hasInsufficientBalance}
-                        className="flex-1 h-12 text-base"
+                        className="h-12 flex-1 text-base"
                     >
                         {isProcessing ? (
                             <>

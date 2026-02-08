@@ -34,7 +34,7 @@ class FortifyServiceProvider extends ServiceProvider
             $user = User::where('email', $request->email)->first();
 
             if ($user && Hash::check($request->password, $user->password)) {
-                if (!$user->is_active) {
+                if (! $user->is_active) {
                     throw ValidationException::withMessages([
                         'email' => ['Tu cuenta ha sido desactivada. Contacta al administrador.'],
                     ]);
