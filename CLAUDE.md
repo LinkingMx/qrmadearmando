@@ -84,10 +84,13 @@ php artisan filament:upgrade  # Run after composer install/update
 
 **Backend Structure:**
 - `app/Models/` - Core domain models:
-  - `GiftCard` - Uses UUIDs, soft deletes, auto-generates QR codes on create/update
+  - `GiftCardCategory` - Gift card categories with unique prefix and nature (payment_method/discount)
+  - `GiftCard` - Uses UUIDs, soft deletes, belongs to category, auto-generates QR codes on create/update
   - `Transaction` - Tracks balance changes with before/after snapshots
   - `Branch` - Locations with assigned employees (deletion disabled)
   - `User` - Includes 2FA, branch assignment, and activation status with HasRoles trait
+- `app/Enums/` - Enum types:
+  - `GiftCardNature` - Enum for category nature (payment_method, discount)
 - `app/Http/Controllers/` - Controllers return `Inertia::render()` responses
   - `EmployeeDashboardController` - Employee transaction views
   - `ScannerController` - QR lookup and debit processing (requires `has.branch` middleware)
@@ -155,11 +158,22 @@ php artisan filament:upgrade  # Run after composer install/update
 
 **Gift Card System:**
 - Gift cards use UUID primary keys (`HasUuids` trait)
-- `legacy_id` field auto-generated in format "EMCAD" + 6 digits (e.g., EMCAD000001)
+- Gift cards belong to a `GiftCardCategory` (required relationship)
+- `legacy_id` auto-generated using category prefix + 6-digit counter (e.g., EMCAD000001, RPCAD000001, CON000001)
+- Each category has an independent counter starting from 000001
 - Two QR codes generated per card: one with UUID, one with legacy_id
 - QR codes auto-generated via model events (`created`, `updating`)
 - QR image files stored in `storage/app/public/qr_codes/`
 - Soft deletes enabled - QR files cleaned up on force delete
+
+**Gift Card Categories:**
+- Categories define prefix (unique, uppercase letters only) and nature (payment_method or discount)
+- Nature types: `payment_method` ("Método de pago") and `discount` ("Descuento")
+- Categories cannot be deleted if they have gift cards assigned (FK restrict)
+- Prefix and nature are disabled for editing once gift cards exist in the category
+- Default category "Empleados" (EMCAD, payment_method) created during migration
+- Legacy ID generation delegated to `GiftCardCategory::generateNextLegacyId()`
+- Counter uses `withTrashed()` to prevent soft-deleted ID reuse
 
 **Import/Export Features:**
 - User import via Excel templates (download at `/download/users-template`)

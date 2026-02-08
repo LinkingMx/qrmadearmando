@@ -56,8 +56,8 @@ class GiftCardCategory extends Model
         $lastLegacyId = GiftCard::withTrashed()
             ->where('gift_card_category_id', $this->id)
             ->whereNotNull('legacy_id')
-            ->where('legacy_id', 'LIKE', $this->prefix . '%')
-            ->orderByRaw('CAST(SUBSTRING(legacy_id, ' . ($prefixLength + 1) . ') AS UNSIGNED) DESC')
+            ->where('legacy_id', 'LIKE', $this->prefix.'%')
+            ->orderByRaw('CAST(SUBSTRING(legacy_id, '.($prefixLength + 1).') AS UNSIGNED) DESC')
             ->value('legacy_id');
 
         // Extract numeric part and increment
@@ -69,13 +69,13 @@ class GiftCardCategory extends Model
         }
 
         // Generate with 6-digit zero-padding
-        $newLegacyId = $this->prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        $newLegacyId = $this->prefix.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
 
         // Collision detection safety loop
         $attempts = 0;
         while (GiftCard::withTrashed()->where('legacy_id', $newLegacyId)->exists() && $attempts < 100) {
             $nextNumber++;
-            $newLegacyId = $this->prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            $newLegacyId = $this->prefix.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
             $attempts++;
         }
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\GiftCard;
+use App\Models\GiftCardCategory;
 use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Storage;
@@ -10,11 +11,21 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
+
+    // Get or create default EMCAD category for all tests
+    $this->category = GiftCardCategory::firstOrCreate(
+        ['prefix' => 'EMCAD'],
+        [
+            'name' => 'Empleados',
+            'nature' => 'payment_method',
+        ]
+    );
 });
 
 test('can create a gift card with basic information', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20001',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
         'expiry_date' => now()->addYear(),
     ]);
@@ -29,6 +40,7 @@ test('can create a gift card with basic information', function () {
 test('automatically generates QR codes when gift card is created', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20002',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -47,6 +59,7 @@ test('can assign user to gift card', function () {
 
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20003',
+        'gift_card_category_id' => $this->category->id,
         'user_id' => $user->id,
         'status' => true,
     ]);
@@ -59,6 +72,7 @@ test('can assign user to gift card', function () {
 test('regenerates QR codes when legacy_id is updated', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20004',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -81,6 +95,7 @@ test('regenerates QR codes when legacy_id is updated', function () {
 test('does not regenerate QR codes when other fields are updated', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20006',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -95,6 +110,7 @@ test('does not regenerate QR codes when other fields are updated', function () {
 test('getQrCodeUrls returns correct URLs', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20007',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -109,6 +125,7 @@ test('getQrCodeUrls returns correct URLs', function () {
 test('getQrCodeUrls returns nulls when no QR path exists', function () {
     $giftCard = new GiftCard([
         'legacy_id' => 'EMCAD20008',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -123,11 +140,13 @@ test('getQrCodeUrls returns nulls when no QR path exists', function () {
 test('legacy_id must be unique', function () {
     GiftCard::create([
         'legacy_id' => 'EMCAD20009',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
     expect(fn () => GiftCard::create([
         'legacy_id' => 'EMCAD20009', // Duplicado
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]))->toThrow(\Illuminate\Database\QueryException::class);
 });
@@ -135,6 +154,7 @@ test('legacy_id must be unique', function () {
 test('can soft delete gift card', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20010',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -160,6 +180,7 @@ test('can soft delete gift card', function () {
 test('can restore soft deleted gift card', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20011',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -179,6 +200,7 @@ test('can restore soft deleted gift card', function () {
 test('force delete removes QR files', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20012',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -202,6 +224,7 @@ test('force delete removes QR files', function () {
 test('can handle null user_id', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20013',
+        'gift_card_category_id' => $this->category->id,
         'user_id' => null,
         'status' => true,
     ]);
@@ -213,6 +236,7 @@ test('can handle null user_id', function () {
 test('can handle null expiry_date', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20014',
+        'gift_card_category_id' => $this->category->id,
         'expiry_date' => null,
         'status' => true,
     ]);
@@ -223,11 +247,13 @@ test('can handle null expiry_date', function () {
 test('status field works as boolean', function () {
     $activeGiftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20015',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
     $inactiveGiftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20016',
+        'gift_card_category_id' => $this->category->id,
         'status' => false,
     ]);
 
@@ -238,6 +264,7 @@ test('status field works as boolean', function () {
 test('QR code files are generated with correct names', function () {
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20017',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -261,6 +288,7 @@ test('relationships work correctly', function () {
 
     $giftCard = GiftCard::create([
         'legacy_id' => 'EMCAD20018',
+        'gift_card_category_id' => $this->category->id,
         'user_id' => $user->id,
         'status' => true,
     ]);
@@ -275,6 +303,7 @@ test('relationships work correctly', function () {
 
 test('auto-generates legacy_id when not provided', function () {
     $giftCard = GiftCard::create([
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -285,6 +314,7 @@ test('auto-generates legacy_id when not provided', function () {
 
 test('auto-generated legacy_id has correct format', function () {
     $giftCard = GiftCard::create([
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -297,6 +327,7 @@ test('respects manually provided legacy_id', function () {
 
     $giftCard = GiftCard::create([
         'legacy_id' => $customLegacyId,
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -307,11 +338,13 @@ test('auto-generated legacy_id is sequential', function () {
     // Crear primer gift card con legacy_id conocido
     $first = GiftCard::create([
         'legacy_id' => 'EMCAD000100',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
     // Crear segundo gift card sin legacy_id (debe auto-generarse)
     $second = GiftCard::create([
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
@@ -320,11 +353,11 @@ test('auto-generated legacy_id is sequential', function () {
 
 test('auto-generated legacy_id handles gaps in sequence', function () {
     // Crear gift cards con saltos en la secuencia
-    GiftCard::create(['legacy_id' => 'EMCAD000050', 'status' => true]);
-    GiftCard::create(['legacy_id' => 'EMCAD000055', 'status' => true]);
+    GiftCard::create(['legacy_id' => 'EMCAD000050', 'gift_card_category_id' => $this->category->id, 'status' => true]);
+    GiftCard::create(['legacy_id' => 'EMCAD000055', 'gift_card_category_id' => $this->category->id, 'status' => true]);
 
     // El siguiente auto-generado debe ser 56 (siguiente al más alto)
-    $giftCard = GiftCard::create(['status' => true]);
+    $giftCard = GiftCard::create(['gift_card_category_id' => $this->category->id, 'status' => true]);
 
     expect($giftCard->legacy_id)->toBe('EMCAD000056');
 });
@@ -333,31 +366,34 @@ test('auto-generated legacy_id works with soft deleted records', function () {
     // Crear gift card base
     $base = GiftCard::create([
         'legacy_id' => 'EMCAD000200',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
 
     // Crear y soft delete otro gift card
     $deleted = GiftCard::create([
         'legacy_id' => 'EMCAD000250',
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
     ]);
     $deleted->delete(); // Soft delete
 
     // El siguiente auto-generado debe ser 251 (considera soft deleted)
-    $giftCard = GiftCard::create(['status' => true]);
+    $giftCard = GiftCard::create(['gift_card_category_id' => $this->category->id, 'status' => true]);
 
     expect($giftCard->legacy_id)->toBe('EMCAD000251');
 });
 
 test('auto-generated legacy_id starts from 1 when database is empty', function () {
-    // Base de datos vacía (RefreshDatabase)
-    $giftCard = GiftCard::create(['status' => true]);
+    // Base de datos vacía (RefreshDatabase) - only category exists
+    $giftCard = GiftCard::create(['gift_card_category_id' => $this->category->id, 'status' => true]);
 
     expect($giftCard->legacy_id)->toBe('EMCAD000001');
 });
 
 test('auto-generation generates QR codes correctly', function () {
     $giftCard = GiftCard::create([
+        'gift_card_category_id' => $this->category->id,
         'status' => true,
         // Sin legacy_id - debe auto-generarse
     ]);
@@ -378,4 +414,61 @@ test('auto-generation generates QR codes correctly', function () {
     expect(strlen($uuidQrContent))->toBeGreaterThan(0)
         ->and(strlen($legacyQrContent))->toBeGreaterThan(0)
         ->and($giftCard->qr_image_path)->toContain($uuid);
+});
+
+// ===== Category-specific tests =====
+
+test('gift card requires category when creating', function () {
+    expect(fn () => GiftCard::create([
+        'legacy_id' => 'TEST000001',
+        'status' => true,
+    ]))->toThrow(\InvalidArgumentException::class, 'gift_card_category_id is required');
+});
+
+test('gift card belongs to correct category', function () {
+    $giftCard = GiftCard::create([
+        'gift_card_category_id' => $this->category->id,
+        'status' => true,
+    ]);
+
+    $giftCard->load('category');
+
+    expect($giftCard->category)->toBeInstanceOf(GiftCardCategory::class)
+        ->and($giftCard->category->id)->toBe($this->category->id)
+        ->and($giftCard->category->prefix)->toBe('EMCAD');
+});
+
+test('different categories have independent counters', function () {
+    $categoryB = GiftCardCategory::create([
+        'name' => 'Relaciones Públicas',
+        'prefix' => 'RPCAD',
+        'nature' => 'discount',
+    ]);
+
+    // Create cards in category A (EMCAD)
+    $cardA1 = GiftCard::create(['gift_card_category_id' => $this->category->id, 'status' => true]);
+    $cardA2 = GiftCard::create(['gift_card_category_id' => $this->category->id, 'status' => true]);
+
+    // Create cards in category B (RPCAD)
+    $cardB1 = GiftCard::create(['gift_card_category_id' => $categoryB->id, 'status' => true]);
+    $cardB2 = GiftCard::create(['gift_card_category_id' => $categoryB->id, 'status' => true]);
+
+    // Each category should start from 000001
+    expect($cardA1->legacy_id)->toBe('EMCAD000001')
+        ->and($cardA2->legacy_id)->toBe('EMCAD000002')
+        ->and($cardB1->legacy_id)->toBe('RPCAD000001')
+        ->and($cardB2->legacy_id)->toBe('RPCAD000002');
+});
+
+test('category with short prefix generates correct legacy_ids', function () {
+    $shortCategory = GiftCardCategory::create([
+        'name' => 'Convenios',
+        'prefix' => 'CON',
+        'nature' => 'discount',
+    ]);
+
+    $card = GiftCard::create(['gift_card_category_id' => $shortCategory->id, 'status' => true]);
+
+    expect($card->legacy_id)->toBe('CON000001')
+        ->and(strlen($card->legacy_id))->toBe(9); // CON + 6 dígitos
 });

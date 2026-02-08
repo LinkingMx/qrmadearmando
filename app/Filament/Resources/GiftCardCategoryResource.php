@@ -20,10 +20,15 @@ class GiftCardCategoryResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+
     protected static ?string $navigationGroup = 'Administración de QR';
+
     protected static ?string $navigationLabel = 'Categorías de QR';
+
     protected static ?string $pluralModelLabel = 'Categorías de QR';
+
     protected static ?string $modelLabel = 'Categoría de QR';
+
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

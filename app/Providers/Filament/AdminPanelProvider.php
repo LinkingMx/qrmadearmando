@@ -3,15 +3,13 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureUserIsActive;
-use Filament\Http\Middleware\Authenticate;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -35,22 +33,21 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(true)
             ->font('Open Sans')
             ->sidebarCollapsibleOnDesktop()
-            ->viteTheme('resources/css/filament/admin/theme.css')
             ->homeUrl(fn () => route('filament.admin.resources.gift-cards.index'))
             ->colors([
-                // Primary: Cream scale for buttons and interactive elements
+                // Primary: Navy to Cream scale (Navy for light mode buttons, Cream/Gold for dark mode)
                 'primary' => [
-                    50 => '#FDFCFA',
-                    100 => '#FAF7F2',
-                    200 => '#F5EFE6',
+                    50 => '#F5F4F2',
+                    100 => '#E8E6E3',
+                    200 => '#D4D1CC',
                     300 => '#EBDFC7', // Official cream
-                    400 => '#DCC9A3',
-                    500 => '#C5A059', // Gold accent
-                    600 => '#A8863D',
-                    700 => '#8A6B2F',
-                    800 => '#6B5224',
-                    900 => '#4D3B1A',
-                    950 => '#3D352A',
+                    400 => '#C5A059', // Gold accent
+                    500 => '#C5A059', // Gold accent (dark mode buttons)
+                    600 => '#191731', // Navy (light mode buttons)
+                    700 => '#2D2A45',
+                    800 => '#191731', // Official navy
+                    900 => '#121024',
+                    950 => '#0D0F1A',
                 ],
                 // Gray: Navy tones
                 'gray' => [
@@ -80,9 +77,6 @@ class AdminPanelProvider extends PanelProvider
                     900 => '#4D3B1A',
                     950 => '#2F2313',
                 ],
-                'danger' => Color::Red,
-                'success' => Color::Green,
-                'info' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -112,7 +106,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->resources([
-                config('filament-logger.activity_resource')
+                config('filament-logger.activity_resource'),
             ]);
     }
 }

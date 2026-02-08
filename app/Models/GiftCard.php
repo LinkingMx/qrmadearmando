@@ -15,6 +15,7 @@ class GiftCard extends Model
 
     protected $fillable = [
         'legacy_id',
+        'gift_card_category_id',
         'user_id',
         'status',
         'expiry_date',
@@ -34,9 +35,17 @@ class GiftCard extends Model
     protected static function booted()
     {
         static::creating(function ($giftCard) {
-            // Auto-generar legacy_id si no se proporciona
+            // Category is required for legacy_id generation
+            if (empty($giftCard->gift_card_category_id)) {
+                throw new \InvalidArgumentException(
+                    'gift_card_category_id is required when creating a gift card.'
+                );
+            }
+
+            // Auto-generate legacy_id based on category prefix if not provided
             if (empty($giftCard->legacy_id)) {
-                $giftCard->legacy_id = static::generateLegacyId();
+                $category = GiftCardCategory::findOrFail($giftCard->gift_card_category_id);
+                $giftCard->legacy_id = $category->generateNextLegacyId();
             }
         });
 
@@ -51,9 +60,14 @@ class GiftCard extends Model
         });
 
         static::forceDeleted(function ($giftCard) {
-            $qrService = new QrCodeService();
+            $qrService = new QrCodeService;
             $qrService->deleteQrCodes($giftCard->qr_image_path);
         });
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(GiftCardCategory::class, 'gift_card_category_id');
     }
 
     public function user()
@@ -68,7 +82,7 @@ class GiftCard extends Model
 
     public function generateQrCodes(): void
     {
-        $qrService = new QrCodeService();
+        $qrService = new QrCodeService;
 
         // Eliminar QR codes anteriores si existen
         if ($this->qr_image_path) {
@@ -84,42 +98,8 @@ class GiftCard extends Model
 
     public function getQrCodeUrls(): array
     {
-        $qrService = new QrCodeService();
+        $qrService = new QrCodeService;
+
         return $qrService->getQrCodeUrls($this->qr_image_path ?? '');
-    }
-
-    /**
-     * Genera un nuevo legacy_id único en formato EMCAD + 6 dígitos
-     */
-    protected static function generateLegacyId(): string
-    {
-        // Buscar el último legacy_id con formato EMCAD
-        $lastLegacyId = static::withTrashed()
-            ->whereNotNull('legacy_id')
-            ->where('legacy_id', 'LIKE', 'EMCAD%')
-            ->orderByRaw('CAST(SUBSTRING(legacy_id, 6) AS UNSIGNED) DESC')
-            ->value('legacy_id');
-
-        // Extraer el número y calcular el siguiente
-        if ($lastLegacyId) {
-            $lastNumber = (int) substr($lastLegacyId, 5);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            // Si no hay ninguno, empezar desde 1
-            $nextNumber = 1;
-        }
-
-        // Generar el nuevo legacy_id con padding de 6 dígitos
-        $newLegacyId = 'EMCAD' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-
-        // Verificar unicidad (por si acaso hay colisiones)
-        $attempts = 0;
-        while (static::withTrashed()->where('legacy_id', $newLegacyId)->exists() && $attempts < 100) {
-            $nextNumber++;
-            $newLegacyId = 'EMCAD' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-            $attempts++;
-        }
-
-        return $newLegacyId;
     }
 }

@@ -6,15 +6,11 @@ use App\Filament\Resources\GiftCardResource\Pages;
 use App\Filament\Resources\GiftCardResource\RelationManagers;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
-use App\Services\TransactionService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Notifications\Notification;
 
 class GiftCardResource extends Resource
 {
@@ -24,10 +20,15 @@ class GiftCardResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-qr-code';
+
     protected static ?string $navigationGroup = 'Administración de QR';
+
     protected static ?string $navigationLabel = 'QR Codes';
+
     protected static ?string $pluralModelLabel = 'QR Codes';
+
     protected static ?string $modelLabel = 'QR Code';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -72,7 +73,7 @@ class GiftCardResource extends Resource
                                         $category = GiftCardCategory::find($categoryId);
 
                                         return $category
-                                            ? 'Ej: ' . $category->prefix . '000001 (automático)'
+                                            ? 'Ej: '.$category->prefix.'000001 (automático)'
                                             : 'Primero selecciona una categoría';
                                     })
                                     ->prefixIcon('heroicon-m-hashtag')
