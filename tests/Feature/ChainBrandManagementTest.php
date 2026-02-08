@@ -165,7 +165,7 @@ test('branch can access chain through brand', function () {
 // ===== Hierarchy tests =====
 
 test('full hierarchy chain to brand to branch works', function () {
-    $chain = Chain::create(['name' => 'Cadenas Don Carlos']);
+    $chain = Chain::create(['name' => 'Grupo Empresarial Test']);
 
     $mochomos = Brand::create(['chain_id' => $chain->id, 'name' => 'Mochomos']);
     $donCarlos = Brand::create(['chain_id' => $chain->id, 'name' => 'Don Carlos']);
@@ -185,5 +185,5 @@ test('full hierarchy chain to brand to branch works', function () {
 
     // Verify branch -> brand -> chain navigation
     $mochMty->load('brand.chain');
-    expect($mochMty->brand->chain->name)->toBe('Cadenas Don Carlos');
+    expect($mochMty->brand->chain->name)->toBe('Grupo Empresarial Test');
 });
