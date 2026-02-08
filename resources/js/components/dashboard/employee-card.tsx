@@ -2,6 +2,7 @@ import { EmployeeGiftCard } from '@/types/employee-dashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useAppearance } from '@/hooks/use-appearance';
 import {
     CalendarIcon,
     CheckCircle2Icon,
@@ -14,6 +15,9 @@ interface EmployeeCardProps {
 }
 
 export function EmployeeCard({ giftCard }: EmployeeCardProps) {
+    const { resolvedAppearance } = useAppearance();
+    const isDark = resolvedAppearance === 'dark';
+
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -40,7 +44,7 @@ export function EmployeeCard({ giftCard }: EmployeeCardProps) {
                                 {/* Logo arriba del QR */}
                                 <div className="w-full flex justify-center">
                                     <img
-                                        src="/logo.svg"
+                                        src={isDark ? '/logo_light.webp' : '/logo_dark.webp'}
                                         alt="Logo"
                                         className="w-full h-auto"
                                     />

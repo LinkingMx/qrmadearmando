@@ -215,10 +215,10 @@ export function QRScannerNative({ onScan, onError, isActive }: QRScannerNativePr
                                 <div className="relative">
                                     <div className="w-64 h-64 border-2 border-green-500 border-dashed animate-pulse rounded-lg"></div>
                                     <div className="absolute top-2 left-2 text-green-400 text-xs font-mono bg-black/50 px-2 py-1 rounded">
-                                        QR Target Zone
+                                        Zona de Objetivo QR
                                     </div>
                                     <div className="absolute bottom-2 right-2 text-green-400 text-xs font-mono bg-black/50 px-2 py-1 rounded">
-                                        {scanCount} scans
+                                        {scanCount} escaneos
                                     </div>
                                 </div>
                             </div>

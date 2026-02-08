@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\GiftCardScope;
 use App\Services\QrCodeService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -21,6 +24,9 @@ class GiftCard extends Model
         'expiry_date',
         'qr_image_path',
         'balance',
+        'scope',
+        'chain_id',
+        'brand_id',
     ];
 
     protected function casts(): array
@@ -29,6 +35,7 @@ class GiftCard extends Model
             'status' => 'boolean',
             'expiry_date' => 'date',
             'balance' => 'decimal:2',
+            'scope' => GiftCardScope::class,
         ];
     }
 
@@ -65,14 +72,38 @@ class GiftCard extends Model
         });
     }
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(GiftCardCategory::class, 'gift_card_category_id');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Chain this gift card is scoped to (when scope is 'chain').
+     */
+    public function chain(): BelongsTo
+    {
+        return $this->belongsTo(Chain::class);
+    }
+
+    /**
+     * Brand this gift card is scoped to (when scope is 'brand').
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    /**
+     * Specific branches this gift card can be used at (when scope is 'branch').
+     */
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class);
     }
 
     public function transactions(): HasMany
@@ -80,19 +111,33 @@ class GiftCard extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /**
+     * Check if this gift card can be used at the given branch based on its scope.
+     */
+    public function canBeUsedAtBranch(Branch $branch): bool
+    {
+        $branch->loadMissing('brand');
+
+        return match ($this->scope) {
+            GiftCardScope::CHAIN => $this->chain_id === $branch->brand->chain_id,
+            GiftCardScope::BRAND => $this->brand_id === $branch->brand_id,
+            GiftCardScope::BRANCH => $this->branches()->where('branches.id', $branch->id)->exists(),
+        };
+    }
+
     public function generateQrCodes(): void
     {
         $qrService = new QrCodeService;
 
-        // Eliminar QR codes anteriores si existen
+        // Delete previous QR codes if they exist
         if ($this->qr_image_path) {
             $qrService->deleteQrCodes($this->qr_image_path);
         }
 
-        // Generar nuevos QR codes
+        // Generate new QR codes
         $qrImagePath = $qrService->generateQrCodes($this->id, $this->legacy_id);
 
-        // Actualizar el campo sin disparar eventos
+        // Update field without triggering events
         $this->updateQuietly(['qr_image_path' => $qrImagePath]);
     }
 

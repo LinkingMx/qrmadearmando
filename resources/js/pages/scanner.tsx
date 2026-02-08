@@ -21,7 +21,7 @@ import axios from '@/lib/axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Scanner',
+        title: 'Escáner',
         href: '/scanner',
     },
 ];
@@ -98,7 +98,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Scanner" />
+            <Head title="Escáner" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4 md:p-6">
                 {/* Header */}

@@ -23,7 +23,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Scanner',
+        title: 'Escáner',
         href: scanner(),
         icon: QrCode,
     },

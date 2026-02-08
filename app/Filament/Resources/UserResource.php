@@ -3,21 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Group;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-
 
 class UserResource extends Resource
 {
@@ -27,9 +22,13 @@ class UserResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationGroup = 'Administración de sistema';
+
     protected static ?string $navigationLabel = 'Usuarios';
+
     protected static ?string $pluralModelLabel = 'Usuarios';
+
     protected static ?string $modelLabel = 'Usuario';
 
     public static function form(Form $form): Form
@@ -94,8 +93,7 @@ class UserResource extends Resource
                                             ->required(fn (string $operation): bool => $operation === 'create')
                                             ->prefixIcon('heroicon-m-lock-closed')
                                             ->live(onBlur: true)
-                                            ->helperText(fn (string $operation): string =>
-                                                $operation === 'create'
+                                            ->helperText(fn (string $operation): string => $operation === 'create'
                                                     ? 'Ingrese una contraseña segura (mínimo 8 caracteres).'
                                                     : 'Deja en blanco si no deseas cambiar la contraseña.'
                                             )
@@ -126,14 +124,14 @@ class UserResource extends Resource
                                     ->required()
                                     ->placeholder('Seleccionar rol')
                                     ->prefixIcon('heroicon-m-shield-check')
-                                    ->helperText('El rol por defecto para nuevos usuarios es Employee')
+                                    ->helperText('Employee: Empleado humano | BranchTerminal: Terminal de sucursal (acceso a scanner)')
                                     ->columnSpanFull(),
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Usuario Activo')
                                     ->default(true)
                                     ->helperText('Los usuarios inactivos no podrán iniciar sesión')
                                     ->disabled(fn ($record) => $record && $record->id === auth()->id())
-                                    ->dehydrated(fn ($record) => !$record || $record->id !== auth()->id())
+                                    ->dehydrated(fn ($record) => ! $record || $record->id !== auth()->id())
                                     ->inline(false)
                                     ->columnSpanFull(),
                             ])
@@ -147,8 +145,8 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('avatar')
-                ->label('Foto')
-                ->circular(),
+                    ->label('Foto')
+                    ->circular(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
@@ -220,11 +218,12 @@ class UserResource extends Resource
                                 ->title('No puedes desactivar tu propia cuenta')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
                         $giftCardsCount = $record->giftCards()->count();
-                        $record->is_active = !$record->is_active;
+                        $record->is_active = ! $record->is_active;
                         $record->save();
 
                         \Filament\Notifications\Notification::make()

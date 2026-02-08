@@ -1,8 +1,11 @@
 import { useSidebar } from '@/components/ui/sidebar';
+import { useAppearance } from '@/hooks/use-appearance';
 
 export default function AppLogo() {
     const { state } = useSidebar();
+    const { appearance, resolvedAppearance } = useAppearance();
     const isCollapsed = state === 'collapsed';
+    const isDark = resolvedAppearance === 'dark';
 
     return (
         <>
@@ -16,11 +19,11 @@ export default function AppLogo() {
                     />
                 </div>
             ) : (
-                // Expanded: Show full logo
+                // Expanded: Show full logo (light logo for dark mode, dark logo for light mode)
                 <div className="flex items-center gap-2 w-full">
                     <img
-                        src="/logo.svg?v=2"
-                        alt="QR Codemesón"
+                        src={isDark ? '/logo_light.webp' : '/logo_dark.webp'}
+                        alt="QR Costeño"
                         className="h-6 w-auto"
                     />
                 </div>

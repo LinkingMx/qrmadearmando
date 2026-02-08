@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GiftCardScope;
 use App\Http\Requests\ProcessDebitRequest;
 use App\Models\GiftCard;
 use App\Models\Transaction;
@@ -47,23 +48,23 @@ class ScannerController extends Controller
             ->with('user')
             ->first();
 
-        if (!$giftCard) {
+        if (! $giftCard) {
             return response()->json([
-                'error' => 'QR no encontrado. Verifique el código e intente nuevamente.'
+                'error' => 'QR no encontrado. Verifique el código e intente nuevamente.',
             ], 404);
         }
 
-        if (!$giftCard->status) {
+        if (! $giftCard->status) {
             return response()->json([
-                'error' => 'Este QR está inactivo y no puede ser utilizado.'
+                'error' => 'Este QR está inactivo y no puede ser utilizado.',
             ], 422);
         }
 
         // Generate QR image path - prefer UUID QR
         $qrImagePath = null;
         if ($giftCard->qr_image_path) {
-            $uuidQrPath = 'qr-codes/' . $giftCard->id . '_uuid.svg';
-            $legacyQrPath = 'qr-codes/' . $giftCard->id . '_legacy.svg';
+            $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
+            $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
 
             if (Storage::disk('public')->exists($uuidQrPath)) {
                 $qrImagePath = Storage::url($uuidQrPath);
@@ -100,16 +101,30 @@ class ScannerController extends Controller
             $branch = auth()->user()->branch;
 
             // Check if gift card is active
-            if (!$giftCard->status) {
+            if (! $giftCard->status) {
                 return response()->json([
-                    'error' => 'Este QR está inactivo y no puede ser utilizado.'
+                    'error' => 'Este QR está inactivo y no puede ser utilizado.',
+                ], 422);
+            }
+
+            // Validate gift card scope against current branch
+            $branch->loadMissing('brand');
+            if (! $giftCard->canBeUsedAtBranch($branch)) {
+                $scopeMessage = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => 'Este QR es tipo Cadena y no puede usarse en esta sucursal.',
+                    GiftCardScope::BRAND => 'Este QR es tipo Marca y solo funciona en sucursales de la marca asignada.',
+                    GiftCardScope::BRANCH => 'Este QR es tipo Sucursal y no está asignado a esta ubicación.',
+                };
+
+                return response()->json([
+                    'error' => $scopeMessage,
                 ], 422);
             }
 
             // Validate sufficient balance
             if ($giftCard->balance < $request->amount) {
                 return response()->json([
-                    'error' => 'Saldo insuficiente. Saldo disponible: $' . number_format($giftCard->balance, 2)
+                    'error' => 'Saldo insuficiente. Saldo disponible: $'.number_format($giftCard->balance, 2),
                 ], 422);
             }
 
@@ -123,7 +138,7 @@ class ScannerController extends Controller
             );
 
             // Generate unique folio
-            $folio = 'TRX-' . now()->format('Ymd') . '-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+            $folio = 'TRX-'.now()->format('Ymd').'-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
             // Refresh gift card to get updated balance
             $giftCard->refresh();
@@ -157,11 +172,11 @@ class ScannerController extends Controller
             ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Error al procesar la transacción. Por favor intente nuevamente.'
+                'error' => 'Error al procesar la transacción. Por favor intente nuevamente.',
             ], 500);
         }
     }
@@ -181,10 +196,10 @@ class ScannerController extends Controller
         return response()->json([
             'data' => $transactions->map(function ($transaction) {
                 // Generate folio same way as processDebit
-                $folio = 'TRX-' . $transaction->created_at->format('Ymd') . '-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+                $folio = 'TRX-'.$transaction->created_at->format('Ymd').'-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
                 // Generate reference same way as processDebit
-                $reference = 'REF-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+                $reference = 'REF-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
                 return [
                     'id' => $transaction->id,

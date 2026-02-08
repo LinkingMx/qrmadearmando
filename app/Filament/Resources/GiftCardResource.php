@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\GiftCardScope;
 use App\Filament\Resources\GiftCardResource\Pages;
 use App\Filament\Resources\GiftCardResource\RelationManagers;
 use App\Models\GiftCard;
@@ -101,19 +102,69 @@ class GiftCardResource extends Resource
                                     ->helperText('Activo/Inactivo')
                                     ->default(true),
                             ]),
-                        Forms\Components\Section::make('Códigos QR Generados')
-                            ->icon('heroicon-o-qr-code')
-                            ->schema([
-                                Forms\Components\View::make('filament.qr-codes')
-                                    ->visible(fn ($record) => $record !== null && $record->qr_image_path)
-                                    ->viewData(fn ($record) => [
-                                        'qrUrls' => $record ? $record->getQrCodeUrls() : ['uuid' => null, 'legacy' => null],
-                                        'legacyId' => $record?->legacy_id,
-                                        'uuid' => $record?->id,
-                                    ]),
-                            ])
-                            ->visible(fn ($record) => $record !== null),
                     ]),
+
+                Forms\Components\Section::make('Alcance de Uso')
+                    ->description('Define dónde puede usarse este QR Code')
+                    ->icon('heroicon-o-map-pin')
+                    ->schema([
+                        Forms\Components\Select::make('scope')
+                            ->label('Tipo de Alcance')
+                            ->options(GiftCardScope::options())
+                            ->required()
+                            ->default('chain')
+                            ->live()
+                            ->prefixIcon('heroicon-o-globe-alt')
+                            ->helperText('Define el alcance geográfico del QR'),
+
+                        Forms\Components\Select::make('chain_id')
+                            ->label('Cadena')
+                            ->relationship('chain', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar cadena')
+                            ->prefixIcon('heroicon-o-globe-alt')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'chain')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'chain')
+                            ->helperText('El QR podrá usarse en todas las sucursales de esta cadena'),
+
+                        Forms\Components\Select::make('brand_id')
+                            ->label('Marca')
+                            ->relationship('brand', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar marca')
+                            ->prefixIcon('heroicon-o-building-storefront')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'brand')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'brand')
+                            ->helperText('El QR podrá usarse en todas las sucursales de esta marca'),
+
+                        Forms\Components\Select::make('branches')
+                            ->label('Sucursales')
+                            ->relationship('branches', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar sucursales')
+                            ->prefixIcon('heroicon-o-map-pin')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'branch')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'branch')
+                            ->helperText('Selecciona una o varias sucursales donde podrá usarse el QR'),
+                    ])
+                    ->columns(1),
+
+                Forms\Components\Section::make('Códigos QR Generados')
+                    ->icon('heroicon-o-qr-code')
+                    ->schema([
+                        Forms\Components\View::make('filament.qr-codes')
+                            ->visible(fn ($record) => $record !== null && $record->qr_image_path)
+                            ->viewData(fn ($record) => [
+                                'qrUrls' => $record ? $record->getQrCodeUrls() : ['uuid' => null, 'legacy' => null],
+                                'legacyId' => $record?->legacy_id,
+                                'uuid' => $record?->id,
+                            ]),
+                    ])
+                    ->visible(fn ($record) => $record !== null),
             ]);
     }
 
@@ -135,6 +186,19 @@ class GiftCardResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('warning'),
+                Tables\Columns\TextColumn::make('scope')
+                    ->label('Alcance')
+                    ->badge()
+                    ->color(fn (GiftCardScope $state): string => match ($state) {
+                        GiftCardScope::CHAIN => 'success',
+                        GiftCardScope::BRAND => 'warning',
+                        GiftCardScope::BRANCH => 'primary',
+                    })
+                    ->formatStateUsing(fn (GiftCardScope $state): string => match ($state) {
+                        GiftCardScope::CHAIN => 'Cadena',
+                        GiftCardScope::BRAND => 'Marca',
+                        GiftCardScope::BRANCH => 'Sucursal',
+                    }),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuario')
                     ->searchable()
@@ -178,6 +242,18 @@ class GiftCardResource extends Resource
                     ->label('Categoría')
                     ->relationship('category', 'name')
                     ->placeholder('Todas las categorías'),
+                Tables\Filters\SelectFilter::make('scope')
+                    ->label('Alcance')
+                    ->options(GiftCardScope::options())
+                    ->placeholder('Todos los alcances'),
+                Tables\Filters\SelectFilter::make('chain_id')
+                    ->label('Cadena')
+                    ->relationship('chain', 'name')
+                    ->placeholder('Todas las cadenas'),
+                Tables\Filters\SelectFilter::make('brand_id')
+                    ->label('Marca')
+                    ->relationship('brand', 'name')
+                    ->placeholder('Todas las marcas'),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
@@ -192,7 +268,7 @@ class GiftCardResource extends Resource
                     ->color('primary'),
             ])
             ->bulkActions([
-                // No bulk actions - QR Empleados can only be activated/deactivated
+                // No bulk actions
             ]);
     }
 
@@ -211,8 +287,6 @@ class GiftCardResource extends Resource
             'edit' => Pages\EditGiftCard::route('/{record}/edit'),
         ];
     }
-
-    // Removed soft delete query scope - QR Empleados cannot be deleted
 
     public static function canDelete($record): bool
     {
