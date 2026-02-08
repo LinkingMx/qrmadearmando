@@ -1,5 +1,3 @@
-@import '../../../../vendor/filament/filament/resources/css/index.css';
-
 /**
  * QR Made Armando - Filament Admin Theme
  * Based on SELA Travel Design System
@@ -7,6 +5,9 @@
  * - Navy: #191731 (primary dark)
  * - Cream: #EBDFC7 (primary light)
  * - Gold: #C5A059 (accent/warning)
+ *
+ * Note: Tailwind CSS 4.0 is imported via app.css
+ * This file only contains Filament-specific customizations
  */
 
 :root {
