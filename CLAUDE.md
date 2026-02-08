@@ -202,3 +202,106 @@ php artisan filament:upgrade  # Run after composer install/update
 - Branch deletion is completely disabled in Filament admin
 - No delete button in edit page, table actions, or bulk actions
 - Prevents accidental deletion of critical organizational data
+
+## Claude Code Skills
+
+This project has specialized skills installed to enhance development efficiency. Skills are invoked automatically based on context or manually via `/skill-name`.
+
+### Available Skills
+
+**Core Development Skills:**
+
+1. **pest-testing** - Pest PHP 4.1 testing framework
+   - **Auto-activates:** When writing tests, debugging test failures, working with assertions
+   - **Manual invoke:** `/pest-testing` or when user mentions "test", "spec", "TDD"
+   - **Use for:** Creating unit/feature tests, browser testing, architecture tests
+   - **Key features:**
+     - Prefer specific assertions (`assertSuccessful()` over `assertStatus(200)`)
+     - Use datasets for repetitive validation tests
+     - Browser tests with real browser integration
+     - Architecture testing for code conventions
+   - **Run tests:** `composer test` or `vendor/bin/pest --watch`
+
+2. **inertia-react-development** - Inertia.js v2 + React 19
+   - **Auto-activates:** When working with React pages, forms, navigation, or `<Link>`, `<Form>`, `useForm`
+   - **Manual invoke:** `/inertia-react-development`
+   - **Use for:** Creating/modifying React page components, client-side forms, SPA navigation
+   - **Key features:**
+     - Use `<Form>` component for forms (auto CSRF, validation errors)
+     - Use `<Link>` for navigation (maintains SPA behavior)
+     - Deferred props for progressive loading
+     - Polling for real-time updates
+     - WhenVisible for infinite scroll
+   - **Common pitfall:** Don't use traditional `<a>` or `<form>` tags
+
+3. **wayfinder-development** - Laravel Wayfinder type-safe routing
+   - **Auto-activates:** When importing from `@/actions/` or `@/routes/`, calling Laravel routes from TypeScript
+   - **Manual invoke:** `/wayfinder-development`
+   - **Use for:** Type-safe route references in frontend
+   - **Key patterns:**
+     ```typescript
+     import { store } from '@/actions/App/Http/Controllers/PostController'
+     <Form {...store.form()}><input name="title" /></Form>
+     store.url() // "/posts"
+     show.get(1) // { url: "/posts/1", method: "get" }
+     ```
+   - **Regenerate routes:** `php artisan wayfinder:generate --with-form --no-interaction`
+
+4. **tailwindcss-development** - Tailwind CSS 4.0
+   - **Auto-activates:** When adding styles, working with responsive design, dark mode, or UI changes
+   - **Manual invoke:** `/tailwindcss-development`
+   - **Use for:** Styling components, responsive layouts, dark mode implementation
+   - **Tailwind v4 specifics:**
+     - Use `@import "tailwindcss"` not `@tailwind` directives
+     - Use CSS `@theme` for configuration, not `tailwind.config.js`
+     - Replaced utilities: `bg-black/50` not `bg-opacity-50`
+     - Use `gap` utilities instead of margins for spacing
+   - **Dark mode:** Always add `dark:` variants if project uses dark mode
+
+5. **filament-docs** - FilamentPHP v4 documentation reference
+   - **Auto-activates:** When working with Filament admin panel components
+   - **Manual invoke:** `/filament-docs`
+   - **Use for:** Looking up exact Filament implementations, method signatures, patterns
+   - **Documentation structure:**
+     - `forms/` - All form field types and configurations
+     - `tables/` - Column types, filters, actions
+     - `actions/` - Action buttons and modals
+     - `general/03-resources/` - CRUD resources patterns
+     - `general/10-testing/` - Filament testing guide
+   - **Workflow:** Read docs → Extract patterns → Apply to code
+
+**Advanced Skills:**
+
+6. **devteam-laravel-skill** - AI Development Team (Opus 4.6 Agent Teams)
+   - **Manual invoke:** `/devteam-laravel-skill` or describe complex feature
+   - **Use for:**
+     - ✅ Multi-component feature development
+     - ✅ Complex system builds requiring architecture
+     - ✅ Large refactoring (5+ files)
+     - ✅ Complex integrations (payment gateways, external APIs)
+     - ✅ Features needing comprehensive testing + documentation
+   - **NOT for:**
+     - ❌ Single-file changes or quick bug fixes
+     - ❌ Simple CRUD operations
+     - ❌ Minor documentation updates
+   - **Workflow:** Planning → Development → Testing → Documentation (with approval checkpoints)
+   - **Cost optimized:** Opus 4.6 with adaptive thinking, effort level tuning
+
+### Skill Usage Guidelines
+
+**When skills auto-activate:**
+- Skills automatically engage based on context (e.g., editing a test file activates pest-testing)
+- Multiple skills can be active simultaneously
+- Skills provide specialized knowledge and patterns for their domain
+
+**Manual skill invocation:**
+- Use `/skill-name` when you need specialized help
+- Example: `/pest-testing help me write browser tests for the scanner`
+- Skills listed in system are available for use
+
+**Best practices:**
+1. Let skills auto-activate - they know when they're needed
+2. Consult filament-docs before generating any Filament code
+3. Use devteam-laravel for ambitious features, not simple changes
+4. Always verify Wayfinder routes after backend route changes
+5. Follow Tailwind v4 patterns (no v3 utilities)
