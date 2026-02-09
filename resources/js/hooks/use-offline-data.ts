@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { initDB, GiftCard, Category } from '@/lib/db'
+import { ApiResponse, GiftCardListResponse, CategoryListResponse } from '@/types/api'
 
 export interface UseOfflineDataReturn {
   giftCards: GiftCard[]
@@ -20,6 +21,7 @@ export interface UseOfflineDataReturn {
 
 /**
  * Fetch gift cards from the API
+ * Response format: { data: GiftCard[] }
  */
 async function fetchGiftCardsFromAPI(): Promise<GiftCard[]> {
   const response = await fetch('/api/v1/gift-cards', {
@@ -33,12 +35,13 @@ async function fetchGiftCardsFromAPI(): Promise<GiftCard[]> {
     throw new Error(`Failed to fetch gift cards: ${response.statusText}`)
   }
 
-  const data = await response.json()
+  const data: GiftCardListResponse = await response.json()
   return data.data || []
 }
 
 /**
  * Fetch categories from the API
+ * Response format: { data: Category[] }
  */
 async function fetchCategoriesFromAPI(): Promise<Category[]> {
   const response = await fetch('/api/v1/categories', {
@@ -52,7 +55,7 @@ async function fetchCategoriesFromAPI(): Promise<Category[]> {
     throw new Error(`Failed to fetch categories: ${response.statusText}`)
   }
 
-  const data = await response.json()
+  const data: CategoryListResponse = await response.json()
   return data.data || []
 }
 

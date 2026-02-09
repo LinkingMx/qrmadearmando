@@ -13,6 +13,7 @@ import {
   removeOfflineAction,
   getPendingActions,
 } from '@/lib/db'
+import { ApiResponse } from '@/types/api'
 
 export interface ScanResult {
   legacy_id: string
@@ -48,6 +49,7 @@ export interface UseScannerOfflineReturn {
 
 /**
  * Process a debit transaction (online or queued offline)
+ * Response format: { data: ScanTransaction }
  */
 async function processDebitOnline(
   legacy_id: string,
@@ -71,12 +73,13 @@ async function processDebitOnline(
     throw new Error(`Failed to process debit: ${response.statusText}`)
   }
 
-  const data = await response.json()
+  const data: ApiResponse<ScanTransaction> = await response.json()
   return data.data
 }
 
 /**
  * Sync pending transactions to server
+ * Server endpoint returns: { data: { synced: boolean, offline_id: string } }
  */
 async function syncTransactionsToAPI(
   actions: OfflineAction[]

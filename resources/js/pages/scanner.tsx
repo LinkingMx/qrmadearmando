@@ -16,6 +16,7 @@ import {
     ScannerPageProps,
     Transaction,
 } from '@/types/scanner';
+import { extractResponseData } from '@/types/api';
 import { Head } from '@inertiajs/react';
 import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -79,7 +80,19 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                     const response = await axios.post('/api/scanner/lookup', {
                         identifier,
                     });
-                    setGiftCard(response.data.gift_card);
+
+                    // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
+                    const giftCardData = extractResponseData<GiftCard>(
+                        response.data,
+                        'gift_card'
+                    );
+
+                    if (giftCardData) {
+                        setGiftCard(giftCardData);
+                        setMode('viewing');
+                    } else {
+                        throw new Error('Formato de respuesta inválido');
+                    }
                 } catch (apiErr: any) {
                     const errorMsg =
                         apiErr.response?.data?.error ||

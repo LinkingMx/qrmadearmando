@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Services\TransactionService;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class DebitController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private TransactionService $transactionService
     ) {}
@@ -38,18 +41,24 @@ class DebitController extends Controller
 
             // Verify card is active
             if (! $giftCard->status) {
-                return response()->json([
-                    'error' => 'Gift card está inactivo',
-                ], 403);
+                return $this->error(
+                    'INACTIVE_CARD',
+                    'Gift card está inactivo',
+                    403
+                );
             }
 
             // Verify sufficient balance
             if ($giftCard->balance < $validated['amount']) {
-                return response()->json([
-                    'error' => 'Saldo insuficiente',
-                    'balance' => $giftCard->balance,
-                    'requested' => $validated['amount'],
-                ], 422);
+                return $this->error(
+                    'INSUFFICIENT_BALANCE',
+                    'Saldo insuficiente',
+                    422,
+                    [
+                        'balance' => $giftCard->balance,
+                        'requested' => $validated['amount'],
+                    ]
+                );
             }
 
             // Process debit using transaction service
@@ -62,8 +71,8 @@ class DebitController extends Controller
             );
 
             // Return transaction with updated balance
-            return response()->json([
-                'data' => [
+            return $this->success(
+                [
                     'id' => $transaction->id,
                     'gift_card_id' => $transaction->gift_card_id,
                     'type' => $transaction->type,
@@ -74,26 +83,25 @@ class DebitController extends Controller
                     'created_at' => $transaction->created_at->timestamp,
                     'synced' => true,
                 ],
-            ], 201)
+                null,
+                201
+            )
                 ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'error' => 'Gift card no encontrado',
-            ], 404);
+            return $this->notFound('Gift card');
         } catch (ValidationException $e) {
-            return response()->json([
-                'error' => 'Validación fallida',
-                'errors' => $e->errors(),
-            ], 422);
+            return $this->validationError($e->errors(), 'Validación fallida');
         } catch (\Exception $e) {
             \Log::error('Debit processing error:', [
                 'legacy_id' => $validated['legacy_id'] ?? null,
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'error' => 'Error al procesar débito',
-            ], 500);
+            return $this->error(
+                'PROCESSING_ERROR',
+                'Error al procesar débito',
+                500
+            );
         }
     }
 }

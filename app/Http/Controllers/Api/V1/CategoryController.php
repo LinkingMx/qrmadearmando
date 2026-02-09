@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Models\GiftCardCategory;
 use Illuminate\Http\JsonResponse;
 
 class CategoryController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Get all gift card categories
      * Public endpoint - no authentication required
@@ -29,9 +32,7 @@ class CategoryController extends Controller
             });
 
         // Set cache headers for offline use (24 hours)
-        return response()->json([
-            'data' => $categories,
-        ])
+        return $this->success($categories)
             ->header('Cache-Control', 'public, max-age=86400')
             ->header('ETag', hash('sha256', json_encode($categories)));
     }
