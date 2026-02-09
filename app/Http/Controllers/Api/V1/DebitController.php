@@ -37,7 +37,7 @@ class DebitController extends Controller
                 ->firstOrFail();
 
             // Verify card is active
-            if ($giftCard->status === 'inactive') {
+            if (! $giftCard->status) {
                 return response()->json([
                     'error' => 'Gift card está inactivo',
                 ], 403);
@@ -67,9 +67,9 @@ class DebitController extends Controller
                     'id' => $transaction->id,
                     'gift_card_id' => $transaction->gift_card_id,
                     'type' => $transaction->type,
-                    'amount' => $transaction->amount,
-                    'balance_before' => $transaction->balance_before,
-                    'balance_after' => $transaction->balance_after,
+                    'amount' => (float) $transaction->amount,
+                    'balance_before' => (float) $transaction->balance_before,
+                    'balance_after' => (float) $transaction->balance_after,
                     'description' => $transaction->description,
                     'created_at' => $transaction->created_at->timestamp,
                     'synced' => true,

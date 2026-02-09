@@ -11,7 +11,7 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Create branch
+    // Create branch with brand and chain
     $this->branch = Branch::factory()->create();
 
     // Create category
@@ -23,13 +23,15 @@ beforeEach(function () {
         ]
     );
 
-    // Create gift card
+    // Create gift card with chain scope (simplest for testing)
     $this->giftCard = GiftCard::create([
         'id' => \Illuminate\Support\Str::uuid(),
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'DEBIT000001',
         'balance' => 1000.00,
-        'status' => 'active',
+        'status' => true,
+        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'chain_id' => $this->branch->brand->chain_id,
     ]);
 
     // Create user with branch
@@ -58,13 +60,13 @@ describe('Debit API', function () {
         ]);
 
         expect($response->status())->toBe(201)
-            ->and($response->json('data.amount'))->toBe(100.0)
-            ->and($response->json('data.balance_before'))->toBe(1000.0)
-            ->and($response->json('data.balance_after'))->toBe(900.0);
+            ->and((float) $response->json('data.amount'))->toBe(100.0)
+            ->and((float) $response->json('data.balance_before'))->toBe(1000.0)
+            ->and((float) $response->json('data.balance_after'))->toBe(900.0);
 
         // Verify gift card balance was updated
         $this->giftCard->refresh();
-        expect($this->giftCard->balance)->toBe(900.00);
+        expect((float) $this->giftCard->balance)->toBe(900.00);
     });
 
     it('returns 422 for insufficient balance', function () {
@@ -113,7 +115,7 @@ describe('Sync API', function () {
 
     it('can sync offline transaction', function () {
         Sanctum::actingAs($this->user);
-        $offlineId = \Illuminate\Support\Str::uuid();
+        $offlineId = (string) \Illuminate\Support\Str::uuid();
 
         $response = $this->postJson('/api/v1/sync/transactions', [
             'offline_id' => $offlineId,
@@ -124,18 +126,18 @@ describe('Sync API', function () {
 
         expect($response->status())->toBe(201)
             ->and($response->json('data.offline_id'))->toBe($offlineId)
-            ->and($response->json('data.amount'))->toBe(50.0)
+            ->and((float) $response->json('data.amount'))->toBe(50.0)
             ->and($response->json('message'))->toContain('exitosamente');
 
         // Verify transaction was recorded
         $transaction = Transaction::where('offline_id', $offlineId)->first();
         expect($transaction)->not->toBeNull()
-            ->and($transaction->amount)->toBe(50.0);
+            ->and((float) $transaction->amount)->toBe(50.0);
     });
 
     it('prevents duplicate offline transactions', function () {
         Sanctum::actingAs($this->user);
-        $offlineId = \Illuminate\Support\Str::uuid();
+        $offlineId = (string) \Illuminate\Support\Str::uuid();
 
         // First sync
         $this->postJson('/api/v1/sync/transactions', [
@@ -152,6 +154,8 @@ describe('Sync API', function () {
         ]);
 
         expect($response->status())->toBe(200)
+            ->and($response->json('data.offline_id'))->toBe($offlineId)
+            ->and((float) $response->json('data.amount'))->toBe(50.0)
             ->and($response->json('message'))->toContain('ya sincronizada');
 
         // Verify only one transaction was created

@@ -41,9 +41,10 @@ class SyncController extends Controller
                         'id' => $existingTransaction->id,
                         'gift_card_id' => $existingTransaction->gift_card_id,
                         'type' => $existingTransaction->type,
-                        'amount' => $existingTransaction->amount,
-                        'balance_before' => $existingTransaction->balance_before,
-                        'balance_after' => $existingTransaction->balance_after,
+                        'amount' => (float) $existingTransaction->amount,
+                        'balance_before' => (float) $existingTransaction->balance_before,
+                        'balance_after' => (float) $existingTransaction->balance_after,
+                        'offline_id' => $existingTransaction->offline_id,
                         'created_at' => $existingTransaction->created_at->timestamp,
                         'synced' => true,
                     ],
@@ -55,7 +56,7 @@ class SyncController extends Controller
             $giftCard = GiftCard::where('legacy_id', $validated['legacy_id'])->firstOrFail();
 
             // Verify card is active
-            if ($giftCard->status === 'inactive') {
+            if (! $giftCard->status) {
                 return response()->json([
                     'error' => 'Gift card está inactivo',
                 ], 403);
@@ -85,9 +86,10 @@ class SyncController extends Controller
                     'id' => $transaction->id,
                     'gift_card_id' => $transaction->gift_card_id,
                     'type' => $transaction->type,
-                    'amount' => $transaction->amount,
-                    'balance_before' => $transaction->balance_before,
-                    'balance_after' => $transaction->balance_after,
+                    'amount' => (float) $transaction->amount,
+                    'balance_before' => (float) $transaction->balance_before,
+                    'balance_after' => (float) $transaction->balance_after,
+                    'offline_id' => $transaction->offline_id,
                     'created_at' => $transaction->created_at->timestamp,
                     'synced' => true,
                 ],

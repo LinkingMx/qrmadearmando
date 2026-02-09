@@ -61,7 +61,7 @@ class GiftCardController extends Controller
             ->firstOrFail();
 
         // Check if card is active
-        if ($giftCard->status === 'inactive') {
+        if (! $giftCard->status) {
             return response()->json([
                 'error' => 'Gift card está inactivo',
             ], 403);

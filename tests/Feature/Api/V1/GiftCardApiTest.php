@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
 use App\Models\User;
@@ -18,13 +19,18 @@ beforeEach(function () {
         ]
     );
 
-    // Create test gift cards
+    // Create a branch for gift card scope validation
+    $branch = Branch::factory()->create();
+
+    // Create test gift cards with chain scope
     $this->activeCard = GiftCard::create([
         'id' => \Illuminate\Support\Str::uuid(),
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'APITST000001',
         'balance' => 1000.00,
-        'status' => 'active',
+        'status' => true,
+        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'chain_id' => $branch->brand->chain_id,
     ]);
 
     $this->inactiveCard = GiftCard::create([
@@ -32,7 +38,9 @@ beforeEach(function () {
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'APITST000002',
         'balance' => 500.00,
-        'status' => 'inactive',
+        'status' => false,
+        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'chain_id' => $branch->brand->chain_id,
     ]);
 
     // Create test user
@@ -45,8 +53,8 @@ describe('Gift Card API', function () {
 
         expect($response->status())->toBe(200)
             ->and($response->json('data.legacy_id'))->toBe('APITST000001')
-            ->and($response->json('data.balance'))->toBe(1000.00)
-            ->and($response->json('data.status'))->toBe('active');
+            ->and((float) $response->json('data.balance'))->toBe(1000.00)
+            ->and($response->json('data.status'))->toBe(true);
     });
 
     it('returns 404 for non-existent gift card', function () {
