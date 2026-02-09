@@ -12,13 +12,13 @@ use InvalidArgumentException;
 
 class TransactionService
 {
-    public function credit(GiftCard $giftCard, float $amount, ?string $description = null, ?int $adminUserId = null, ?int $branchId = null): Transaction
+    public function credit(GiftCard $giftCard, float $amount, ?object $user = null, ?string $description = null, ?int $branchId = null, ?string $offlineId = null): Transaction
     {
         if ($amount <= 0) {
             throw new InvalidArgumentException('Amount must be greater than zero.');
         }
 
-        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $user, $description, $branchId, $offlineId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore + $amount;
@@ -32,8 +32,9 @@ class TransactionService
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'description' => $description,
-                'admin_user_id' => $adminUserId,
+                'admin_user_id' => $user?->id,
                 'branch_id' => $branchId,
+                'offline_id' => $offlineId,
             ]);
         });
 
@@ -42,7 +43,7 @@ class TransactionService
         return $transaction;
     }
 
-    public function debit(GiftCard $giftCard, float $amount, ?string $description = null, ?int $adminUserId = null, ?int $branchId = null): Transaction
+    public function debit(GiftCard $giftCard, float $amount, ?object $user = null, ?string $description = null, ?int $branchId = null, ?string $offlineId = null): Transaction
     {
         if ($amount <= 0) {
             throw new InvalidArgumentException('Amount must be greater than zero.');
@@ -55,7 +56,7 @@ class TransactionService
         // Validate gift card scope against the branch
         $this->validateScope($giftCard, $branchId);
 
-        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $user, $description, $branchId, $offlineId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore - $amount;
@@ -73,8 +74,9 @@ class TransactionService
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'description' => $description,
-                'admin_user_id' => $adminUserId,
+                'admin_user_id' => $user?->id,
                 'branch_id' => $branchId,
+                'offline_id' => $offlineId,
             ]);
         });
 
@@ -83,14 +85,14 @@ class TransactionService
         return $transaction;
     }
 
-    public function adjustment(GiftCard $giftCard, float $amount, ?string $description = null, ?int $adminUserId = null, ?int $branchId = null): Transaction
+    public function adjustment(GiftCard $giftCard, float $amount, ?object $user = null, ?string $description = null, ?int $branchId = null, ?string $offlineId = null): Transaction
     {
         // Branch is required only when reducing balance (negative amount)
         if ($amount < 0 && ! $branchId) {
             throw new InvalidArgumentException('Branch is required for adjustments that reduce balance.');
         }
 
-        $transaction = DB::transaction(function () use ($giftCard, $amount, $description, $adminUserId, $branchId) {
+        $transaction = DB::transaction(function () use ($giftCard, $amount, $user, $description, $branchId, $offlineId) {
             $giftCard->refresh();
             $balanceBefore = $giftCard->balance ?? 0;
             $balanceAfter = $balanceBefore + $amount;
@@ -108,8 +110,9 @@ class TransactionService
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'description' => $description,
-                'admin_user_id' => $adminUserId,
+                'admin_user_id' => $user?->id,
                 'branch_id' => $branchId,
+                'offline_id' => $offlineId,
             ]);
         });
 

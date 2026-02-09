@@ -19,6 +19,7 @@ class Transaction extends Model
         'description',
         'admin_user_id',
         'branch_id',
+        'offline_id',
     ];
 
     protected $casts = [
