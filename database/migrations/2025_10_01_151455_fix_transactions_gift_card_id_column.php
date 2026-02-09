@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            // Change gift_card_id to support UUIDs (36 characters)
-            $table->string('gift_card_id', 36)->change();
-        });
+        // This migration is no longer needed - the initial migration now uses foreignUuid()
+        // Keeping this as a no-op for backwards compatibility with existing migrations
     }
 
     /**
@@ -22,9 +20,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('transactions', function (Blueprint $table) {
-            // Revert back to bigint if needed
-            $table->unsignedBigInteger('gift_card_id')->change();
-        });
+        // No-op - see up() method for details
     }
 };
