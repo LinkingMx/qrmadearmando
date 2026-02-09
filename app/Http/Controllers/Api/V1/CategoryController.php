@@ -15,14 +15,14 @@ class CategoryController extends Controller
      */
     public function index(): JsonResponse
     {
-        $categories = GiftCardCategory::select('id', 'prefix', 'name_es', 'nature')
-            ->orderBy('name_es')
+        $categories = GiftCardCategory::select('id', 'prefix', 'name', 'nature')
+            ->orderBy('name')
             ->get()
             ->map(function ($category) {
                 return [
                     'id' => $category->id,
                     'prefix' => $category->prefix,
-                    'name_es' => $category->name_es,
+                    'name' => $category->name,
                     'nature' => $category->nature->value,
                     'cached_at' => now()->timestamp,
                 ];
