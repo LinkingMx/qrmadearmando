@@ -95,6 +95,31 @@ export default defineConfig({
                     },
 
                     {
+                        urlPattern: /^https:\/\/[^/]+\/api\/v1\/(gift-cards|categories)/,
+                        handler: 'CacheFirst',
+                        options: {
+                            cacheName: 'offline-data',
+                            expiration: {
+                                maxEntries: 50,
+                                maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                            },
+                        },
+                    },
+
+                    {
+                        urlPattern: /^https:\/\/[^/]+\/api\/v1\/(debit|sync|gift-cards\/search)/,
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'api-calls',
+                            networkTimeoutSeconds: 5,
+                            expiration: {
+                                maxEntries: 30,
+                                maxAgeSeconds: 60,
+                            },
+                        },
+                    },
+
+                    {
                         urlPattern: /^https:\/\/[^/]+\/api\//,
                         handler: 'NetworkFirst',
                         options: {

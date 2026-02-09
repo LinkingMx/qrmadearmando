@@ -3,6 +3,7 @@ import { DebitForm } from '@/components/scanner/debit-form';
 import { GiftCardInfo } from '@/components/scanner/gift-card-info';
 import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
 import { ReceiptModal } from '@/components/scanner/receipt-modal';
+import { OfflineStatusIndicator } from '@/components/offline-status-indicator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
@@ -17,7 +18,9 @@ import {
 } from '@/types/scanner';
 import { Head } from '@inertiajs/react';
 import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useScannerOffline } from '@/hooks/use-scanner-offline';
+import { useSyncManager } from '@/hooks/use-scanner-offline';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -33,22 +36,62 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     const [error, setError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showReceipt, setShowReceipt] = useState(false);
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    // Offline-first hooks
+    const offlineScanner = useScannerOffline();
+    const syncManager = useSyncManager();
+
+    // Monitor online/offline status
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Auto-sync when coming back online
+    useEffect(() => {
+        if (isOnline && syncManager.lastSyncTime === null) {
+            syncManager.syncPending().catch((err) => {
+                console.error('Auto-sync failed:', err);
+            });
+        }
+    }, [isOnline]);
 
     const handleScan = async (identifier: string) => {
         setError(null);
         setIsProcessing(true);
 
         try {
-            const response = await axios.post('/api/scanner/lookup', {
-                identifier,
-            });
+            // Try offline-first approach
+            const card = await offlineScanner.scan(identifier);
 
-            setGiftCard(response.data.gift_card);
-            setMode('viewing');
+            if (!card) {
+                // Fall back to API if offline scan fails
+                try {
+                    const response = await axios.post('/api/scanner/lookup', {
+                        identifier,
+                    });
+                    setGiftCard(response.data.gift_card);
+                } catch (apiErr: any) {
+                    const errorMsg =
+                        apiErr.response?.data?.error ||
+                        'Error al buscar el QR. Intente nuevamente.';
+                    setError(errorMsg);
+                }
+            } else {
+                setGiftCard(card as GiftCard);
+                setMode('viewing');
+            }
         } catch (err: any) {
-            const errorMsg =
-                err.response?.data?.error ||
-                'Error al buscar el QR. Intente nuevamente.';
+            const errorMsg = err.message || 'Error al buscar el QR.';
             setError(errorMsg);
         } finally {
             setIsProcessing(false);
@@ -62,20 +105,44 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
         setIsProcessing(true);
 
         try {
-            const response = await axios.post('/api/scanner/process-debit', {
-                gift_card_id: giftCard.id,
-                amount: data.amount,
-                reference: data.reference,
-                description: data.description,
-            });
+            // Use offline-capable debit processing
+            const offlineTransaction = await offlineScanner.processDebit(
+                giftCard.legacy_id,
+                data.amount,
+                data.description
+            );
 
-            setTransaction(response.data.transaction);
-            setMode('success');
-            setShowReceipt(true);
+            if (offlineTransaction) {
+                setTransaction({
+                    id: offlineTransaction.id,
+                    gift_card_id: offlineTransaction.gift_card_id,
+                    type: 'debit',
+                    amount: offlineTransaction.amount,
+                    balance_before: offlineTransaction.balance_before,
+                    balance_after: offlineTransaction.balance_after,
+                    created_at: new Date(offlineTransaction.created_at),
+                    user_id: user.id,
+                    branch_id: branch.id,
+                } as Transaction);
+                setMode('success');
+                setShowReceipt(true);
+
+                // Update gift card balance locally
+                setGiftCard({
+                    ...giftCard,
+                    balance: offlineTransaction.balance_after,
+                });
+            } else {
+                setError(
+                    offlineScanner.error ||
+                        'Error al procesar el descuento. Intente nuevamente.'
+                );
+            }
         } catch (err: any) {
             const errorMsg =
                 err.response?.data?.error ||
-                'Error al procesar el descuento. Intente nuevamente.';
+                err.message ||
+                'Error al procesar el descuento.';
             setError(errorMsg);
         } finally {
             setIsProcessing(false);
@@ -116,7 +183,22 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                             <span className="font-semibold">{user.name}</span>
                         </p>
                     </div>
+                    {!isOnline && (
+                        <Button
+                            onClick={() => syncManager.syncPending()}
+                            disabled={syncManager.isSyncing}
+                            variant="outline"
+                            size="sm"
+                        >
+                            {syncManager.isSyncing ? 'Sincronizando...' : 'Sincronizar'}
+                        </Button>
+                    )}
                 </div>
+
+                {/* Offline Status Indicator */}
+                {(!isOnline || (syncManager.isSyncing || (offlineScanner.error?.includes('Sin conexión')))) && (
+                    <OfflineStatusIndicator showPendingCount={true} />
+                )}
 
                 {/* Error Alert */}
                 {error && (
