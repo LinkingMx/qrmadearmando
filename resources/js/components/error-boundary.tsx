@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -8,8 +8,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircleIcon, RefreshCwIcon } from 'lucide-react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
     children: ReactNode;
@@ -145,12 +145,12 @@ export class ErrorBoundary extends Component<Props, State> {
                             {/* Error Details (Collapsible) */}
                             {error && import.meta.env.DEV && (
                                 <details className="rounded-lg border bg-muted/50 p-4">
-                                    <summary className="cursor-pointer font-medium text-sm text-muted-foreground hover:text-foreground">
+                                    <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
                                         Detalles del error (desarrollo)
                                     </summary>
                                     <div className="mt-4 space-y-2">
                                         <div>
-                                            <p className="font-semibold text-sm">
+                                            <p className="text-sm font-semibold">
                                                 Error:
                                             </p>
                                             <pre className="mt-1 overflow-auto rounded bg-muted p-2 text-xs">
@@ -160,7 +160,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                                         {error.stack && (
                                             <div>
-                                                <p className="font-semibold text-sm">
+                                                <p className="text-sm font-semibold">
                                                     Stack Trace:
                                                 </p>
                                                 <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
@@ -171,7 +171,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                                         {errorInfo?.componentStack && (
                                             <div>
-                                                <p className="font-semibold text-sm">
+                                                <p className="text-sm font-semibold">
                                                     Component Stack:
                                                 </p>
                                                 <pre className="mt-1 max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
@@ -185,7 +185,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                             {/* Production Error Message */}
                             {!import.meta.env.DEV && (
-                                <p className="text-center text-muted-foreground text-sm">
+                                <p className="text-center text-sm text-muted-foreground">
                                     Si el problema persiste, contacta al equipo
                                     de soporte técnico.
                                 </p>

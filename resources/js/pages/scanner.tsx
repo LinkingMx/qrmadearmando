@@ -1,14 +1,16 @@
+import { OfflineStatusIndicator } from '@/components/offline-status-indicator';
 import { BranchTransactionList } from '@/components/scanner/branch-transaction-list';
 import { DebitForm } from '@/components/scanner/debit-form';
 import { GiftCardInfo } from '@/components/scanner/gift-card-info';
 import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
 import { ReceiptModal } from '@/components/scanner/receipt-modal';
-import { OfflineStatusIndicator } from '@/components/offline-status-indicator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { useScannerOffline, useSyncManager } from '@/hooks/use-scanner-offline';
 import AppLayout from '@/layouts/app-layout';
 import axios from '@/lib/axios';
 import { BreadcrumbItem } from '@/types';
+import { extractResponseData } from '@/types/api';
 import {
     DebitFormData,
     GiftCard,
@@ -16,12 +18,9 @@ import {
     ScannerPageProps,
     Transaction,
 } from '@/types/scanner';
-import { extractResponseData } from '@/types/api';
 import { Head } from '@inertiajs/react';
 import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useScannerOffline } from '@/hooks/use-scanner-offline';
-import { useSyncManager } from '@/hooks/use-scanner-offline';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -84,7 +83,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                     // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
                     const giftCardData = extractResponseData<GiftCard>(
                         response.data,
-                        'gift_card'
+                        'gift_card',
                     );
 
                     if (giftCardData) {
@@ -122,7 +121,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
             const offlineTransaction = await offlineScanner.processDebit(
                 giftCard.legacy_id,
                 data.amount,
-                data.description
+                data.description,
             );
 
             if (offlineTransaction) {
@@ -148,7 +147,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
             } else {
                 setError(
                     offlineScanner.error ||
-                        'Error al procesar el descuento. Intente nuevamente.'
+                        'Error al procesar el descuento. Intente nuevamente.',
                 );
             }
         } catch (err: any) {
@@ -203,13 +202,17 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                             variant="outline"
                             size="sm"
                         >
-                            {syncManager.isSyncing ? 'Sincronizando...' : 'Sincronizar'}
+                            {syncManager.isSyncing
+                                ? 'Sincronizando...'
+                                : 'Sincronizar'}
                         </Button>
                     )}
                 </div>
 
                 {/* Offline Status Indicator */}
-                {(!isOnline || (syncManager.isSyncing || (offlineScanner.error?.includes('Sin conexión')))) && (
+                {(!isOnline ||
+                    syncManager.isSyncing ||
+                    offlineScanner.error?.includes('Sin conexión')) && (
                     <OfflineStatusIndicator showPendingCount={true} />
                 )}
 

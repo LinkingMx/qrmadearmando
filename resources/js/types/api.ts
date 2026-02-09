@@ -9,20 +9,20 @@ import { GiftCard, Transaction } from './scanner';
  * Pagination metadata included in list responses
  */
 export interface PaginationMeta {
-  current_page: number;
-  per_page: number;
-  total: number;
-  last_page: number;
-  from: number | null;
-  to: number | null;
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+    from: number | null;
+    to: number | null;
 }
 
 /**
  * Response metadata container
  */
 export interface ResponseMeta {
-  pagination?: PaginationMeta;
-  timestamp?: string;
+    pagination?: PaginationMeta;
+    timestamp?: string;
 }
 
 /**
@@ -30,24 +30,24 @@ export interface ResponseMeta {
  * All endpoints return data wrapped in a { data: T } structure
  */
 export interface ApiResponse<T = unknown> {
-  data: T;
-  meta?: ResponseMeta;
-  error?: {
-    code: string;
-    message: string;
-    details?: Record<string, any>;
-  };
+    data: T;
+    meta?: ResponseMeta;
+    error?: {
+        code: string;
+        message: string;
+        details?: Record<string, any>;
+    };
 }
 
 /**
  * Error response format
  */
 export interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, any>;
-  };
+    error: {
+        code: string;
+        message: string;
+        details?: Record<string, any>;
+    };
 }
 
 /**
@@ -63,10 +63,10 @@ export type TransactionResponse = ApiResponse<Transaction>;
 export type TransactionListResponse = ApiResponse<Transaction[]>;
 
 export interface GiftCardCategory {
-  id: string;
-  name: string;
-  prefix: string;
-  nature: 'payment_method' | 'discount';
+    id: string;
+    name: string;
+    prefix: string;
+    nature: 'payment_method' | 'discount';
 }
 
 export type CategoryListResponse = ApiResponse<GiftCardCategory[]>;
@@ -76,20 +76,24 @@ export type CategoryListResponse = ApiResponse<GiftCardCategory[]>;
  * Handles responses that may have varying structures
  */
 export function extractResponseData<T>(
-  response: any,
-  fallbackPath?: string
+    response: any,
+    fallbackPath?: string,
 ): T | null {
-  // Try new format first: { data: T }
-  if (response && 'data' in response && typeof response.data === 'object') {
-    if (Array.isArray(response.data) || typeof response.data !== 'object' || !('gift_card' in response.data)) {
-      return response.data;
+    // Try new format first: { data: T }
+    if (response && 'data' in response && typeof response.data === 'object') {
+        if (
+            Array.isArray(response.data) ||
+            typeof response.data !== 'object' ||
+            !('gift_card' in response.data)
+        ) {
+            return response.data;
+        }
     }
-  }
 
-  // Try old format with fallbackPath (e.g., 'gift_card' or 'transaction')
-  if (fallbackPath && response && fallbackPath in response) {
-    return response[fallbackPath];
-  }
+    // Try old format with fallbackPath (e.g., 'gift_card' or 'transaction')
+    if (fallbackPath && response && fallbackPath in response) {
+        return response[fallbackPath];
+    }
 
-  return null;
+    return null;
 }

@@ -3,48 +3,48 @@
  * Queues debits for sync when offline
  */
 
-import { useCallback, useState, useRef } from 'react'
 import {
-  initDB,
-  GiftCard,
-  Transaction,
-  OfflineAction,
-  queueOfflineAction,
-  removeOfflineAction,
-  getPendingActions,
-} from '@/lib/db'
-import { ApiResponse } from '@/types/api'
+    getPendingActions,
+    GiftCard,
+    initDB,
+    OfflineAction,
+    queueOfflineAction,
+    removeOfflineAction,
+    Transaction,
+} from '@/lib/db';
+import { ApiResponse } from '@/types/api';
+import { useCallback, useRef, useState } from 'react';
 
 export interface ScanResult {
-  legacy_id: string
-  amount: number
-  description?: string
+    legacy_id: string;
+    amount: number;
+    description?: string;
 }
 
 export interface ScanTransaction {
-  id: string
-  gift_card_id: string
-  type: 'debit'
-  amount: number
-  balance_before: number
-  balance_after: number
-  created_at: number
-  synced: boolean
-  offline_id?: string
+    id: string;
+    gift_card_id: string;
+    type: 'debit';
+    amount: number;
+    balance_before: number;
+    balance_after: number;
+    created_at: number;
+    synced: boolean;
+    offline_id?: string;
 }
 
 export interface UseScannerOfflineReturn {
-  scan: (legacy_id: string) => Promise<GiftCard | null>
-  processDebit: (
-    legacy_id: string,
-    amount: number,
-    description?: string
-  ) => Promise<ScanTransaction | null>
-  getSyncQueue: () => Promise<OfflineAction[]>
-  syncPendingTransactions: () => Promise<void>
-  isProcessing: boolean
-  error: string | null
-  lastScannedCard: GiftCard | null
+    scan: (legacy_id: string) => Promise<GiftCard | null>;
+    processDebit: (
+        legacy_id: string,
+        amount: number,
+        description?: string,
+    ) => Promise<ScanTransaction | null>;
+    getSyncQueue: () => Promise<OfflineAction[]>;
+    syncPendingTransactions: () => Promise<void>;
+    isProcessing: boolean;
+    error: string | null;
+    lastScannedCard: GiftCard | null;
 }
 
 /**
@@ -52,388 +52,386 @@ export interface UseScannerOfflineReturn {
  * Response format: { data: ScanTransaction }
  */
 async function processDebitOnline(
-  legacy_id: string,
-  amount: number,
-  description?: string
+    legacy_id: string,
+    amount: number,
+    description?: string,
 ): Promise<ScanTransaction> {
-  const response = await fetch('/api/v1/debit', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({
-      legacy_id,
-      amount,
-      description,
-    }),
-  })
+    const response = await fetch('/api/v1/debit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+        },
+        body: JSON.stringify({
+            legacy_id,
+            amount,
+            description,
+        }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to process debit: ${response.statusText}`)
-  }
+    if (!response.ok) {
+        throw new Error(`Failed to process debit: ${response.statusText}`);
+    }
 
-  const data: ApiResponse<ScanTransaction> = await response.json()
-  return data.data
+    const data: ApiResponse<ScanTransaction> = await response.json();
+    return data.data;
 }
 
 /**
  * Sync pending transactions to server
  * Server endpoint returns: { data: { synced: boolean, offline_id: string } }
  */
-async function syncTransactionsToAPI(
-  actions: OfflineAction[]
-): Promise<void> {
-  for (const action of actions) {
-    try {
-      const response = await fetch('/api/v1/sync/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          offline_id: action.id,
-          ...action.payload,
-        }),
-      })
+async function syncTransactionsToAPI(actions: OfflineAction[]): Promise<void> {
+    for (const action of actions) {
+        try {
+            const response = await fetch('/api/v1/sync/transactions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify({
+                    offline_id: action.id,
+                    ...action.payload,
+                }),
+            });
 
-      if (response.ok) {
-        // Remove from queue after successful sync
-        await removeOfflineAction(action.id)
-      } else {
-        // Update error info if sync failed
-        await updateOfflineActionError(
-          action.id,
-          `Server error: ${response.statusText}`
-        )
-      }
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Sync failed'
-      await updateOfflineActionError(action.id, errorMsg)
+            if (response.ok) {
+                // Remove from queue after successful sync
+                await removeOfflineAction(action.id);
+            } else {
+                // Update error info if sync failed
+                await updateOfflineActionError(
+                    action.id,
+                    `Server error: ${response.statusText}`,
+                );
+            }
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Sync failed';
+            await updateOfflineActionError(action.id, errorMsg);
+        }
     }
-  }
 }
 
 /**
  * Update offline action error
  */
 async function updateOfflineActionError(
-  id: string,
-  error: string
+    id: string,
+    error: string,
 ): Promise<void> {
-  const db = await initDB()
-  const action = await db.get('offline_queue', id)
+    const db = await initDB();
+    const action = await db.get('offline_queue', id);
 
-  if (action) {
-    await db.put('offline_queue', {
-      ...action,
-      retry_count: action.retry_count + 1,
-      last_error: error,
-    })
-  }
+    if (action) {
+        await db.put('offline_queue', {
+            ...action,
+            retry_count: action.retry_count + 1,
+            last_error: error,
+        });
+    }
 }
 
 /**
  * Hook for QR scanning with offline debit support
  */
 export function useScannerOffline(): UseScannerOfflineReturn {
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [lastScannedCard, setLastScannedCard] = useState<GiftCard | null>(null)
-  const maxRetriesRef = useRef(3)
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastScannedCard, setLastScannedCard] = useState<GiftCard | null>(
+        null,
+    );
+    const maxRetriesRef = useRef(3);
 
-  /**
-   * Scan a QR code (lookup gift card)
-   */
-  const scan = useCallback(async (legacy_id: string) => {
-    try {
-      setError(null)
-      const db = await initDB()
+    /**
+     * Scan a QR code (lookup gift card)
+     */
+    const scan = useCallback(async (legacy_id: string) => {
+        try {
+            setError(null);
+            const db = await initDB();
 
-      // Look up by legacy_id index
-      const index = await db.getAllFromIndex(
-        'gift_cards',
-        'by-legacy-id',
-        legacy_id
-      )
+            // Look up by legacy_id index
+            const index = await db.getAllFromIndex(
+                'gift_cards',
+                'by-legacy-id',
+                legacy_id,
+            );
 
-      if (index.length > 0) {
-        const card = index[0]
-        setLastScannedCard(card)
-        return card
-      }
-
-      // If not in cache and online, fetch from API
-      if (navigator.onLine) {
-        const response = await fetch(
-          `/api/v1/gift-cards/search?legacy_id=${legacy_id}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-          }
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          const card = data.data
-
-          // Cache the result
-          if (card) {
-            await db.put('gift_cards', {
-              ...card,
-              cached_at: Date.now(),
-            })
-            setLastScannedCard(card)
-            return card
-          }
-        }
-      }
-
-      setError('Gift card not found')
-      return null
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Scan failed'
-      setError(errorMsg)
-      return null
-    }
-  }, [])
-
-  /**
-   * Process debit (online or queue offline)
-   */
-  const processDebit = useCallback(
-    async (
-      legacy_id: string,
-      amount: number,
-      description?: string
-    ): Promise<ScanTransaction | null> => {
-      try {
-        setError(null)
-        setIsProcessing(true)
-
-        // First, get the gift card
-        const card = await scan(legacy_id)
-        if (!card) {
-          throw new Error('Gift card not found')
-        }
-
-        // Check if we have sufficient balance
-        if (card.balance < amount) {
-          throw new Error(
-            `Insufficient balance. Available: $${card.balance.toFixed(2)}`
-          )
-        }
-
-        // Try to process online
-        if (navigator.onLine) {
-          try {
-            const transaction = await processDebitOnline(
-              legacy_id,
-              amount,
-              description
-            )
-
-            // Update local cache with new balance
-            const db = await initDB()
-            await db.put('gift_cards', {
-              ...card,
-              balance: transaction.balance_after,
-              updated_at: Date.now(),
-              cached_at: Date.now(),
-            })
-
-            setLastScannedCard({
-              ...card,
-              balance: transaction.balance_after,
-            })
-
-            return transaction
-          } catch (err) {
-            // If online request fails, try queuing for offline sync
-            if (navigator.onLine) {
-              throw err
+            if (index.length > 0) {
+                const card = index[0];
+                setLastScannedCard(card);
+                return card;
             }
-            // Fall through to offline processing
-          }
+
+            // If not in cache and online, fetch from API
+            if (navigator.onLine) {
+                const response = await fetch(
+                    `/api/v1/gift-cards/search?legacy_id=${legacy_id}`,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                        },
+                    },
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const card = data.data;
+
+                    // Cache the result
+                    if (card) {
+                        await db.put('gift_cards', {
+                            ...card,
+                            cached_at: Date.now(),
+                        });
+                        setLastScannedCard(card);
+                        return card;
+                    }
+                }
+            }
+
+            setError('Gift card not found');
+            return null;
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Scan failed';
+            setError(errorMsg);
+            return null;
         }
+    }, []);
 
-        // Process offline - queue for sync
-        const db = await initDB()
-        const newBalance = card.balance - amount
+    /**
+     * Process debit (online or queue offline)
+     */
+    const processDebit = useCallback(
+        async (
+            legacy_id: string,
+            amount: number,
+            description?: string,
+        ): Promise<ScanTransaction | null> => {
+            try {
+                setError(null);
+                setIsProcessing(true);
 
-        // Create offline transaction record
-        const offlineTransaction: Transaction = {
-          id: crypto.randomUUID(),
-          gift_card_id: card.id,
-          type: 'debit',
-          amount,
-          balance_before: card.balance,
-          balance_after: newBalance,
-          description: description || 'Offline debit',
-          created_at: Date.now(),
-          synced: false,
-          offline_id: crypto.randomUUID(),
-        }
+                // First, get the gift card
+                const card = await scan(legacy_id);
+                if (!card) {
+                    throw new Error('Gift card not found');
+                }
 
-        // Save to local transactions
-        await db.add('transactions', offlineTransaction)
+                // Check if we have sufficient balance
+                if (card.balance < amount) {
+                    throw new Error(
+                        `Insufficient balance. Available: $${card.balance.toFixed(2)}`,
+                    );
+                }
 
-        // Queue for sync
-        await queueOfflineAction({
-          action_type: 'debit',
-          payload: {
-            legacy_id,
-            amount,
-            description,
-            offline_id: offlineTransaction.offline_id,
-          },
-          created_at: Date.now(),
-          retry_count: 0,
-          last_error: null,
-        })
+                // Try to process online
+                if (navigator.onLine) {
+                    try {
+                        const transaction = await processDebitOnline(
+                            legacy_id,
+                            amount,
+                            description,
+                        );
 
-        // Update local gift card balance
-        await db.put('gift_cards', {
-          ...card,
-          balance: newBalance,
-          updated_at: Date.now(),
-          is_dirty: true, // Mark for sync
-        })
+                        // Update local cache with new balance
+                        const db = await initDB();
+                        await db.put('gift_cards', {
+                            ...card,
+                            balance: transaction.balance_after,
+                            updated_at: Date.now(),
+                            cached_at: Date.now(),
+                        });
 
-        setLastScannedCard({
-          ...card,
-          balance: newBalance,
-        })
+                        setLastScannedCard({
+                            ...card,
+                            balance: transaction.balance_after,
+                        });
 
-        return offlineTransaction
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Debit failed'
-        setError(errorMsg)
-        return null
-      } finally {
-        setIsProcessing(false)
-      }
-    },
-    [scan]
-  )
+                        return transaction;
+                    } catch (err) {
+                        // If online request fails, try queuing for offline sync
+                        if (navigator.onLine) {
+                            throw err;
+                        }
+                        // Fall through to offline processing
+                    }
+                }
 
-  /**
-   * Get pending transactions in sync queue
-   */
-  const getSyncQueue = useCallback(async () => {
-    try {
-      return await getPendingActions()
-    } catch (err) {
-      // Error getting sync queue, returning empty array
-      return []
-    }
-  }, [])
+                // Process offline - queue for sync
+                const db = await initDB();
+                const newBalance = card.balance - amount;
 
-  /**
-   * Sync pending transactions to server
-   */
-  const syncPendingTransactions = useCallback(async () => {
-    try {
-      setIsProcessing(true)
-      setError(null)
+                // Create offline transaction record
+                const offlineTransaction: Transaction = {
+                    id: crypto.randomUUID(),
+                    gift_card_id: card.id,
+                    type: 'debit',
+                    amount,
+                    balance_before: card.balance,
+                    balance_after: newBalance,
+                    description: description || 'Offline debit',
+                    created_at: Date.now(),
+                    synced: false,
+                    offline_id: crypto.randomUUID(),
+                };
 
-      if (!navigator.onLine) {
-        setError('No internet connection')
-        return
-      }
+                // Save to local transactions
+                await db.add('transactions', offlineTransaction);
 
-      const pendingActions = await getPendingActions()
+                // Queue for sync
+                await queueOfflineAction({
+                    action_type: 'debit',
+                    payload: {
+                        legacy_id,
+                        amount,
+                        description,
+                        offline_id: offlineTransaction.offline_id,
+                    },
+                    created_at: Date.now(),
+                    retry_count: 0,
+                    last_error: null,
+                });
 
-      if (pendingActions.length === 0) {
-        return
-      }
+                // Update local gift card balance
+                await db.put('gift_cards', {
+                    ...card,
+                    balance: newBalance,
+                    updated_at: Date.now(),
+                    is_dirty: true, // Mark for sync
+                });
 
-      // Sync all pending actions
-      await syncTransactionsToAPI(pendingActions)
+                setLastScannedCard({
+                    ...card,
+                    balance: newBalance,
+                });
 
-      // Refresh gift cards from API
-      const response = await fetch('/api/v1/gift-cards', {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+                return offlineTransaction;
+            } catch (err) {
+                const errorMsg =
+                    err instanceof Error ? err.message : 'Debit failed';
+                setError(errorMsg);
+                return null;
+            } finally {
+                setIsProcessing(false);
+            }
         },
-      })
+        [scan],
+    );
 
-      if (response.ok) {
-        const data = await response.json()
-        const db = await initDB()
-
-        for (const card of data.data || []) {
-          await db.put('gift_cards', {
-            ...card,
-            cached_at: Date.now(),
-            is_dirty: false,
-          })
+    /**
+     * Get pending transactions in sync queue
+     */
+    const getSyncQueue = useCallback(async () => {
+        try {
+            return await getPendingActions();
+        } catch (err) {
+            // Error getting sync queue, returning empty array
+            return [];
         }
-      }
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Sync failed'
-      setError(errorMsg)
-      throw err
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [])
+    }, []);
 
-  return {
-    scan,
-    processDebit,
-    getSyncQueue,
-    syncPendingTransactions,
-    isProcessing,
-    error,
-    lastScannedCard,
-  }
+    /**
+     * Sync pending transactions to server
+     */
+    const syncPendingTransactions = useCallback(async () => {
+        try {
+            setIsProcessing(true);
+            setError(null);
+
+            if (!navigator.onLine) {
+                setError('No internet connection');
+                return;
+            }
+
+            const pendingActions = await getPendingActions();
+
+            if (pendingActions.length === 0) {
+                return;
+            }
+
+            // Sync all pending actions
+            await syncTransactionsToAPI(pendingActions);
+
+            // Refresh gift cards from API
+            const response = await fetch('/api/v1/gift-cards', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const db = await initDB();
+
+                for (const card of data.data || []) {
+                    await db.put('gift_cards', {
+                        ...card,
+                        cached_at: Date.now(),
+                        is_dirty: false,
+                    });
+                }
+            }
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Sync failed';
+            setError(errorMsg);
+            throw err;
+        } finally {
+            setIsProcessing(false);
+        }
+    }, []);
+
+    return {
+        scan,
+        processDebit,
+        getSyncQueue,
+        syncPendingTransactions,
+        isProcessing,
+        error,
+        lastScannedCard,
+    };
 }
 
 /**
  * Hook for manual sync control
  */
 export function useSyncManager() {
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
-  const syncPending = useCallback(async () => {
-    try {
-      setIsSyncing(true)
-      setError(null)
+    const syncPending = useCallback(async () => {
+        try {
+            setIsSyncing(true);
+            setError(null);
 
-      if (!navigator.onLine) {
-        throw new Error('No internet connection')
-      }
+            if (!navigator.onLine) {
+                throw new Error('No internet connection');
+            }
 
-      const pendingActions = await getPendingActions()
+            const pendingActions = await getPendingActions();
 
-      if (pendingActions.length > 0) {
-        await syncTransactionsToAPI(pendingActions)
-      }
+            if (pendingActions.length > 0) {
+                await syncTransactionsToAPI(pendingActions);
+            }
 
-      setLastSyncTime(Date.now())
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Sync failed'
-      setError(errorMsg)
-      throw err
-    } finally {
-      setIsSyncing(false)
-    }
-  }, [])
+            setLastSyncTime(Date.now());
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Sync failed';
+            setError(errorMsg);
+            throw err;
+        } finally {
+            setIsSyncing(false);
+        }
+    }, []);
 
-  return {
-    syncPending,
-    isSyncing,
-    error,
-    lastSyncTime,
-  }
+    return {
+        syncPending,
+        isSyncing,
+        error,
+        lastSyncTime,
+    };
 }

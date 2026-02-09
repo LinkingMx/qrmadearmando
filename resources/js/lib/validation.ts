@@ -49,10 +49,7 @@ export const amountValidation = {
     /**
      * Check if amount is within balance
      */
-    withinBalance: (
-        value: number,
-        balance: number
-    ): ValidationResult => {
+    withinBalance: (value: number, balance: number): ValidationResult => {
         return (
             value <= balance ||
             `Saldo insuficiente. Disponible: $${balance.toFixed(2)}`
@@ -103,7 +100,11 @@ export const stringValidation = {
     /**
      * Check if string matches pattern
      */
-    pattern: (value: string, pattern: RegExp, message: string): ValidationResult => {
+    pattern: (
+        value: string,
+        pattern: RegExp,
+        message: string,
+    ): ValidationResult => {
         return pattern.test(value) || message;
     },
 };

@@ -21,7 +21,7 @@ createInertiaApp({
         root.render(
             <ErrorBoundary>
                 <App {...props} />
-            </ErrorBoundary>
+            </ErrorBoundary>,
         );
     },
     progress: {

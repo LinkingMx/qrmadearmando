@@ -67,7 +67,7 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
                         const response = await fetch('/api/v1/me', {
                             method: 'GET',
                             headers: {
-                                'Accept': 'application/json',
+                                Accept: 'application/json',
                                 'Content-Type': 'application/json',
                             },
                         });
@@ -85,7 +85,7 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
                                         JSON.stringify({
                                             data: json.data,
                                             cached_at: new Date().toISOString(),
-                                        })
+                                        }),
                                     );
                                 }
                             }
@@ -104,7 +104,9 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
                         if (isMounted) {
                             setData(cachedData);
                             if (!navigator.onLine) {
-                                setError('Viendo datos del último sincronización');
+                                setError(
+                                    'Viendo datos del último sincronización',
+                                );
                             }
                         }
                         return;
@@ -128,11 +130,14 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
         fetchGiftCard();
 
         // Auto-refresh every 5 minutes when online
-        const refreshInterval = setInterval(() => {
-            if (navigator.onLine && isMounted) {
-                fetchGiftCard();
-            }
-        }, 5 * 60 * 1000);
+        const refreshInterval = setInterval(
+            () => {
+                if (navigator.onLine && isMounted) {
+                    fetchGiftCard();
+                }
+            },
+            5 * 60 * 1000,
+        );
 
         return () => {
             clearInterval(refreshInterval);

@@ -10,34 +10,34 @@
  * @returns Derived CryptoKey for AES encryption
  */
 export async function deriveKey(
-  password: string,
-  salt: Uint8Array
+    password: string,
+    salt: Uint8Array,
 ): Promise<CryptoKey> {
-  const encoder = new TextEncoder()
-  const passwordBuffer = encoder.encode(password)
+    const encoder = new TextEncoder();
+    const passwordBuffer = encoder.encode(password);
 
-  // Import password as raw key
-  const baseKey = await crypto.subtle.importKey(
-    'raw',
-    passwordBuffer,
-    { name: 'PBKDF2' },
-    false,
-    ['deriveBits', 'deriveKey']
-  )
+    // Import password as raw key
+    const baseKey = await crypto.subtle.importKey(
+        'raw',
+        passwordBuffer,
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits', 'deriveKey'],
+    );
 
-  // Derive 256-bit key using PBKDF2
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: salt,
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    baseKey,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  )
+    // Derive 256-bit key using PBKDF2
+    return crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: salt,
+            iterations: 100000,
+            hash: 'SHA-256',
+        },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt'],
+    );
 }
 
 /**
@@ -48,23 +48,23 @@ export async function deriveKey(
  * @returns Ciphertext bytes
  */
 export async function encrypt(
-  plaintext: string,
-  key: CryptoKey,
-  iv: Uint8Array
+    plaintext: string,
+    key: CryptoKey,
+    iv: Uint8Array,
 ): Promise<Uint8Array> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(plaintext)
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plaintext);
 
-  const ciphertext = await crypto.subtle.encrypt(
-    {
-      name: 'AES-GCM',
-      iv: iv,
-    },
-    key,
-    data
-  )
+    const ciphertext = await crypto.subtle.encrypt(
+        {
+            name: 'AES-GCM',
+            iv: iv,
+        },
+        key,
+        data,
+    );
 
-  return new Uint8Array(ciphertext)
+    return new Uint8Array(ciphertext);
 }
 
 /**
@@ -75,21 +75,21 @@ export async function encrypt(
  * @returns Decrypted plaintext
  */
 export async function decrypt(
-  ciphertext: Uint8Array,
-  key: CryptoKey,
-  iv: Uint8Array
+    ciphertext: Uint8Array,
+    key: CryptoKey,
+    iv: Uint8Array,
 ): Promise<string> {
-  const plaintext = await crypto.subtle.decrypt(
-    {
-      name: 'AES-GCM',
-      iv: iv,
-    },
-    key,
-    ciphertext
-  )
+    const plaintext = await crypto.subtle.decrypt(
+        {
+            name: 'AES-GCM',
+            iv: iv,
+        },
+        key,
+        ciphertext,
+    );
 
-  const decoder = new TextDecoder()
-  return decoder.decode(plaintext)
+    const decoder = new TextDecoder();
+    return decoder.decode(plaintext);
 }
 
 /**
@@ -98,7 +98,7 @@ export async function decrypt(
  * @returns Random Uint8Array
  */
 export function getRandomBytes(length: number): Uint8Array {
-  return crypto.getRandomValues(new Uint8Array(length))
+    return crypto.getRandomValues(new Uint8Array(length));
 }
 
 /**
@@ -107,11 +107,11 @@ export function getRandomBytes(length: number): Uint8Array {
  * @returns Base64 string
  */
 export function bytesToBase64(bytes: Uint8Array): string {
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
 }
 
 /**
@@ -120,21 +120,21 @@ export function bytesToBase64(bytes: Uint8Array): string {
  * @returns Uint8Array
  */
 export function base64ToBytes(base64: string): Uint8Array {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
-  }
-  return bytes
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
 }
 
 /**
  * Encrypted data storage format
  */
 export interface EncryptedData {
-  salt: string // base64-encoded salt (16 bytes)
-  iv: string // base64-encoded IV (12 bytes)
-  ciphertext: string // base64-encoded ciphertext
+    salt: string; // base64-encoded salt (16 bytes)
+    iv: string; // base64-encoded IV (12 bytes)
+    ciphertext: string; // base64-encoded ciphertext
 }
 
 /**
@@ -143,18 +143,18 @@ export interface EncryptedData {
  * @returns EncryptedData object with salt, iv, and ciphertext
  */
 export async function encryptPassword(
-  password: string
+    password: string,
 ): Promise<EncryptedData> {
-  const salt = getRandomBytes(16)
-  const iv = getRandomBytes(12)
-  const key = await deriveKey(password, salt)
-  const ciphertext = await encrypt(password, key, iv)
+    const salt = getRandomBytes(16);
+    const iv = getRandomBytes(12);
+    const key = await deriveKey(password, salt);
+    const ciphertext = await encrypt(password, key, iv);
 
-  return {
-    salt: bytesToBase64(salt),
-    iv: bytesToBase64(iv),
-    ciphertext: bytesToBase64(ciphertext),
-  }
+    return {
+        salt: bytesToBase64(salt),
+        iv: bytesToBase64(iv),
+        ciphertext: bytesToBase64(ciphertext),
+    };
 }
 
 /**
@@ -164,14 +164,14 @@ export async function encryptPassword(
  * @returns Decrypted password string
  */
 export async function decryptPassword(
-  password: string,
-  encrypted: EncryptedData
+    password: string,
+    encrypted: EncryptedData,
 ): Promise<string> {
-  const salt = base64ToBytes(encrypted.salt)
-  const iv = base64ToBytes(encrypted.iv)
-  const ciphertext = base64ToBytes(encrypted.ciphertext)
-  const key = await deriveKey(password, salt)
-  return decrypt(ciphertext, key, iv)
+    const salt = base64ToBytes(encrypted.salt);
+    const iv = base64ToBytes(encrypted.iv);
+    const ciphertext = base64ToBytes(encrypted.ciphertext);
+    const key = await deriveKey(password, salt);
+    return decrypt(ciphertext, key, iv);
 }
 
 /**
@@ -182,8 +182,8 @@ export async function decryptPassword(
  * @returns Base64-encoded hash
  */
 export async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  return bytesToBase64(new Uint8Array(hashBuffer))
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return bytesToBase64(new Uint8Array(hashBuffer));
 }

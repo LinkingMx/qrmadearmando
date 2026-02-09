@@ -93,7 +93,8 @@ export function DebitForm({
                         )}
                         {form.amount && !form.errors.amount && (
                             <p className="text-sm text-muted-foreground">
-                                Saldo restante: ${form.remainingBalance.toFixed(2)}
+                                Saldo restante: $
+                                {form.remainingBalance.toFixed(2)}
                             </p>
                         )}
                     </div>
@@ -132,7 +133,9 @@ export function DebitForm({
                             type="text"
                             placeholder="Ej: Comida del día, Compra en tienda"
                             value={form.description}
-                            onChange={(e) => form.setDescription(e.target.value)}
+                            onChange={(e) =>
+                                form.setDescription(e.target.value)
+                            }
                             maxLength={500}
                             className="h-12 text-base"
                             disabled={isProcessing}

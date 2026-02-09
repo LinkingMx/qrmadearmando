@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
-import { validation, getError } from '@/lib/validation';
+import { getError, validation } from '@/lib/validation';
 import { DebitFormData, GiftCard } from '@/types/scanner';
+import { useCallback, useMemo, useState } from 'react';
 
 interface DebitFormErrors {
     amount?: string;
@@ -64,7 +64,7 @@ interface UseDebitFormReturn {
  */
 export function useDebitForm({
     giftCard,
-    onSuccess
+    onSuccess,
 }: UseDebitFormOptions): UseDebitFormReturn {
     const [amount, setAmount] = useState('');
     const [reference, setReference] = useState('');
@@ -114,7 +114,7 @@ export function useDebitForm({
                 // Check if within balance
                 const balanceResult = validation.amount.withinBalance(
                     amountValue,
-                    giftCard.balance
+                    giftCard.balance,
                 );
                 if (balanceResult !== true) {
                     newErrors.amount = balanceResult;

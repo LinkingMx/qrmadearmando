@@ -5,8 +5,6 @@
 
 /// <reference lib="webworker" />
 
- 
-
 /**
  * Push event handler - receives push notifications from backend
  * and displays them to the user
