@@ -2,59 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GiftCard;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class EmployeeDashboardController extends Controller
 {
     /**
      * Display the employee dashboard
+     * Note: Data is now loaded via useOfflineGiftCard() hook with API endpoint /api/v1/me
+     * This enables offline-first functionality with NetworkFirst caching
      */
     public function index()
     {
-        $giftCard = GiftCard::where('user_id', auth()->id())
-            ->with('user')
-            ->first();
-
-        if (! $giftCard) {
-            return Inertia::render('dashboard', [
-                'giftCard' => null,
-                'error' => 'No tienes una tarjeta QR asignada.',
-            ]);
-        }
-
-        // Generate QR image path - prefer UUID QR
-        $qrImagePath = null;
-        if ($giftCard->qr_image_path) {
-            $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
-            $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
-
-            if (Storage::disk('public')->exists($uuidQrPath)) {
-                $qrImagePath = Storage::url($uuidQrPath);
-            } elseif (Storage::disk('public')->exists($legacyQrPath)) {
-                $qrImagePath = Storage::url($legacyQrPath);
-            }
-        }
-
-        return Inertia::render('dashboard', [
-            'giftCard' => [
-                'id' => $giftCard->id,
-                'legacy_id' => $giftCard->legacy_id,
-                'balance' => (float) $giftCard->balance,
-                'status' => $giftCard->status,
-                'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
-                'qr_image_path' => $qrImagePath,
-                'user' => [
-                    'name' => $giftCard->user->name,
-                    'email' => $giftCard->user->email,
-                    'avatar' => $giftCard->user->avatar
-                        ? Storage::url($giftCard->user->avatar)
-                        : null,
-                ],
-            ],
-        ]);
+        return Inertia::render('dashboard');
     }
 
     /**

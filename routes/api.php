@@ -18,6 +18,10 @@ Route::prefix('v1')->group(function () {
 
     // Authenticated endpoints - require valid session
     Route::middleware(['auth:sanctum'])->group(function () {
+        // User's own data and gift card (for offline dashboard)
+        Route::get('me', [\App\Http\Controllers\Api\V1\UserController::class, 'me']);
+        Route::get('me/transactions', [\App\Http\Controllers\Api\V1\UserController::class, 'transactions']);
+
         // Gift card data - for caching
         Route::get('gift-cards', [\App\Http\Controllers\Api\V1\GiftCardController::class, 'index']);
 
