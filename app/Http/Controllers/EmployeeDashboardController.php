@@ -42,6 +42,12 @@ class EmployeeDashboardController extends Controller
                     'id' => $giftCard->category->id,
                     'name' => $giftCard->category->name,
                 ],
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                ],
             ];
         }
 
