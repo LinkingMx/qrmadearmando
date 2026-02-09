@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { validation, getError } from '@/lib/validation';
 import { DebitFormData, GiftCard } from '@/types/scanner';
 
 interface DebitFormErrors {
@@ -94,23 +95,38 @@ export function useDebitForm({
     }, [errors]);
 
     /**
-     * Validate all form fields
+     * Validate all form fields using shared validation rules
      * Sets errors and returns validation result
      */
     const validateForm = useCallback((): boolean => {
         const newErrors: DebitFormErrors = {};
 
-        // Validate amount
+        // Validate amount using shared validation rules
         const amountValue = parseFloat(amount);
-        if (!amount || isNaN(amountValue) || amountValue <= 0) {
-            newErrors.amount = 'El monto debe ser mayor a 0';
-        } else if (amountValue > giftCard.balance) {
-            newErrors.amount = `Saldo insuficiente. Disponible: $${giftCard.balance.toFixed(2)}`;
+        if (!amount || isNaN(amountValue)) {
+            newErrors.amount = 'El monto es requerido';
+        } else {
+            // Check if positive
+            const positiveResult = validation.amount.positive(amountValue);
+            if (positiveResult !== true) {
+                newErrors.amount = positiveResult;
+            } else {
+                // Check if within balance
+                const balanceResult = validation.amount.withinBalance(
+                    amountValue,
+                    giftCard.balance
+                );
+                if (balanceResult !== true) {
+                    newErrors.amount = balanceResult;
+                }
+            }
         }
 
-        // Validate reference (required)
-        if (!reference.trim()) {
-            newErrors.reference = 'La referencia es requerida';
+        // Validate reference using shared validation rules
+        const referenceResult = validation.reference.required(reference);
+        const referenceError = getError(referenceResult);
+        if (referenceError) {
+            newErrors.reference = referenceError;
         }
 
         // Description is optional, no validation needed
