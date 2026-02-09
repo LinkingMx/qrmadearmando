@@ -59,8 +59,8 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     // Auto-sync when coming back online
     useEffect(() => {
         if (isOnline && syncManager.lastSyncTime === null) {
-            syncManager.syncPending().catch((err) => {
-                console.error('Auto-sync failed:', err);
+            syncManager.syncPending().catch(() => {
+                // Auto-sync failed silently
             });
         }
     }, [isOnline]);

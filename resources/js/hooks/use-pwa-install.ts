@@ -108,7 +108,6 @@ export function usePwaInstall(): UsePwaInstallReturn {
             // Clear the deferred prompt
             setDeferredPrompt(null);
         } catch (err) {
-            console.error('Failed to show install prompt:', err);
             throw err;
         }
     };

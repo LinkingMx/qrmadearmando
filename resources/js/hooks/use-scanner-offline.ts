@@ -325,7 +325,7 @@ export function useScannerOffline(): UseScannerOfflineReturn {
     try {
       return await getPendingActions()
     } catch (err) {
-      console.error('Failed to get sync queue:', err)
+      // Error getting sync queue, returning empty array
       return []
     }
   }, [])

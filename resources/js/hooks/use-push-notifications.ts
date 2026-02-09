@@ -60,7 +60,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
                     setPermission(cachedPermission as NotificationPermission);
                 }
             } catch (err) {
-                console.error('Failed to initialize push notifications:', err);
+                // Error initializing push notifications silently
             }
         };
 

@@ -46,7 +46,7 @@ export function PwaInstallPrompt({ className = '' }: PwaInstallPromptProps) {
             setIsAnimating(false);
             setTimeout(() => setIsVisible(false), 300);
         } catch (err) {
-            console.error('Installation failed:', err);
+            // Error handled silently
         }
     };
 

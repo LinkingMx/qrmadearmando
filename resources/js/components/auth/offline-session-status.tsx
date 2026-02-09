@@ -43,7 +43,7 @@ export function OfflineSessionStatus({ compact = false }: OfflineSessionStatusPr
       await logout()
       window.location.reload()
     } catch (err) {
-      console.error('Failed to logout:', err)
+      // Error handled silently
     }
   }
 

@@ -5,7 +5,7 @@
 
 /// <reference lib="webworker" />
 
-/* eslint-disable no-restricted-globals */
+ 
 
 /**
  * Push event handler - receives push notifications from backend
@@ -39,7 +39,7 @@ addEventListener('push', (event: PushEvent) => {
             ),
         );
     } catch (error) {
-        console.error('Error handling push event:', error);
+        // Error handling push event
     }
 });
 
@@ -60,7 +60,6 @@ addEventListener('notificationclick', (event: NotificationEvent) => {
 
     // Validate URL to prevent navigation to external sites
     if (!url.startsWith('/')) {
-        console.warn('Invalid notification URL:', url);
         return;
     }
 
@@ -87,7 +86,6 @@ addEventListener('notificationclick', (event: NotificationEvent) => {
  * Optional: Notification close handler for analytics
  * Track when users dismiss notifications
  */
-addEventListener('notificationclose', (event: NotificationEvent) => {
+addEventListener('notificationclose', () => {
     // Could send analytics event here if needed
-    console.debug('Notification dismissed:', event.notification.data);
 });

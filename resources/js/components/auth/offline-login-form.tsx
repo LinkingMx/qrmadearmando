@@ -61,7 +61,7 @@ export function OfflineLoginForm({
           onSuccess?.()
         }, 1500)
       } catch (err) {
-        console.error('Failed to save offline session:', err)
+        // Error handled silently
       } finally {
         setIsSubmitting(false)
       }
@@ -82,7 +82,7 @@ export function OfflineLoginForm({
         onSuccess?.()
       }, 1500)
     } catch (err) {
-      console.error('Failed to enter guest mode:', err)
+      // Error handled silently
     } finally {
       setIsSubmitting(false)
     }

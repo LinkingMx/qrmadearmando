@@ -82,7 +82,7 @@ export function useOfflineData(autoRefresh = true): UseOfflineDataReturn {
       setCategories(cachedCategories)
       return { cards: cachedCards, categories: cachedCategories }
     } catch (err) {
-      console.error('Failed to load from cache:', err)
+      // Error loading from cache, returning empty data
       return { cards: [], categories: [] }
     }
   }, [])
@@ -127,7 +127,6 @@ export function useOfflineData(autoRefresh = true): UseOfflineDataReturn {
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Sync failed'
       setError(errorMsg)
-      console.error('Sync error:', err)
       return false
     } finally {
       setIsSyncing(false)

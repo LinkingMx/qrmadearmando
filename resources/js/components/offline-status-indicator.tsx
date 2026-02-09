@@ -41,7 +41,7 @@ export function OfflineStatusIndicator({
         const actions = await getPendingActions()
         setPendingCount(actions.length)
       } catch (err) {
-        console.error('Failed to check pending actions:', err)
+        // Error handled silently
       }
     }
 

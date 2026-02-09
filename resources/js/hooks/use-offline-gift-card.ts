@@ -93,7 +93,6 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
                         }
                     } catch (apiError) {
                         // API call failed, will fall back to cache below
-                        console.warn('Failed to fetch from API, falling back to cache:', apiError);
                     }
                 }
 
@@ -110,7 +109,7 @@ export function useOfflineGiftCard(): UseOfflineGiftCardResult {
                         }
                         return;
                     } catch (parseError) {
-                        console.error('Failed to parse cached data:', parseError);
+                        // Error parsing cached data, continuing with empty state
                     }
                 }
 

@@ -59,8 +59,7 @@ axios.interceptors.response.use(
 
         // Handle 403 Forbidden
         if (error.response?.status === 403) {
-            // Show error or redirect as needed
-            console.error('Access denied:', error.response.data);
+            // Access denied - handle silently
         }
 
         return Promise.reject(error);

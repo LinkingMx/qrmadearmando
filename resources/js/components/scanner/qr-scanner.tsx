@@ -48,7 +48,6 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                 setHasCamera(true);
             } catch (err) {
                 setHasCamera(false);
-                console.error('Camera not available:', err);
             }
         };
 
@@ -81,7 +80,6 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
             setIsScanning(false);
             isInitializedRef.current = false;
         } catch (err) {
-            console.error('Error stopping scanner:', err);
             setIsScanning(false);
             isInitializedRef.current = false;
         }
@@ -114,7 +112,6 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                 decodedText: string,
                 result: Html5QrcodeResult,
             ) => {
-                console.log('QR scanned successfully:', decodedText);
                 stopScanning();
                 onScan(decodedText);
             };
@@ -146,11 +143,6 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
                     cameraStarted = true;
                     break;
                 } catch (cameraErr) {
-                    console.warn(
-                        'Failed to start camera with config:',
-                        cameraConfig,
-                        cameraErr,
-                    );
                     continue;
                 }
             }
@@ -161,8 +153,6 @@ export function QRScanner({ onScan, onError, isActive }: QRScannerProps) {
 
             setIsScanning(true);
         } catch (err: any) {
-            console.error('Error starting camera:', err);
-
             let errorMsg = 'Error desconocido al acceder a la cámara.';
 
             if (err.message === 'CAMERA_NOT_AVAILABLE') {

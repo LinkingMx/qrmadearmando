@@ -44,7 +44,6 @@ export function QRScannerImproved({
 
     // Add debug log
     const addDebugLog = (message: string) => {
-        console.log(`[QR Scanner] ${message}`);
         setDebugInfo((prev) => [
             ...prev.slice(-4),
             `${new Date().toLocaleTimeString()}: ${message}`,

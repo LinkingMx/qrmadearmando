@@ -6,11 +6,20 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        // Listen on localhost - Herd proxies to qrmadearmando.test with correct SSL cert
+        host: 'localhost',
+        port: 5173,
+        // Disable HMR for iOS - not needed and causes WebSocket errors
+        hmr: false,
+    },
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             ssr: 'resources/js/ssr.tsx',
             refresh: true,
+            // Force HTTPS for dev server assets on local network
+            valetTls: 'qrmadearmando.test',
         }),
         react(),
         tailwindcss(),
@@ -70,16 +79,32 @@ export default defineConfig({
 
                 runtimeCaching: [
                     {
-                        urlPattern: ({ request }) => request.headers.get('x-inertia') === 'true',
-                        handler: 'NetworkFirst',
+                        // Cache GET Inertia requests (pages with CSRF tokens)
+                        urlPattern: ({ request, url }) => {
+                            // Skip auth-related paths entirely - they contain CSRF tokens
+                            const isAuthPath = /\/(login|register|logout|forgot-password|reset-password|confirm-password|two-factor-challenge|verify-email)/.test(url.pathname);
+                            if (isAuthPath) return false;
+
+                            // Cache GET Inertia requests only
+                            return request.method === 'GET' &&
+                                   request.headers.get('x-inertia') === 'true';
+                        },
+                        handler: 'StaleWhileRevalidate',
                         options: {
                             cacheName: 'inertia-pages',
-                            networkTimeoutSeconds: 10,
                             expiration: {
                                 maxEntries: 20,
-                                maxAgeSeconds: 7 * 24 * 60 * 60,
+                                maxAgeSeconds: 60 * 60, // 1 hour instead of 24h
                             },
                         },
+                    },
+
+                    {
+                        // Auth routes: always fetch fresh (never cache)
+                        urlPattern: ({ request, url }) =>
+                            request.method === 'GET' &&
+                            /\/(login|register|logout|forgot-password|reset-password|confirm-password|two-factor-challenge|verify-email)/.test(url.pathname),
+                        handler: 'NetworkOnly',
                     },
 
                     {

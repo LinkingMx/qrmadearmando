@@ -77,7 +77,6 @@ export function QRScannerNative({
             );
 
             if (qrCode) {
-                console.log('QR Code detected:', qrCode.data);
                 setStatus(`✅ QR detectado: ${qrCode.data}`);
                 stopScanning();
                 onScan(qrCode.data);
@@ -89,7 +88,6 @@ export function QRScannerNative({
                 `🔍 Escaneando... (${scanCount} intentos) - ${lastScanAttempt}`,
             );
         } catch (err) {
-            console.error('Error detecting QR:', err);
             setStatus(`❌ Error en detección: ${err}`);
         }
     }, [onScan, scanCount, lastScanAttempt]);

@@ -46,7 +46,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
                 await subscribe();
             }
         } catch (err) {
-            console.error('Failed to toggle subscription:', err);
+            // Error handled silently
         }
     };
 
