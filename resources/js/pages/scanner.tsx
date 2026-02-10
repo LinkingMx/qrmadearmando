@@ -146,13 +146,11 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 reference: data.reference,
             });
 
-            if (response?.data) {
-                const transactionData = extractResponseData<{ transaction: Transaction; gift_card: GiftCard }>(
-                    response.data,
-                );
+            if (response?.data?.data) {
+                const transactionData = response.data.data as Transaction;
 
-                if (transactionData) {
-                    setTransaction(transactionData.transaction);
+                if (transactionData && transactionData.gift_card) {
+                    setTransaction(transactionData);
                     setGiftCard(transactionData.gift_card);
                     setMode('success');
                     setShowReceipt(true);
