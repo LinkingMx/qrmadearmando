@@ -19,7 +19,7 @@ export default function Dashboard({ giftCard }: EmployeeDashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-2 md:gap-6 md:p-6">
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto p-2 pt-6 md:gap-6 md:p-6">
                 {giftCard ? (
                     <>
                         {/* Employee Card with QR and Balance */}
