@@ -8,10 +8,18 @@ interface AppContentProps extends React.ComponentProps<'main'> {
 export function AppContent({
     variant = 'header',
     children,
+    className,
     ...props
 }: AppContentProps) {
     if (variant === 'sidebar') {
-        return <SidebarInset {...props}>{children}</SidebarInset>;
+        return (
+            <SidebarInset
+                className={`overflow-y-auto ${className || ''}`}
+                {...props}
+            >
+                {children}
+            </SidebarInset>
+        );
     }
 
     return (
