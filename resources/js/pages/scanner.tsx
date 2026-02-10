@@ -80,22 +80,43 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                         identifier,
                     });
 
-                    // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
-                    const giftCardData = extractResponseData<GiftCard>(
-                        response.data,
-                        'gift_card',
-                    );
+                    if (response?.data) {
+                        // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
+                        const giftCardData = extractResponseData<GiftCard>(
+                            response.data,
+                            'gift_card',
+                        );
 
-                    if (giftCardData) {
-                        setGiftCard(giftCardData);
-                        setMode('viewing');
+                        if (giftCardData) {
+                            setGiftCard(giftCardData);
+                            setMode('viewing');
+                        } else {
+                            setError('Formato de respuesta inválido');
+                        }
                     } else {
-                        throw new Error('Formato de respuesta inválido');
+                        setError('Respuesta del servidor vacía');
                     }
                 } catch (apiErr: any) {
-                    const errorMsg =
-                        apiErr.response?.data?.error ||
-                        'Error al buscar el QR. Intente nuevamente.';
+                    // Check both 'error' and 'message' fields in response
+                    let errorMsg = 'Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.';
+
+                    try {
+                        if (apiErr?.response?.data) {
+                            const errorData = apiErr.response.data;
+
+                            // Handle both string and object error formats
+                            if (typeof errorData.error === 'string') {
+                                errorMsg = errorData.error;
+                            } else if (typeof errorData.error === 'object' && errorData.error?.message) {
+                                errorMsg = errorData.error.message;
+                            } else if (typeof errorData.message === 'string') {
+                                errorMsg = errorData.message;
+                            }
+                        }
+                    } catch {
+                        // Ignore extraction errors, use default message
+                    }
+
                     setError(errorMsg);
                 }
             } else {
@@ -103,8 +124,8 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 setMode('viewing');
             }
         } catch (err: any) {
-            const errorMsg = err.message || 'Error al buscar el QR.';
-            setError(errorMsg);
+            // Catch any unexpected errors and show friendly message
+            setError('Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.');
         } finally {
             setIsProcessing(false);
         }

@@ -195,13 +195,24 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                         setLastScannedCard(card);
                         return card;
                     }
+                } else if (response.status === 404) {
+                    // Gift card not found - set Spanish error message
+                    setError('Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.');
+                    return null;
+                } else {
+                    // Other HTTP errors
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMsg = errorData.message || errorData.error || 'Error al buscar la tarjeta';
+                    setError(errorMsg);
+                    return null;
                 }
             }
 
-            setError('Gift card not found');
+            // Offline and not in cache
+            setError('Tarjeta no encontrada en caché. Conéctate a internet e intenta nuevamente.');
             return null;
         } catch (err) {
-            const errorMsg = err instanceof Error ? err.message : 'Scan failed';
+            const errorMsg = err instanceof Error ? err.message : 'Error al buscar la tarjeta';
             setError(errorMsg);
             return null;
         }
