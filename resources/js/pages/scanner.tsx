@@ -125,25 +125,13 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
             );
 
             if (offlineTransaction) {
-                setTransaction({
-                    id: offlineTransaction.id,
-                    gift_card_id: offlineTransaction.gift_card_id,
-                    type: 'debit',
-                    amount: offlineTransaction.amount,
-                    balance_before: offlineTransaction.balance_before,
-                    balance_after: offlineTransaction.balance_after,
-                    created_at: new Date(offlineTransaction.created_at),
-                    user_id: user.id,
-                    branch_id: branch.id,
-                } as Transaction);
+                // Use the transaction directly - it's already in the correct format
+                setTransaction(offlineTransaction);
                 setMode('success');
                 setShowReceipt(true);
 
-                // Update gift card balance locally
-                setGiftCard({
-                    ...giftCard,
-                    balance: offlineTransaction.balance_after,
-                });
+                // Update gift card from transaction (it has the updated balance)
+                setGiftCard(offlineTransaction.gift_card);
             } else {
                 setError(
                     offlineScanner.error ||

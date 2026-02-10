@@ -27,6 +27,9 @@ return new class extends Migration
     {
         if (Schema::hasTable('transactions') && Schema::hasColumn('transactions', 'offline_id')) {
             Schema::table('transactions', function (Blueprint $table) {
+                // Drop unique index first (SQLite compatible)
+                $table->dropUnique(['offline_id']);
+                // Then drop column
                 $table->dropColumn('offline_id');
             });
         }

@@ -10,9 +10,10 @@ import {
     OfflineAction,
     queueOfflineAction,
     removeOfflineAction,
-    Transaction,
+    Transaction as DBTransaction,
 } from '@/lib/db';
 import { ApiResponse } from '@/types/api';
+import { Transaction as APITransaction } from '@/types/scanner';
 import { useCallback, useRef, useState } from 'react';
 
 export interface ScanResult {
@@ -39,7 +40,7 @@ export interface UseScannerOfflineReturn {
         legacy_id: string,
         amount: number,
         description?: string,
-    ) => Promise<ScanTransaction | null>;
+    ) => Promise<APITransaction | null>;
     getSyncQueue: () => Promise<OfflineAction[]>;
     syncPendingTransactions: () => Promise<void>;
     isProcessing: boolean;
@@ -49,31 +50,36 @@ export interface UseScannerOfflineReturn {
 
 /**
  * Process a debit transaction (online or queued offline)
- * Response format: { data: ScanTransaction }
+ * Response format: { data: APITransaction }
  */
 async function processDebitOnline(
-    legacy_id: string,
+    gift_card_id: string,
     amount: number,
     description?: string,
-): Promise<ScanTransaction> {
-    const response = await fetch('/api/v1/debit', {
+    reference?: string,
+): Promise<APITransaction> {
+    const response = await fetch('/api/scanner/process-debit', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
-            legacy_id,
+            gift_card_id,
             amount,
-            description,
+            description: description || 'Descuento procesado',
+            reference: reference || 'Scanner',
         }),
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to process debit: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to process debit: ${response.statusText}`);
     }
 
-    const data: ApiResponse<ScanTransaction> = await response.json();
+    const data: ApiResponse<APITransaction> = await response.json();
     return data.data;
 }
 
@@ -231,7 +237,7 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                 if (navigator.onLine) {
                     try {
                         const transaction = await processDebitOnline(
-                            legacy_id,
+                            card.id,
                             amount,
                             description,
                         );
@@ -263,9 +269,10 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                 // Process offline - queue for sync
                 const db = await initDB();
                 const newBalance = card.balance - amount;
+                const offline_id = crypto.randomUUID();
 
-                // Create offline transaction record
-                const offlineTransaction: Transaction = {
+                // Create offline transaction record for IndexedDB
+                const dbTransaction: DBTransaction = {
                     id: crypto.randomUUID(),
                     gift_card_id: card.id,
                     type: 'debit',
@@ -275,11 +282,11 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                     description: description || 'Offline debit',
                     created_at: Date.now(),
                     synced: false,
-                    offline_id: crypto.randomUUID(),
+                    offline_id,
                 };
 
                 // Save to local transactions
-                await db.add('transactions', offlineTransaction);
+                await db.add('transactions', dbTransaction);
 
                 // Queue for sync
                 await queueOfflineAction({
@@ -288,7 +295,7 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                         legacy_id,
                         amount,
                         description,
-                        offline_id: offlineTransaction.offline_id,
+                        offline_id,
                     },
                     created_at: Date.now(),
                     retry_count: 0,
@@ -308,7 +315,20 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                     balance: newBalance,
                 });
 
-                return offlineTransaction;
+                // Return as APITransaction format for consistency
+                return {
+                    id: parseInt(dbTransaction.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for display
+                    folio: `OFFLINE-${Date.now()}`,
+                    gift_card: card,
+                    amount,
+                    balance_before: card.balance,
+                    balance_after: newBalance,
+                    reference: 'Offline',
+                    description: description || 'Offline debit',
+                    created_at: Date.now(),
+                    branch_name: 'Offline',
+                    cashier_name: 'Offline',
+                } as APITransaction;
             } catch (err) {
                 const errorMsg =
                     err instanceof Error ? err.message : 'Debit failed';

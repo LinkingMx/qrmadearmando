@@ -173,7 +173,7 @@ class ScannerController extends Controller
                 'balance_after' => (float) $transaction->balance_after,
                 'reference' => $request->reference,
                 'description' => $transaction->description,
-                'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
+                'created_at' => $transaction->created_at->timestamp * 1000, // Timestamp in milliseconds for JavaScript
                 'branch_name' => $branch->name,
                 'cashier_name' => auth()->user()->name,
             ]);

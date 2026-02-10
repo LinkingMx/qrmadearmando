@@ -26,7 +26,7 @@ export interface Transaction {
     balance_after: number;
     reference: string;
     description: string;
-    created_at: string;
+    created_at: number; // Timestamp in milliseconds
     branch_name: string;
     cashier_name: string;
 }

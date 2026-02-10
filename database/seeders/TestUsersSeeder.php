@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Enums\GiftCardNature;
 use App\Enums\GiftCardScope;
 use App\Models\Branch;
+use App\Models\Brand;
+use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
 use App\Models\User;
@@ -20,13 +22,17 @@ class TestUsersSeeder extends Seeder
     {
         $this->command->info('Creating test users for scanner testing...');
 
+        // Create chain and brand first (required for branches)
+        $chain = Chain::firstOrCreate(['name' => 'Cadenas Don Carlos']);
+        $brand = Brand::firstOrCreate(
+            ['name' => 'Tigre'],
+            ['chain_id' => $chain->id]
+        );
+
         // Create Tigre Masaryk branch
         $branch = Branch::firstOrCreate(
             ['name' => 'Tigre Masaryk'],
-            [
-                'address' => 'Av. Masaryk 123, Polanco, CDMX',
-                'phone' => '5555555555',
-            ]
+            ['brand_id' => $brand->id]
         );
 
         $this->command->info("✓ Branch created: {$branch->name}");
@@ -90,6 +96,11 @@ class TestUsersSeeder extends Seeder
                 'scope' => GiftCardScope::BRANCH,
             ]
         );
+
+        // Attach the gift card to the branch (required for BRANCH scope)
+        if (! $giftCard->branches()->where('branch_id', $branch->id)->exists()) {
+            $giftCard->branches()->attach($branch->id);
+        }
 
         $this->command->info("✓ Gift card created: {$giftCard->legacy_id}");
         $this->command->newLine();
