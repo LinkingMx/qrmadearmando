@@ -14,7 +14,7 @@ export function AppContent({
     if (variant === 'sidebar') {
         return (
             <SidebarInset
-                className={`overflow-y-auto ${className || ''}`}
+                className={`h-screen max-h-screen overflow-y-auto ${className || ''}`}
                 {...props}
             >
                 {children}
