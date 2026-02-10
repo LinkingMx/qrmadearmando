@@ -208,6 +208,20 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Hide scrollbars on mobile while keeping functionality */
+    @media (max-width: 768px) {
+        /* Webkit browsers (Safari, Chrome on iOS) */
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            /* Hide scrollbar for IE, Edge and Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    }
 }
 
 /* ============================================
