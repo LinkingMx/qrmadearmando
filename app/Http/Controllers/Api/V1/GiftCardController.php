@@ -7,6 +7,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\GiftCard;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class GiftCardController extends Controller
 {
@@ -66,6 +67,19 @@ class GiftCardController extends Controller
             );
         }
 
+        // Generate QR image path - prefer UUID QR
+        $qrImagePath = null;
+        if ($giftCard->qr_image_path) {
+            $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
+            $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
+
+            if (Storage::disk('public')->exists($uuidQrPath)) {
+                $qrImagePath = Storage::url($uuidQrPath);
+            } elseif (Storage::disk('public')->exists($legacyQrPath)) {
+                $qrImagePath = Storage::url($legacyQrPath);
+            }
+        }
+
         // Format response with proper types (balance as float)
         $data = [
             'id' => $giftCard->id,
@@ -73,7 +87,7 @@ class GiftCardController extends Controller
             'status' => $giftCard->status,
             'balance' => floatval($giftCard->balance),
             'expiry_date' => $giftCard->expiry_date?->format('Y-m-d'),
-            'qr_image_path' => $giftCard->qr_image_path,
+            'qr_image_path' => $qrImagePath,
             'category' => $giftCard->category ? [
                 'id' => $giftCard->category->id,
                 'name' => $giftCard->category->name,

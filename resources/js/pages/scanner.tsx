@@ -38,9 +38,9 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     const [showReceipt, setShowReceipt] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-    // Offline-first hooks
-    const offlineScanner = useScannerOffline();
-    const syncManager = useSyncManager();
+    // Offline-first hooks - DISABLED FOR TESTING
+    // const offlineScanner = useScannerOffline();
+    // const syncManager = useSyncManager();
 
     // Monitor online/offline status
     useEffect(() => {
@@ -56,25 +56,25 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
         };
     }, []);
 
-    // Auto-sync when coming back online
-    useEffect(() => {
-        if (isOnline && syncManager.lastSyncTime === null) {
-            syncManager.syncPending().catch(() => {
-                // Auto-sync failed silently
-            });
-        }
-    }, [isOnline]);
+    // Auto-sync when coming back online - DISABLED
+    // useEffect(() => {
+    //     if (isOnline && syncManager.lastSyncTime === null) {
+    //         syncManager.syncPending().catch(() => {
+    //             // Auto-sync failed silently
+    //         });
+    //     }
+    // }, [isOnline]);
 
     const handleScan = async (identifier: string) => {
         setError(null);
         setIsProcessing(true);
 
         try {
-            // Try offline-first approach
-            const card = await offlineScanner.scan(identifier);
+            // OFFLINE DISABLED - Use API directly
+            // const card = await offlineScanner.scan(identifier);
 
-            if (!card) {
-                // Fall back to API if offline scan fails
+            // if (!card) {
+                // Always use API
                 try {
                     const response = await axios.post('/api/scanner/lookup', {
                         identifier,
@@ -119,10 +119,10 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
 
                     setError(errorMsg);
                 }
-            } else {
-                setGiftCard(card as GiftCard);
-                setMode('viewing');
-            }
+            // } else {
+            //     setGiftCard(card as GiftCard);
+            //     setMode('viewing');
+            // }
         } catch (err: any) {
             // Catch any unexpected errors and show friendly message
             setError('Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.');
@@ -138,26 +138,29 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
         setIsProcessing(true);
 
         try {
-            // Use offline-capable debit processing
-            const offlineTransaction = await offlineScanner.processDebit(
-                giftCard.legacy_id,
-                data.amount,
-                data.description,
-            );
+            // OFFLINE DISABLED - Use API directly
+            const response = await axios.post('/api/scanner/process-debit', {
+                gift_card_id: giftCard.id,
+                amount: data.amount,
+                description: data.description,
+                reference: data.reference,
+            });
 
-            if (offlineTransaction) {
-                // Use the transaction directly - it's already in the correct format
-                setTransaction(offlineTransaction);
-                setMode('success');
-                setShowReceipt(true);
-
-                // Update gift card from transaction (it has the updated balance)
-                setGiftCard(offlineTransaction.gift_card);
-            } else {
-                setError(
-                    offlineScanner.error ||
-                        'Error al procesar el descuento. Intente nuevamente.',
+            if (response?.data) {
+                const transactionData = extractResponseData<{ transaction: Transaction; gift_card: GiftCard }>(
+                    response.data,
                 );
+
+                if (transactionData) {
+                    setTransaction(transactionData.transaction);
+                    setGiftCard(transactionData.gift_card);
+                    setMode('success');
+                    setShowReceipt(true);
+                } else {
+                    setError('Formato de respuesta inválido');
+                }
+            } else {
+                setError('Respuesta del servidor vacía');
             }
         } catch (err: any) {
             const errorMsg =
@@ -204,6 +207,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                             <span className="font-semibold">{user.name}</span>
                         </p>
                     </div>
+                    {/* OFFLINE DISABLED
                     {!isOnline && (
                         <Button
                             onClick={() => syncManager.syncPending()}
@@ -216,14 +220,16 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                                 : 'Sincronizar'}
                         </Button>
                     )}
+                    */}
                 </div>
 
-                {/* Offline Status Indicator */}
+                {/* Offline Status Indicator - DISABLED
                 {(!isOnline ||
                     syncManager.isSyncing ||
                     offlineScanner.error?.includes('Sin conexión')) && (
                     <OfflineStatusIndicator showPendingCount={true} />
                 )}
+                */}
 
                 {/* Error Alert */}
                 {error && (
