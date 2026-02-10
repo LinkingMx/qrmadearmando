@@ -245,6 +245,10 @@
         padding-right: env(safe-area-inset-right);
     }
 
+    .top-safe {
+        top: env(safe-area-inset-top);
+    }
+
     .min-h-screen-safe {
         min-height: 100svh; /* Small viewport height for mobile */
     }
