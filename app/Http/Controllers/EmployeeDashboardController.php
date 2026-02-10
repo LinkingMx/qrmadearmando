@@ -92,7 +92,7 @@ class EmployeeDashboardController extends Controller
         ];
 
         return response()->json([
-            'data' => $transactions->items()->map(function ($transaction) use ($typeLabels) {
+            'data' => $transactions->map(function ($transaction) use ($typeLabels) {
                 return [
                     'id' => $transaction->id,
                     'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
