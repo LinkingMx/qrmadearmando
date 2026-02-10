@@ -167,7 +167,7 @@ export function useScannerOffline(): UseScannerOfflineReturn {
             // If not in cache and online, fetch from API
             if (navigator.onLine) {
                 const response = await fetch(
-                    `/api/v1/gift-cards/search?legacy_id=${legacy_id}`,
+                    `/api/v1/public/gift-cards/search?legacy_id=${legacy_id}`,
                     {
                         headers: {
                             'Content-Type': 'application/json',
@@ -221,9 +221,9 @@ export function useScannerOffline(): UseScannerOfflineReturn {
                 }
 
                 // Check if we have sufficient balance
-                if (card.balance < amount) {
+                if (Number(card.balance) < amount) {
                     throw new Error(
-                        `Insufficient balance. Available: $${card.balance.toFixed(2)}`,
+                        `Insufficient balance. Available: $${Number(card.balance).toFixed(2)}`,
                     );
                 }
 

@@ -94,7 +94,7 @@ export function DebitForm({
                         {form.amount && !form.errors.amount && (
                             <p className="text-sm text-muted-foreground">
                                 Saldo restante: $
-                                {form.remainingBalance.toFixed(2)}
+                                {Number(form.remainingBalance).toFixed(2)}
                             </p>
                         )}
                     </div>

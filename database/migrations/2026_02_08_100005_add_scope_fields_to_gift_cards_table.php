@@ -28,10 +28,17 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('gift_cards', function (Blueprint $table) {
+            // Drop indexes first
             $table->dropIndex(['scope']);
-            $table->dropConstrainedForeignId('brand_id');
-            $table->dropConstrainedForeignId('chain_id');
-            $table->dropColumn('scope');
+            $table->dropIndex(['brand_id']);
+            $table->dropIndex(['chain_id']);
+
+            // Drop foreign keys (SQLite compatible)
+            $table->dropForeign(['brand_id']);
+            $table->dropForeign(['chain_id']);
+
+            // Drop columns
+            $table->dropColumn(['brand_id', 'chain_id', 'scope']);
         });
     }
 };

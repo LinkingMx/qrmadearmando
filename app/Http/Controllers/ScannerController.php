@@ -88,7 +88,7 @@ class ScannerController extends Controller
                     ? Storage::url($giftCard->user->avatar)
                     : null,
             ] : null,
-            'balance' => (float) $giftCard->balance,
+            'balance' => floatval($giftCard->balance),
             'status' => $giftCard->status,
             'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
             'qr_image_path' => $qrImagePath,
@@ -142,8 +142,8 @@ class ScannerController extends Controller
             $transaction = $this->transactionService->debit(
                 $giftCard,
                 $request->amount,
+                auth()->user(),
                 $request->description ?? 'Descuento desde Scanner',
-                auth()->id(),
                 $branch->id
             );
 

@@ -14,7 +14,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     if (variant === 'header') {
         return (
             <>
-                <div className="flex min-h-screen w-full flex-col">
+                <div className="flex min-h-screen-safe w-full flex-col pt-safe">
                     {children}
                 </div>
                 <PwaInstallPrompt />

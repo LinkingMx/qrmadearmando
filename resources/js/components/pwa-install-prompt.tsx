@@ -62,7 +62,7 @@ export function PwaInstallPrompt({ className = '' }: PwaInstallPromptProps) {
 
     return (
         <div
-            className={`fixed right-0 bottom-0 left-0 z-40 ${className}`}
+            className={`fixed right-0 bottom-0 left-0 z-40 pb-safe ${className}`}
             style={{
                 transform: isAnimating ? 'translateY(0)' : 'translateY(100%)',
                 transition: 'transform 300ms ease-out',

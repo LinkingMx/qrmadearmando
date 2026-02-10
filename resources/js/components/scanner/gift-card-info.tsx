@@ -109,7 +109,7 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
                             Saldo Disponible
                         </p>
                         <p className="text-5xl font-bold text-green-600 tabular-nums dark:text-green-500">
-                            ${giftCard.balance.toFixed(2)}
+                            ${Number(giftCard.balance).toFixed(2)}
                         </p>
                     </div>
                 </div>

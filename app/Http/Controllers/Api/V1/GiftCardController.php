@@ -66,9 +66,25 @@ class GiftCardController extends Controller
             );
         }
 
+        // Format response with proper types (balance as float)
+        $data = [
+            'id' => $giftCard->id,
+            'legacy_id' => $giftCard->legacy_id,
+            'status' => $giftCard->status,
+            'balance' => floatval($giftCard->balance),
+            'expiry_date' => $giftCard->expiry_date?->format('Y-m-d'),
+            'qr_image_path' => $giftCard->qr_image_path,
+            'category' => $giftCard->category ? [
+                'id' => $giftCard->category->id,
+                'name' => $giftCard->category->name,
+                'prefix' => $giftCard->category->prefix,
+                'nature' => $giftCard->category->nature->value,
+            ] : null,
+        ];
+
         // Set cache headers for offline use (1 hour)
-        return $this->success($giftCard)
+        return $this->success($data)
             ->header('Cache-Control', 'public, max-age=3600')
-            ->header('ETag', hash('sha256', json_encode($giftCard)));
+            ->header('ETag', hash('sha256', json_encode($data)));
     }
 }
