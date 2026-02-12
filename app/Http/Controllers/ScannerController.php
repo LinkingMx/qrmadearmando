@@ -41,11 +41,14 @@ class ScannerController extends Controller
 
         $identifier = trim($request->identifier);
 
-        // Search by legacy_id or UUID
-        $giftCard = GiftCard::where('legacy_id', $identifier)
-            ->orWhere('id', $identifier)
-            ->with('user')
-            ->first();
+        // Search by legacy_id or UUID (only search by UUID if it looks like one)
+        $query = GiftCard::where('legacy_id', $identifier);
+
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $identifier)) {
+            $query->orWhere('id', $identifier);
+        }
+
+        $giftCard = $query->with('user')->first();
 
         if (!$giftCard) {
             return response()->json([
