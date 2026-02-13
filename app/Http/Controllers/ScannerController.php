@@ -84,9 +84,7 @@ class ScannerController extends Controller
             'legacy_id' => $giftCard->legacy_id,
             'user' => $giftCard->user ? [
                 'name' => $giftCard->user->name,
-                'avatar' => $giftCard->user->avatar
-                    ? Storage::url($giftCard->user->avatar)
-                    : null,
+                'avatar' => $giftCard->user->avatar_url,
             ] : null,
             'balance' => floatval($giftCard->balance),
             'status' => $giftCard->status,
@@ -161,9 +159,7 @@ class ScannerController extends Controller
                     'legacy_id' => $giftCard->legacy_id,
                     'user' => $giftCard->user ? [
                         'name' => $giftCard->user->name,
-                        'avatar' => $giftCard->user->avatar
-                            ? Storage::url($giftCard->user->avatar)
-                            : null,
+                        'avatar' => $giftCard->user->avatar_url,
                     ] : null,
                     'balance' => (float) $giftCard->balance,
                     'status' => $giftCard->status,
@@ -219,9 +215,7 @@ class ScannerController extends Controller
                     'legacy_id' => $transaction->giftCard->legacy_id,
                     'user' => $transaction->giftCard->user ? [
                         'name' => $transaction->giftCard->user->name,
-                        'avatar' => $transaction->giftCard->user->avatar
-                            ? Storage::url($transaction->giftCard->user->avatar)
-                            : null,
+                        'avatar' => $transaction->giftCard->user->avatar_url,
                     ] : null,
                     'balance' => (float) $transaction->giftCard->balance,
                     'status' => $transaction->giftCard->status,

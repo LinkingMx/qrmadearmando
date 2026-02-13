@@ -48,7 +48,7 @@ class EmployeeDashboardController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                    'avatar' => $user->avatar_url,
                 ],
             ];
         }

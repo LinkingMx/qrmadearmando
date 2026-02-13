@@ -8,8 +8,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Intervention\Image\Laravel\Facades\Image;
 
 class ProfileController extends Controller
 {
@@ -29,13 +32,36 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->safe()->only(['name', 'email']));
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        // Handle avatar removal
+        if ($request->boolean('remove_avatar')) {
+            $this->deleteOldAvatar($user->avatar);
+            $user->avatar = null;
+        }
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            $this->deleteOldAvatar($user->avatar);
+
+            $filename = Str::slug($user->email).'_'.Str::random(8).'.webp';
+
+            $optimized = Image::read($request->file('avatar'))
+                ->coverDown(400, 400)
+                ->toWebp(quality: 80);
+
+            Storage::disk('public')->put("avatars/{$filename}", (string) $optimized);
+
+            $user->avatar = "avatars/{$filename}";
+        }
+
+        $user->save();
 
         return to_route('profile.edit');
     }
@@ -59,5 +85,15 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Delete the old avatar file from storage.
+     */
+    private function deleteOldAvatar(?string $avatarPath): void
+    {
+        if ($avatarPath && Storage::disk('public')->exists($avatarPath)) {
+            Storage::disk('public')->delete($avatarPath);
+        }
     }
 }

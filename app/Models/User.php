@@ -55,6 +55,16 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the full URL for the user's avatar.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar
+            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar)
+            : null;
+    }
+
     protected static function booted()
     {
         static::updated(function ($user) {
