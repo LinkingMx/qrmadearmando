@@ -97,7 +97,7 @@ class GiftCard extends Model
         $lastLegacyId = static::withTrashed()
             ->whereNotNull('legacy_id')
             ->where('legacy_id', 'LIKE', 'EMCAD%')
-            ->orderByRaw('CAST(SUBSTRING(legacy_id, 6) AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(SUBSTRING(legacy_id, 6) AS INTEGER) DESC')
             ->value('legacy_id');
 
         // Extraer el número y calcular el siguiente
