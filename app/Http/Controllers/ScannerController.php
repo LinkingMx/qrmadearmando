@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\GiftCardScope;
 use App\Http\Requests\ProcessDebitRequest;
 use App\Http\Traits\ApiResponse;
+use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Services\TransactionService;
@@ -64,6 +65,36 @@ class ScannerController extends Controller
                 'Este QR está inactivo y no puede ser utilizado.',
                 422
             );
+        }
+
+        // Validate gift card scope against current branch
+        $branch = auth()->user()->branch;
+        if ($branch) {
+            $branch->loadMissing('brand');
+            if (! $giftCard->canBeUsedAtBranch($branch)) {
+                // Get valid branch names for this QR
+                $validBranches = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => Branch::whereHas('brand', fn ($q) => $q->where('chain_id', $giftCard->chain_id))->pluck('name'),
+                    GiftCardScope::BRAND => Branch::where('brand_id', $giftCard->brand_id)->pluck('name'),
+                    GiftCardScope::BRANCH => $giftCard->branches()->pluck('branches.name'),
+                };
+
+                $branchList = $validBranches->isEmpty()
+                    ? ''
+                    : ' Sucursales válidas: '.$validBranches->join(', ', ' y ').'.';
+
+                $scopeMessage = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => 'Este QR no pertenece a esta cadena.'.$branchList,
+                    GiftCardScope::BRAND => 'Este QR no pertenece a esta marca.'.$branchList,
+                    GiftCardScope::BRANCH => 'Este QR no es válido en esta sucursal.'.$branchList,
+                };
+
+                return $this->error(
+                    'INVALID_SCOPE',
+                    $scopeMessage,
+                    422
+                );
+            }
         }
 
         // Generate QR image path - prefer UUID QR

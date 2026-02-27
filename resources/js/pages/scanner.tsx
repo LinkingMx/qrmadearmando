@@ -161,10 +161,24 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 setError('Respuesta del servidor vacía');
             }
         } catch (err: any) {
-            const errorMsg =
-                err.response?.data?.error ||
-                err.message ||
-                'Error al procesar el descuento.';
+            let errorMsg = 'Error al procesar el descuento.';
+
+            try {
+                if (err?.response?.data) {
+                    const errorData = err.response.data;
+
+                    if (typeof errorData.error === 'string') {
+                        errorMsg = errorData.error;
+                    } else if (typeof errorData.error === 'object' && errorData.error?.message) {
+                        errorMsg = errorData.error.message;
+                    } else if (typeof errorData.message === 'string') {
+                        errorMsg = errorData.message;
+                    }
+                }
+            } catch {
+                // Ignore extraction errors, use default message
+            }
+
             setError(errorMsg);
         } finally {
             setIsProcessing(false);
