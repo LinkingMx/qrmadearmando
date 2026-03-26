@@ -153,8 +153,13 @@ class GiftCard extends Model
      */
     public function scopeFindByIdentifier($query, string $identifier)
     {
-        return $query->where('legacy_id', $identifier)
-            ->orWhere('id', $identifier);
+        $query->where('legacy_id', $identifier);
+
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $identifier)) {
+            $query->orWhere('id', $identifier);
+        }
+
+        return $query;
     }
 
     /**

@@ -19,7 +19,7 @@ import {
     Transaction,
 } from '@/types/scanner';
 import { Head } from '@inertiajs/react';
-import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
+import { AlertCircleIcon, ArrowLeftIcon, BanIcon, MapPinOffIcon, ScanIcon, ShieldXIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,6 +34,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     const [giftCard, setGiftCard] = useState<GiftCard | null>(null);
     const [transaction, setTransaction] = useState<Transaction | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [errorCode, setErrorCode] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showReceipt, setShowReceipt] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -67,65 +68,52 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
 
     const handleScan = async (identifier: string) => {
         setError(null);
+        setErrorCode(null);
         setIsProcessing(true);
 
         try {
-            // OFFLINE DISABLED - Use API directly
-            // const card = await offlineScanner.scan(identifier);
+            const response = await axios.post('/api/scanner/lookup', {
+                identifier,
+            });
 
-            // if (!card) {
-                // Always use API
-                try {
-                    const response = await axios.post('/api/scanner/lookup', {
-                        identifier,
-                    });
+            if (response?.data) {
+                const giftCardData = extractResponseData<GiftCard>(
+                    response.data,
+                    'gift_card',
+                );
 
-                    if (response?.data) {
-                        // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
-                        const giftCardData = extractResponseData<GiftCard>(
-                            response.data,
-                            'gift_card',
-                        );
-
-                        if (giftCardData) {
-                            setGiftCard(giftCardData);
-                            setMode('viewing');
-                        } else {
-                            setError('Formato de respuesta inválido');
-                        }
-                    } else {
-                        setError('Respuesta del servidor vacía');
-                    }
-                } catch (apiErr: any) {
-                    // Check both 'error' and 'message' fields in response
-                    let errorMsg = 'Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.';
-
-                    try {
-                        if (apiErr?.response?.data) {
-                            const errorData = apiErr.response.data;
-
-                            // Handle both string and object error formats
-                            if (typeof errorData.error === 'string') {
-                                errorMsg = errorData.error;
-                            } else if (typeof errorData.error === 'object' && errorData.error?.message) {
-                                errorMsg = errorData.error.message;
-                            } else if (typeof errorData.message === 'string') {
-                                errorMsg = errorData.message;
-                            }
-                        }
-                    } catch {
-                        // Ignore extraction errors, use default message
-                    }
-
-                    setError(errorMsg);
+                if (giftCardData) {
+                    setGiftCard(giftCardData);
+                    setMode('viewing');
+                } else {
+                    setError('Formato de respuesta inválido');
                 }
-            // } else {
-            //     setGiftCard(card as GiftCard);
-            //     setMode('viewing');
-            // }
-        } catch (err: any) {
-            // Catch any unexpected errors and show friendly message
-            setError('Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.');
+            } else {
+                setError('Respuesta del servidor vacía');
+            }
+        } catch (apiErr: any) {
+            let errorMsg = 'Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.';
+            let errCode: string | null = null;
+
+            try {
+                if (apiErr?.response?.data) {
+                    const errorData = apiErr.response.data;
+
+                    if (typeof errorData.error === 'string') {
+                        errorMsg = errorData.error;
+                    } else if (typeof errorData.error === 'object' && errorData.error?.message) {
+                        errorMsg = errorData.error.message;
+                        errCode = errorData.error.code || null;
+                    } else if (typeof errorData.message === 'string') {
+                        errorMsg = errorData.message;
+                    }
+                }
+            } catch {
+                // Ignore extraction errors, use default message
+            }
+
+            setErrorCode(errCode);
+            setError(errorMsg);
         } finally {
             setIsProcessing(false);
         }
@@ -188,6 +176,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     const handleCancel = () => {
         setGiftCard(null);
         setError(null);
+        setErrorCode(null);
         setMode('scanning');
     };
 
@@ -197,6 +186,7 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
         setGiftCard(null);
         setTransaction(null);
         setError(null);
+        setErrorCode(null);
         setMode('scanning');
     };
 
@@ -243,14 +233,41 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 )}
                 */}
 
-                {/* Error Alert */}
-                {error && (
+                {/* Error Display */}
+                {error && (errorCode === 'INVALID_SCOPE' || errorCode === 'INACTIVE_CARD') ? (
+                    <div className="flex items-center gap-4 rounded-lg border-2 border-red-300 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/30">
+                        {errorCode === 'INVALID_SCOPE' ? (
+                            <MapPinOffIcon className="size-10 shrink-0 text-red-500" />
+                        ) : (
+                            <BanIcon className="size-10 shrink-0 text-red-500" />
+                        )}
+                        <div className="flex-1">
+                            <h2 className="text-lg font-bold text-red-700 dark:text-red-400">
+                                {errorCode === 'INVALID_SCOPE'
+                                    ? 'QR No Válido en esta Sucursal'
+                                    : 'QR Inactivo'}
+                            </h2>
+                            <p className="text-sm text-red-600 dark:text-red-300">
+                                {error}
+                            </p>
+                        </div>
+                        <Button
+                            onClick={handleCancel}
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                        >
+                            <ArrowLeftIcon className="mr-1 size-4" />
+                            Otro QR
+                        </Button>
+                    </div>
+                ) : error ? (
                     <Alert variant="destructive">
                         <AlertCircleIcon />
                         <AlertTitle>Error</AlertTitle>
                         <AlertDescription>{error}</AlertDescription>
                     </Alert>
-                )}
+                ) : null}
 
                 {/* Main Content */}
                 <div className="grid gap-6 lg:grid-cols-2">

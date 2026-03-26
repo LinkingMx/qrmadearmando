@@ -9,6 +9,8 @@ export interface GiftCard {
     status: boolean;
     expiry_date: string | null;
     qr_image_path?: string | null;
+    category_nature?: 'payment_method' | 'discount' | null;
+    category_nature_label?: string | null;
 }
 
 export interface DebitFormData {

@@ -6,7 +6,9 @@ import {
     CalendarIcon,
     CheckCircle2Icon,
     CreditCardIcon,
+    PercentIcon,
     UserIcon,
+    WalletIcon,
     XCircleIcon,
 } from 'lucide-react';
 
@@ -101,6 +103,32 @@ export function GiftCardInfo({ giftCard }: GiftCardInfoProps) {
                         )}
                     </div>
                 </div>
+
+                {/* Nature Label */}
+                {giftCard.category_nature_label && (
+                    <div
+                        className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 ${
+                            giftCard.category_nature === 'discount'
+                                ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30'
+                                : 'border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30'
+                        }`}
+                    >
+                        {giftCard.category_nature === 'discount' ? (
+                            <PercentIcon className="size-4 text-orange-600 dark:text-orange-400" />
+                        ) : (
+                            <WalletIcon className="size-4 text-blue-600 dark:text-blue-400" />
+                        )}
+                        <span
+                            className={`text-sm font-semibold uppercase tracking-wide ${
+                                giftCard.category_nature === 'discount'
+                                    ? 'text-orange-700 dark:text-orange-400'
+                                    : 'text-blue-700 dark:text-blue-400'
+                            }`}
+                        >
+                            {giftCard.category_nature_label}
+                        </span>
+                    </div>
+                )}
 
                 {/* Balance Section */}
                 <div className="rounded-lg border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6 dark:border-green-900 dark:from-green-950/20 dark:to-emerald-950/20">

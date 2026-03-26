@@ -48,7 +48,7 @@ class ScannerController extends Controller
 
         // Search by legacy_id or UUID
         $giftCard = GiftCard::findByIdentifier($identifier)
-            ->with('user')
+            ->with(['user', 'category'])
             ->first();
 
         if (! $giftCard) {
@@ -120,6 +120,8 @@ class ScannerController extends Controller
             'status' => $giftCard->status,
             'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
             'qr_image_path' => $qrImagePath,
+            'category_nature' => $giftCard->category?->nature?->value,
+            'category_nature_label' => $giftCard->category?->nature?->label(),
         ]);
     }
 

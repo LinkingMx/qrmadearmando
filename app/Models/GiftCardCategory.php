@@ -57,7 +57,7 @@ class GiftCardCategory extends Model
             ->where('gift_card_category_id', $this->id)
             ->whereNotNull('legacy_id')
             ->where('legacy_id', 'LIKE', $this->prefix.'%')
-            ->orderByRaw('CAST(SUBSTRING(legacy_id, '.($prefixLength + 1).') AS UNSIGNED) DESC')
+            ->orderByRaw('CAST(SUBSTRING(legacy_id, '.($prefixLength + 1).') AS INTEGER) DESC')
             ->value('legacy_id');
 
         // Extract numeric part and increment
