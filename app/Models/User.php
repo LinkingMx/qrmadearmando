@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
@@ -14,7 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasPushSubscriptions, HasRoles, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
@@ -61,7 +63,7 @@ class User extends Authenticatable
     public function getAvatarUrlAttribute(): ?string
     {
         return $this->avatar
-            ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar)
+            ? Storage::disk('public')->url($this->avatar)
             : null;
     }
 

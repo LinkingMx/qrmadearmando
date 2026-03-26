@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Activitylog\Models\Activity;
 
 uses(RefreshDatabase::class);
 
@@ -116,7 +117,7 @@ describe('PushSubscriptionController - Store', function () {
     });
 
     test('endpoint cannot exceed 2048 characters', function () {
-        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/' . str_repeat('a', 2050);
+        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/'.str_repeat('a', 2050);
 
         $response = $this->actingAs($this->user)->postJson('/api/push-subscriptions', [
             'endpoint' => $longEndpoint,
@@ -224,7 +225,7 @@ describe('PushSubscriptionController - Store', function () {
         ]);
 
         // Check that activity was logged
-        $activity = \Spatie\Activitylog\Models\Activity::where('causer_id', $this->user->id)
+        $activity = Activity::where('causer_id', $this->user->id)
             ->where('description', 'Push notification subscribed')
             ->first();
 
@@ -320,7 +321,7 @@ describe('PushSubscriptionController - Destroy', function () {
             'endpoint' => $endpoint,
         ]);
 
-        $activity = \Spatie\Activitylog\Models\Activity::where('causer_id', $this->user->id)
+        $activity = Activity::where('causer_id', $this->user->id)
             ->where('description', 'Push notification unsubscribed')
             ->latest()
             ->first();

@@ -5,6 +5,7 @@ use App\Models\Brand;
 use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,7 +29,7 @@ test('chain name must be unique', function () {
     Chain::create(['name' => 'Duplicada']);
 
     expect(fn () => Chain::create(['name' => 'Duplicada']))
-        ->toThrow(\Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 });
 
 test('chain has many brands', function () {
@@ -44,7 +45,7 @@ test('cannot delete chain with brands', function () {
     Brand::create(['chain_id' => $chain->id, 'name' => 'Marca']);
 
     expect(fn () => $chain->delete())
-        ->toThrow(\Exception::class, 'No se puede eliminar');
+        ->toThrow(Exception::class, 'No se puede eliminar');
 });
 
 test('can delete chain without brands', function () {
@@ -79,7 +80,7 @@ test('brand name must be unique within same chain', function () {
     Brand::create(['chain_id' => $chain->id, 'name' => 'Duplicada']);
 
     expect(fn () => Brand::create(['chain_id' => $chain->id, 'name' => 'Duplicada']))
-        ->toThrow(\Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 });
 
 test('brand name can be repeated across different chains', function () {
@@ -108,7 +109,7 @@ test('cannot delete brand with branches', function () {
     Branch::create(['name' => 'Sucursal', 'brand_id' => $brand->id]);
 
     expect(fn () => $brand->delete())
-        ->toThrow(\Exception::class, 'No se puede eliminar');
+        ->toThrow(Exception::class, 'No se puede eliminar');
 });
 
 test('cannot delete brand with gift cards', function () {
@@ -128,7 +129,7 @@ test('cannot delete brand with gift cards', function () {
     ]);
 
     expect(fn () => $brand->delete())
-        ->toThrow(\Exception::class, 'No se puede eliminar');
+        ->toThrow(Exception::class, 'No se puede eliminar');
 });
 
 test('can delete brand without branches or gift cards', function () {

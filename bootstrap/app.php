@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RequiresBranch;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            SecurityHeaders::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -28,7 +30,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'has.branch' => RequiresBranch::class,
-            'has.gift.card' => \App\Http\Middleware\HasGiftCard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

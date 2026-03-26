@@ -8,6 +8,7 @@ use App\Filament\Resources\GiftCardResource;
 use App\Imports\BalanceImport;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Maatwebsite\Excel\Facades\Excel;
@@ -96,7 +97,7 @@ class ListGiftCards extends ListRecords
                                 ->body($message)
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_report')
+                                    Action::make('download_report')
                                         ->button()
                                         ->label('Descargar Reporte Completo')
                                         ->url(route('download.balance-report', ['file' => $reportFilename]))
@@ -110,7 +111,7 @@ class ListGiftCards extends ListRecords
                                 ->body($message)
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_report')
+                                    Action::make('download_report')
                                         ->button()
                                         ->label('Descargar Reporte Completo')
                                         ->url(route('download.balance-report', ['file' => $reportFilename]))

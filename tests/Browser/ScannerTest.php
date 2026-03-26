@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Dusk\Browser;
+use Spatie\Permission\Models\Role;
 use Tests\DuskTestCase;
 
 class ScannerTest extends DuskTestCase
@@ -50,8 +51,8 @@ class ScannerTest extends DuskTestCase
         ]);
 
         // Assign BranchTerminal role (required by scanner middleware)
-        if (class_exists(\Spatie\Permission\Models\Role::class)) {
-            $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal']);
+        if (class_exists(Role::class)) {
+            $role = Role::firstOrCreate(['name' => 'BranchTerminal']);
             $this->terminalUser->assignRole($role);
         }
 

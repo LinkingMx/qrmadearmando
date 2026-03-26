@@ -12,7 +12,7 @@ class RequiresBranch
      * Handle an incoming request.
      * Ensures the user has a branch assigned and the BranchTerminal role.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {

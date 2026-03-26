@@ -53,8 +53,7 @@ class GiftCardController extends Controller
         }
 
         // Search by legacy_id first (QR code format)
-        $giftCard = GiftCard::where('legacy_id', $identifier)
-            ->orWhere('id', $identifier)
+        $giftCard = GiftCard::findByIdentifier($identifier)
             ->with('category')
             ->firstOrFail();
 

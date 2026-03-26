@@ -94,10 +94,10 @@ it('processes debit transaction successfully via API', function () {
     Sanctum::actingAs($this->user);
 
     $response = $this->postJson('/api/v1/debit', [
-            'legacy_id' => $this->giftCard->legacy_id,
-            'amount' => 100.00,
-            'description' => 'Test debit transaction',
-        ]);
+        'legacy_id' => $this->giftCard->legacy_id,
+        'amount' => 100.00,
+        'description' => 'Test debit transaction',
+    ]);
 
     $response->assertCreated()
         ->assertJsonStructure([
@@ -127,10 +127,10 @@ it('rejects debit with insufficient balance', function () {
     Sanctum::actingAs($this->user);
 
     $response = $this->postJson('/api/v1/debit', [
-            'legacy_id' => $this->giftCard->legacy_id,
-            'amount' => 2000.00, // More than available balance
-            'description' => 'Test insufficient balance',
-        ]);
+        'legacy_id' => $this->giftCard->legacy_id,
+        'amount' => 2000.00, // More than available balance
+        'description' => 'Test insufficient balance',
+    ]);
 
     $response->assertStatus(422)
         ->assertJsonPath('error.code', 'INSUFFICIENT_BALANCE');

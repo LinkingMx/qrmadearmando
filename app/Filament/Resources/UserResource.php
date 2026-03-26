@@ -8,6 +8,7 @@ use Filament\Forms;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -214,7 +215,7 @@ class UserResource extends Resource
                     ->modalSubmitActionLabel(fn (User $record): string => $record->is_active ? 'Desactivar' : 'Activar')
                     ->action(function (User $record) {
                         if ($record->id === auth()->id()) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('No puedes desactivar tu propia cuenta')
                                 ->danger()
                                 ->send();
@@ -226,7 +227,7 @@ class UserResource extends Resource
                         $record->is_active = ! $record->is_active;
                         $record->save();
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title($record->is_active
                                 ? 'Usuario activado correctamente'
                                 : 'Usuario desactivado correctamente')

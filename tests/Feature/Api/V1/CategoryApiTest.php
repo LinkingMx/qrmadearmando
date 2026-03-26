@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\GiftCardNature;
 use App\Models\GiftCardCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -12,7 +13,7 @@ beforeEach(function () {
         ['prefix' => 'TEST'],
         [
             'name' => 'Test Category',
-            'nature' => \App\Enums\GiftCardNature::PAYMENT_METHOD,
+            'nature' => GiftCardNature::PAYMENT_METHOD,
         ]
     );
 });

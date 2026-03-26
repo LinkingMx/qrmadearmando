@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Services\TransactionService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -53,7 +54,7 @@ class SyncController extends Controller
             }
 
             // Find gift card
-            $giftCard = GiftCard::where('legacy_id', $validated['legacy_id'])->firstOrFail();
+            $giftCard = GiftCard::byLegacyId($validated['legacy_id'])->firstOrFail();
 
             // Verify card is active
             if (! $giftCard->status) {
@@ -96,7 +97,7 @@ class SyncController extends Controller
                 'message' => 'Transacción sincronizada exitosamente',
             ], 201)
                 ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'error' => 'Gift card no encontrado',
             ], 404);

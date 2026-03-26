@@ -8,27 +8,84 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Transaction } from '@/types/scanner';
-import { PrinterIcon, XIcon } from 'lucide-react';
+import { CheckCircle2Icon, PrinterIcon, XIcon } from 'lucide-react';
+import { useId } from 'react';
 
-interface ReprintReceiptModalProps {
+interface TransactionReceiptModalProps {
     transaction: Transaction | null;
     isOpen: boolean;
     onClose: () => void;
+    variant: 'success' | 'reprint';
 }
 
-export function ReprintReceiptModal({
+const PRINT_STYLES = `
+    @page {
+        size: 80mm auto;
+        margin: 5mm;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        color: #000;
+        background: white;
+        width: 80mm;
+    }
+    .receipt {
+        padding: 0 8px;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .bold {
+        font-weight: bold;
+    }
+    .separator {
+        border-top: 1px solid #000;
+        margin: 8px 0;
+    }
+    .flex {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+    }
+    .label {
+        color: #666;
+    }
+    .transaction-box {
+        border: 1px solid #ccc;
+        padding: 8px;
+        margin: 8px 0;
+    }
+    .text-red {
+        color: #dc2626;
+    }
+    .text-green {
+        color: #16a34a;
+    }
+    .text-lg {
+        font-size: 14px;
+    }
+    .text-xl {
+        font-size: 16px;
+    }
+`;
+
+export function TransactionReceiptModal({
     transaction,
     isOpen,
     onClose,
-}: ReprintReceiptModalProps) {
+    variant,
+}: TransactionReceiptModalProps) {
+    const printContentId = useId();
+
     if (!transaction) return null;
 
     const handlePrint = () => {
-        // Create print content
-        const printContent = document.getElementById('reprint-receipt-content');
+        const printContent = document.getElementById(printContentId);
         if (!printContent) return;
 
-        // Create iframe for printing
         const iframe = document.createElement('iframe');
         iframe.style.position = 'absolute';
         iframe.style.width = '0';
@@ -47,59 +104,7 @@ export function ReprintReceiptModal({
             <head>
                 <meta charset="utf-8">
                 <title>Comprobante de Transacción</title>
-                <style>
-                    @page {
-                        size: 80mm auto;
-                        margin: 5mm;
-                    }
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        font-family: 'Courier New', monospace;
-                        font-size: 11px;
-                        color: #000;
-                        background: white;
-                        width: 80mm;
-                    }
-                    .receipt {
-                        padding: 0 8px;
-                    }
-                    .text-center {
-                        text-align: center;
-                    }
-                    .bold {
-                        font-weight: bold;
-                    }
-                    .separator {
-                        border-top: 1px solid #000;
-                        margin: 8px 0;
-                    }
-                    .flex {
-                        display: flex;
-                        justify-content: space-between;
-                        margin: 4px 0;
-                    }
-                    .label {
-                        color: #666;
-                    }
-                    .transaction-box {
-                        border: 1px solid #ccc;
-                        padding: 8px;
-                        margin: 8px 0;
-                    }
-                    .text-red {
-                        color: #dc2626;
-                    }
-                    .text-green {
-                        color: #16a34a;
-                    }
-                    .text-lg {
-                        font-size: 14px;
-                    }
-                    .text-xl {
-                        font-size: 16px;
-                    }
-                </style>
+                <style>${PRINT_STYLES}</style>
             </head>
             <body>
                 ${printContent.innerHTML}
@@ -108,7 +113,6 @@ export function ReprintReceiptModal({
         `);
         iframeDoc.close();
 
-        // Wait for content to load then print
         iframe.contentWindow?.focus();
         setTimeout(() => {
             iframe.contentWindow?.print();
@@ -117,6 +121,8 @@ export function ReprintReceiptModal({
             }, 100);
         }, 250);
     };
+
+    const isSuccess = variant === 'success';
 
     const receiptContent = (
         <div className="receipt-content px-2">
@@ -133,7 +139,6 @@ export function ReprintReceiptModal({
             </div>
 
             <div className="space-y-3 py-3">
-                {/* Branch and Date Info */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
                         <span className="shrink-0 text-muted-foreground">
@@ -163,7 +168,6 @@ export function ReprintReceiptModal({
 
                 <Separator />
 
-                {/* Card Info */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
                         <span className="shrink-0 text-muted-foreground">
@@ -185,7 +189,6 @@ export function ReprintReceiptModal({
 
                 <Separator />
 
-                {/* Transaction Details */}
                 <div className="space-y-2 rounded-lg bg-muted/50 p-2.5 sm:p-3">
                     <div className="flex items-center justify-between gap-2">
                         <span className="shrink-0 text-[11px] text-muted-foreground sm:text-xs">
@@ -216,7 +219,6 @@ export function ReprintReceiptModal({
 
                 <Separator />
 
-                {/* Reference and Description */}
                 <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between gap-2">
                         <span className="shrink-0 text-muted-foreground">
@@ -240,7 +242,6 @@ export function ReprintReceiptModal({
 
                 <Separator />
 
-                {/* Folio */}
                 <div className="py-2 text-center">
                     <div className="text-base leading-tight font-bold sm:text-xl">
                         ════════════════
@@ -259,15 +260,21 @@ export function ReprintReceiptModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Reimprimir Comprobante</DialogTitle>
+                <DialogContent className={`max-h-[90vh] w-[calc(100vw-2rem)] max-w-md overflow-y-auto ${isSuccess ? 'receipt-modal' : ''}`}>
+                    <DialogHeader className={isSuccess ? 'no-print' : undefined}>
+                        {isSuccess ? (
+                            <div className="flex items-center gap-2 text-green-600 dark:text-green-500">
+                                <CheckCircle2Icon className="size-6" />
+                                <DialogTitle>Transacción Exitosa</DialogTitle>
+                            </div>
+                        ) : (
+                            <DialogTitle>Reimprimir Comprobante</DialogTitle>
+                        )}
                     </DialogHeader>
 
-                    {/* Receipt Content - Visible */}
                     {receiptContent}
 
-                    <DialogFooter className="flex-col gap-2 sm:flex-row">
+                    <DialogFooter className={`flex-col gap-2 sm:flex-row ${isSuccess ? 'no-print' : ''}`}>
                         <Button
                             onClick={handlePrint}
                             variant="default"
@@ -291,7 +298,7 @@ export function ReprintReceiptModal({
             </Dialog>
 
             {/* Hidden content for printing */}
-            <div id="reprint-receipt-content" style={{ display: 'none' }}>
+            <div id={printContentId} style={{ display: 'none' }}>
                 <div className="receipt">
                     <div className="text-center">
                         <div className="bold">════════════════</div>

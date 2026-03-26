@@ -3,7 +3,7 @@ import { BranchTransactionList } from '@/components/scanner/branch-transaction-l
 import { DebitForm } from '@/components/scanner/debit-form';
 import { GiftCardInfo } from '@/components/scanner/gift-card-info';
 import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
-import { ReceiptModal } from '@/components/scanner/receipt-modal';
+import { TransactionReceiptModal } from '@/components/scanner/transaction-receipt-modal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useScannerOffline, useSyncManager } from '@/hooks/use-scanner-offline';
@@ -291,10 +291,11 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 </div>
 
                 {/* Receipt Modal */}
-                <ReceiptModal
+                <TransactionReceiptModal
                     transaction={transaction}
                     isOpen={showReceipt}
                     onClose={handleCloseReceipt}
+                    variant="success"
                 />
 
                 {/* Transaction History Section */}

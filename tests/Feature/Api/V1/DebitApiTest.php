@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\GiftCardNature;
+use App\Enums\GiftCardScope;
 use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -19,18 +22,18 @@ beforeEach(function () {
         ['prefix' => 'DEBIT'],
         [
             'name' => 'Debit Test',
-            'nature' => \App\Enums\GiftCardNature::PAYMENT_METHOD,
+            'nature' => GiftCardNature::PAYMENT_METHOD,
         ]
     );
 
     // Create gift card with chain scope (simplest for testing)
     $this->giftCard = GiftCard::create([
-        'id' => \Illuminate\Support\Str::uuid(),
+        'id' => Str::uuid(),
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'DEBIT000001',
         'balance' => 1000.00,
         'status' => true,
-        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'scope' => GiftCardScope::CHAIN,
         'chain_id' => $this->branch->brand->chain_id,
     ]);
 
@@ -105,7 +108,7 @@ describe('Debit API', function () {
 describe('Sync API', function () {
     it('requires authentication to sync transactions', function () {
         $response = $this->postJson('/api/v1/sync/transactions', [
-            'offline_id' => \Illuminate\Support\Str::uuid(),
+            'offline_id' => Str::uuid(),
             'legacy_id' => 'DEBIT000001',
             'amount' => 100.00,
         ]);
@@ -115,7 +118,7 @@ describe('Sync API', function () {
 
     it('can sync offline transaction', function () {
         Sanctum::actingAs($this->user);
-        $offlineId = (string) \Illuminate\Support\Str::uuid();
+        $offlineId = (string) Str::uuid();
 
         $response = $this->postJson('/api/v1/sync/transactions', [
             'offline_id' => $offlineId,
@@ -137,7 +140,7 @@ describe('Sync API', function () {
 
     it('prevents duplicate offline transactions', function () {
         Sanctum::actingAs($this->user);
-        $offlineId = (string) \Illuminate\Support\Str::uuid();
+        $offlineId = (string) Str::uuid();
 
         // First sync
         $this->postJson('/api/v1/sync/transactions', [

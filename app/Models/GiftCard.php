@@ -147,4 +147,21 @@ class GiftCard extends Model
 
         return $qrService->getQrCodeUrls($this->qr_image_path ?? '');
     }
+
+    /**
+     * Scope to find a gift card by legacy_id or UUID.
+     */
+    public function scopeFindByIdentifier($query, string $identifier)
+    {
+        return $query->where('legacy_id', $identifier)
+            ->orWhere('id', $identifier);
+    }
+
+    /**
+     * Scope to find a gift card by legacy_id only.
+     */
+    public function scopeByLegacyId($query, string $legacyId)
+    {
+        return $query->where('legacy_id', $legacyId);
+    }
 }

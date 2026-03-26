@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\TransactionCreated;
 use App\Models\Branch;
 use App\Models\Brand;
 use App\Models\Chain;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Notifications\TransactionNotification;
 use App\Services\TransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use NotificationChannels\WebPush\WebPushChannel;
 
 uses(RefreshDatabase::class);
@@ -40,7 +42,7 @@ describe('Push Notification Transaction Integration', function () {
     beforeEach(function () {
         // Disable transaction event listener to prevent WebPush from trying to send notifications
         // VAPID keys are not configured in test environment
-        \Illuminate\Support\Facades\Event::fake(\App\Events\TransactionCreated::class);
+        Event::fake(TransactionCreated::class);
     });
 
     test('credit transaction creates transaction with correct data', function () {

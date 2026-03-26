@@ -12,6 +12,7 @@ use App\Models\GiftCardCategory;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class TestUsersSeeder extends Seeder
 {
@@ -50,8 +51,8 @@ class TestUsersSeeder extends Seeder
         );
 
         // Assign BranchTerminal role if it exists
-        if (class_exists(\Spatie\Permission\Models\Role::class)) {
-            $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal']);
+        if (class_exists(Role::class)) {
+            $role = Role::firstOrCreate(['name' => 'BranchTerminal']);
             if (! $terminalUser->hasRole('BranchTerminal')) {
                 $terminalUser->assignRole($role);
             }

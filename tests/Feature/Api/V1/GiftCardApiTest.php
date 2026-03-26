@@ -1,10 +1,13 @@
 <?php
 
+use App\Enums\GiftCardNature;
+use App\Enums\GiftCardScope;
 use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -15,7 +18,7 @@ beforeEach(function () {
         ['prefix' => 'APITST'],
         [
             'name' => 'API Test',
-            'nature' => \App\Enums\GiftCardNature::PAYMENT_METHOD,
+            'nature' => GiftCardNature::PAYMENT_METHOD,
         ]
     );
 
@@ -24,22 +27,22 @@ beforeEach(function () {
 
     // Create test gift cards with chain scope
     $this->activeCard = GiftCard::create([
-        'id' => \Illuminate\Support\Str::uuid(),
+        'id' => Str::uuid(),
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'APITST000001',
         'balance' => 1000.00,
         'status' => true,
-        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'scope' => GiftCardScope::CHAIN,
         'chain_id' => $branch->brand->chain_id,
     ]);
 
     $this->inactiveCard = GiftCard::create([
-        'id' => \Illuminate\Support\Str::uuid(),
+        'id' => Str::uuid(),
         'gift_card_category_id' => $this->category->id,
         'legacy_id' => 'APITST000002',
         'balance' => 500.00,
         'status' => false,
-        'scope' => \App\Enums\GiftCardScope::CHAIN,
+        'scope' => GiftCardScope::CHAIN,
         'chain_id' => $branch->brand->chain_id,
     ]);
 

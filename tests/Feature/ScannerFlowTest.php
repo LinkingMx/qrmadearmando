@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\GiftCardNature;
 use App\Enums\GiftCardScope;
 use App\Models\Branch;
 use App\Models\Brand;
@@ -10,6 +11,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
@@ -21,7 +23,7 @@ beforeEach(function () {
         ['prefix' => 'SCAN'],
         [
             'name' => 'Scanner Test',
-            'nature' => \App\Enums\GiftCardNature::PAYMENT_METHOD,
+            'nature' => GiftCardNature::PAYMENT_METHOD,
         ]
     );
 
@@ -43,7 +45,7 @@ beforeEach(function () {
 
     // Assign BranchTerminal role
     $this->user->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 });
 
@@ -164,7 +166,7 @@ test('scanner validates branch scope: brand-scoped card at wrong branch', functi
         'email_verified_at' => now(),
     ]);
     $userBranchB->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     // Lookup should succeed (shows card info)
@@ -204,7 +206,7 @@ test('scanner validates branch scope: branch-scoped card at non-assigned branch'
         'email_verified_at' => now(),
     ]);
     $userBranchB->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $debitResponse = $this->actingAs($userBranchB)
@@ -256,7 +258,7 @@ test('scanner prevents concurrent debits on same gift card', function () {
         'email_verified_at' => now(),
     ]);
     $user2->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     // First debit (should succeed)
@@ -346,7 +348,7 @@ test('scanner requires user to have branch assignment and BranchTerminal role', 
     ]);
     // Assign BranchTerminal role but no branch
     $userWithoutBranch->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     // Test 1: User without branch should be redirected from scanner index

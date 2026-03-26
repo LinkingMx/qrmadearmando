@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 uses(RefreshDatabase::class);
 
@@ -305,7 +307,7 @@ test('accepts amounts with explicit plus sign', function () {
 function createTestExcel(array $data): string
 {
     $filePath = storage_path('app/public/test_balance_import_'.uniqid().'.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -314,7 +316,7 @@ function createTestExcel(array $data): string
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
     return $filePath;

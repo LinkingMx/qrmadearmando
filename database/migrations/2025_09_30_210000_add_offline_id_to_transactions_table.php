@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Only add column if table exists and column doesn't already exist
-        if (Schema::hasTable('transactions') && !Schema::hasColumn('transactions', 'offline_id')) {
+        if (Schema::hasTable('transactions') && ! Schema::hasColumn('transactions', 'offline_id')) {
             Schema::table('transactions', function (Blueprint $table) {
                 // Add offline_id for tracking offline sync transactions
                 $table->uuid('offline_id')->nullable()->unique()->after('description');

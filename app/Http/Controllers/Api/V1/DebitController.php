@@ -7,6 +7,7 @@ use App\Http\Traits\ApiResponse;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Services\TransactionService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -35,7 +36,7 @@ class DebitController extends Controller
             ]);
 
             // Find gift card by legacy_id
-            $giftCard = GiftCard::where('legacy_id', $validated['legacy_id'])
+            $giftCard = GiftCard::byLegacyId($validated['legacy_id'])
                 ->with('category')
                 ->firstOrFail();
 
@@ -87,7 +88,7 @@ class DebitController extends Controller
                 201
             )
                 ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return $this->notFound('Gift card');
         } catch (ValidationException $e) {
             return $this->validationError($e->errors(), 'Validación fallida');

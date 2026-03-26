@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\TransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
@@ -138,7 +139,7 @@ test('scanner rejects brand-scoped QR used at branch of different brand', functi
         'is_active' => true,
     ]);
     $terminalUser->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $giftCard = GiftCard::create([
@@ -166,7 +167,7 @@ test('scanner accepts brand-scoped QR used at branch of same brand', function ()
         'is_active' => true,
     ]);
     $terminalUser->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $giftCard = GiftCard::create([
@@ -194,7 +195,7 @@ test('scanner rejects branch-scoped QR used at non-assigned branch', function ()
         'is_active' => true,
     ]);
     $terminalUser->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $giftCard = GiftCard::create([
@@ -222,7 +223,7 @@ test('scanner accepts branch-scoped QR used at assigned branch', function () {
         'is_active' => true,
     ]);
     $terminalUser->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $giftCard = GiftCard::create([
@@ -250,7 +251,7 @@ test('scanner accepts chain-scoped QR at any branch within chain', function () {
         'is_active' => true,
     ]);
     $terminalUser->assignRole(
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
     $giftCard = GiftCard::create([

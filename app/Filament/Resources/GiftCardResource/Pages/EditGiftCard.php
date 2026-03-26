@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\GiftCardResource\Pages;
 
 use App\Filament\Resources\GiftCardResource;
+use App\Models\Branch;
 use App\Services\TransactionService;
 use Filament\Actions;
 use Filament\Forms;
@@ -28,7 +29,7 @@ class EditGiftCard extends EditRecord
                         ->default(fn () => $this->record->balance ?? 0),
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
-                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->options(Branch::pluck('name', 'id'))
                         ->searchable()
                         ->required()
                         ->helperText('La sucursal es requerida para descuentos'),
@@ -137,7 +138,7 @@ class EditGiftCard extends EditRecord
                         ->reactive(),
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
-                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->options(Branch::pluck('name', 'id'))
                         ->searchable()
                         ->required(fn (Forms\Get $get) => $get('amount') < 0)
                         ->visible(fn (Forms\Get $get) => $get('amount') < 0)

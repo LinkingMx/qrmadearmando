@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
+use App\Models\GiftCard;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -41,7 +42,7 @@ class TransactionResource extends Resource
                     ->reactive()
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
                         if ($state) {
-                            $giftCard = \App\Models\GiftCard::find($state);
+                            $giftCard = GiftCard::find($state);
                             $set('current_balance', $giftCard?->balance ?? 0);
                         }
                     })

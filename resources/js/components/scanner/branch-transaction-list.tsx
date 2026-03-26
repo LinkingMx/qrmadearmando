@@ -29,7 +29,7 @@ import {
     ReceiptIcon,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { ReprintReceiptModal } from './reprint-receipt-modal';
+import { TransactionReceiptModal } from './transaction-receipt-modal';
 
 interface BranchTransactionListProps {
     branchId: number;
@@ -334,10 +334,11 @@ export function BranchTransactionList({
             </Card>
 
             {/* Reprint Modal */}
-            <ReprintReceiptModal
+            <TransactionReceiptModal
                 transaction={selectedTransaction}
                 isOpen={showReprintModal}
                 onClose={handleCloseReprint}
+                variant="reprint"
             />
         </>
     );

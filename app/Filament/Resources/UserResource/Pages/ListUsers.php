@@ -5,12 +5,17 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Exports\UsersExport;
 use App\Filament\Resources\UserResource;
 use App\Imports\UsersImport;
+use App\Models\Branch;
 use App\Services\UserImportService;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ListUsers extends ListRecords
 {
@@ -74,7 +79,7 @@ class ListUsers extends ListRecords
                                 throw new \Exception('Archivo ZIP no encontrado.');
                             }
 
-                            $uploadedFile = new \Illuminate\Http\UploadedFile(
+                            $uploadedFile = new UploadedFile(
                                 $zipPath,
                                 basename($zipFile),
                                 'application/zip',
@@ -111,7 +116,7 @@ class ListUsers extends ListRecords
                                 ->body("Creados: {$stats['created']}, Actualizados: {$stats['updated']}, Errores: {$stats['errors']}")
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_errors')
+                                    Action::make('download_errors')
                                         ->button()
                                         ->url(route('download.import-errors', ['file' => $errorReport]))
                                         ->openUrlInNewTab(),
@@ -137,7 +142,7 @@ class ListUsers extends ListRecords
                                 ->body('Se generaron contraseñas automáticas. Descarga el reporte.')
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_passwords')
+                                    Action::make('download_passwords')
                                         ->button()
                                         ->label('Descargar Contraseñas')
                                         ->url(route('download.import-passwords', ['file' => $passwordReport]))
@@ -160,7 +165,7 @@ class ListUsers extends ListRecords
                 ->form([
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
-                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->options(Branch::pluck('name', 'id'))
                         ->searchable()
                         ->placeholder('Todas'),
                     Forms\Components\Select::make('email_verified')
@@ -206,7 +211,7 @@ class ListUsers extends ListRecords
             mkdir(dirname($path), 0755, true);
         }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -229,7 +234,7 @@ class ListUsers extends ListRecords
             $row++;
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($path);
 
         return $filename;
@@ -244,7 +249,7 @@ class ListUsers extends ListRecords
             mkdir(dirname($path), 0755, true);
         }
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -261,7 +266,7 @@ class ListUsers extends ListRecords
             $row++;
         }
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $writer->save($path);
 
         return $filename;

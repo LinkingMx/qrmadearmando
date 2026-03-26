@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use NotificationChannels\WebPush\PushSubscription;
 
 uses(RefreshDatabase::class);
 
@@ -104,7 +105,7 @@ describe('Authorization & Ownership Validation', function () {
         $tempUser->delete();
 
         // Verify subscriptions were deleted via CASCADE
-        $remainingSubscriptions = \NotificationChannels\WebPush\PushSubscription::where('subscribable_id', $userId)
+        $remainingSubscriptions = PushSubscription::where('subscribable_id', $userId)
             ->where('subscribable_type', 'App\\Models\\User')
             ->count();
         expect($remainingSubscriptions)->toBe(0);
@@ -162,7 +163,7 @@ describe('Endpoint Validation', function () {
     });
 
     test('endpoint length cannot exceed 2048 characters', function () {
-        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/' . str_repeat('a', 2020);
+        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/'.str_repeat('a', 2020);
 
         $response = $this->actingAs($this->user)->postJson('/api/push-subscriptions', [
             'endpoint' => $longEndpoint,
@@ -314,9 +315,9 @@ describe('Rate Limiting', function () {
         // Make 5 successful requests
         for ($i = 0; $i < 5; $i++) {
             $response = $this->actingAs($tempUser)->postJson('/api/push-subscriptions', [
-                'endpoint' => 'https://fcm.googleapis.com/fcm/send/rate-limit-' . $i,
-                'publicKey' => 'key' . $i,
-                'authToken' => 'token' . $i,
+                'endpoint' => 'https://fcm.googleapis.com/fcm/send/rate-limit-'.$i,
+                'publicKey' => 'key'.$i,
+                'authToken' => 'token'.$i,
             ]);
 
             expect($response->status())->toBe(201);
@@ -335,7 +336,7 @@ describe('Rate Limiting', function () {
 
 describe('Denial of Service Prevention', function () {
     test('very large endpoint is rejected', function () {
-        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/' . str_repeat('a', 2100);
+        $longEndpoint = 'https://fcm.googleapis.com/fcm/send/'.str_repeat('a', 2100);
 
         $response = $this->actingAs($this->user)->postJson('/api/push-subscriptions', [
             'endpoint' => $longEndpoint,
@@ -353,8 +354,8 @@ describe('Denial of Service Prevention', function () {
         for ($i = 0; $i < 5; $i++) {
             $response = $this->actingAs($tempUser)->postJson('/api/push-subscriptions', [
                 'endpoint' => "https://fcm.googleapis.com/fcm/send/dos-test-$i",
-                'publicKey' => 'key' . $i,
-                'authToken' => 'token' . $i,
+                'publicKey' => 'key'.$i,
+                'authToken' => 'token'.$i,
             ]);
 
             expect($response->status())->toBe(201);

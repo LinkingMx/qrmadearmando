@@ -6,6 +6,7 @@ use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
@@ -172,7 +173,7 @@ test('legacy_id must be unique', function () {
         'status' => true,
         'scope' => 'chain',
         'chain_id' => $this->chain->id,
-    ]))->toThrow(\Illuminate\Database\QueryException::class);
+    ]))->toThrow(QueryException::class);
 });
 
 test('can soft delete gift card', function () {
@@ -479,7 +480,7 @@ test('gift card requires category when creating', function () {
     expect(fn () => GiftCard::create([
         'legacy_id' => 'TEST000001',
         'status' => true,
-    ]))->toThrow(\InvalidArgumentException::class, 'gift_card_category_id is required');
+    ]))->toThrow(InvalidArgumentException::class, 'gift_card_category_id is required');
 });
 
 test('gift card belongs to correct category', function () {

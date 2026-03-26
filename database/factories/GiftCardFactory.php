@@ -5,11 +5,13 @@ namespace Database\Factories;
 use App\Enums\GiftCardScope;
 use App\Models\Brand;
 use App\Models\Chain;
+use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\GiftCard>
+ * @extends Factory<GiftCard>
  */
 class GiftCardFactory extends Factory
 {
@@ -32,7 +34,7 @@ class GiftCardFactory extends Factory
 
         return [
             'gift_card_category_id' => $category->id,
-            'user_id' => \App\Models\User::factory(),
+            'user_id' => User::factory(),
             'status' => true,
             'expiry_date' => fake()->dateTimeBetween('now', '+1 year'),
             'balance' => fake()->randomFloat(2, 0, 1000),

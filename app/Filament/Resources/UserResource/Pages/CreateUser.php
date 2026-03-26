@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class CreateUser extends CreateRecord
 {
@@ -40,7 +41,7 @@ class CreateUser extends CreateRecord
 
         // Si no tiene roles asignados, asignar el rol "Employee" por defecto
         if ($user->roles()->count() === 0) {
-            $employeeRole = \Spatie\Permission\Models\Role::where('name', 'Employee')->first();
+            $employeeRole = Role::where('name', 'Employee')->first();
 
             if ($employeeRole) {
                 $user->assignRole('Employee');

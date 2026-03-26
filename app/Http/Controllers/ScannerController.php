@@ -47,8 +47,7 @@ class ScannerController extends Controller
         $identifier = trim($request->identifier);
 
         // Search by legacy_id or UUID
-        $giftCard = GiftCard::where('legacy_id', $identifier)
-            ->orWhere('id', $identifier)
+        $giftCard = GiftCard::findByIdentifier($identifier)
             ->with('user')
             ->first();
 

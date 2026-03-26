@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Branch;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -328,7 +329,7 @@ class BranchClosureExport implements FromCollection, WithColumnWidths, WithCusto
         // Fecha
         $date = $this->filters['date'] ?? now()->format('Y-m-d');
         $sheet->setCellValue("A{$row}", 'Fecha:');
-        $sheet->setCellValue("B{$row}", \Carbon\Carbon::parse($date)->format('d/m/Y'));
+        $sheet->setCellValue("B{$row}", Carbon::parse($date)->format('d/m/Y'));
         $sheet->getStyle("A{$row}")->getFont()->setBold(true);
         $row++;
 
