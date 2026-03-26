@@ -2,18 +2,16 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\GiftCardScope;
 use App\Filament\Resources\GiftCardResource\Pages;
 use App\Filament\Resources\GiftCardResource\RelationManagers;
 use App\Models\GiftCard;
-use App\Services\TransactionService;
+use App\Models\GiftCardCategory;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Notifications\Notification;
 
 class GiftCardResource extends Resource
 {
@@ -23,17 +21,22 @@ class GiftCardResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-qr-code';
+
     protected static ?string $navigationGroup = 'Administración de QR';
-    protected static ?string $navigationLabel = 'QR Empleados';
-    protected static ?string $pluralModelLabel = 'QR Empleados';
-    protected static ?string $modelLabel = 'QR Empleado';
+
+    protected static ?string $navigationLabel = 'QR Codes';
+
+    protected static ?string $pluralModelLabel = 'QR Codes';
+
+    protected static ?string $modelLabel = 'QR Code';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Información del QR Empleado')
+                Forms\Components\Section::make('Información del QR Code')
                     ->icon('heroicon-o-qr-code')
                     ->schema([
                         Forms\Components\TextInput::make('id')
@@ -45,13 +48,41 @@ class GiftCardResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\Grid::make(2)
                             ->schema([
+                                Forms\Components\Select::make('gift_card_category_id')
+                                    ->label('Categoría')
+                                    ->relationship('category', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload()
+                                    ->placeholder('Seleccionar categoría')
+                                    ->prefixIcon('heroicon-m-tag')
+                                    ->live()
+                                    ->helperText('El código legacy se generará automáticamente basado en el prefijo de la categoría')
+                                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                        if ($state) {
+                                            $set('legacy_id', null);
+                                        }
+                                    }),
                                 Forms\Components\TextInput::make('legacy_id')
                                     ->label('ID Legacy')
                                     ->unique(ignoreRecord: true)
-                                    ->placeholder('Ej: EMCAD20005')
+                                    ->placeholder(function (Forms\Get $get) {
+                                        $categoryId = $get('gift_card_category_id');
+                                        if (! $categoryId) {
+                                            return 'Primero selecciona una categoría';
+                                        }
+                                        $category = GiftCardCategory::find($categoryId);
+
+                                        return $category
+                                            ? 'Ej: '.$category->prefix.'000001 (automático)'
+                                            : 'Primero selecciona una categoría';
+                                    })
                                     ->prefixIcon('heroicon-m-hashtag')
-                                    ->helperText('Se generará automáticamente si se deja vacío (formato: EMCAD000001)')
+                                    ->helperText('Se generará automáticamente si se deja vacío')
                                     ->maxLength(255),
+                            ]),
+                        Forms\Components\Grid::make(3)
+                            ->schema([
                                 Forms\Components\Select::make('user_id')
                                     ->label('Usuario Asignado')
                                     ->relationship('user', 'name')
@@ -59,6 +90,16 @@ class GiftCardResource extends Resource
                                     ->preload()
                                     ->placeholder('Seleccionar usuario')
                                     ->prefixIcon('heroicon-m-user'),
+                                Forms\Components\TextInput::make('balance')
+                                    ->label('Saldo Inicial')
+                                    ->numeric()
+                                    ->default(0)
+                                    ->prefix('$')
+                                    ->required(),
+                                Forms\Components\DatePicker::make('expiry_date')
+                                    ->label('Fecha de Expiración')
+                                    ->placeholder('Seleccionar fecha')
+                                    ->prefixIcon('heroicon-m-calendar-days'),
                             ]),
                         Forms\Components\Grid::make(2)
                             ->schema([
@@ -66,24 +107,70 @@ class GiftCardResource extends Resource
                                     ->label('Estado')
                                     ->helperText('Activo/Inactivo')
                                     ->default(true),
-                                Forms\Components\DatePicker::make('expiry_date')
-                                    ->label('Fecha de Expiración')
-                                    ->placeholder('Seleccionar fecha')
-                                    ->prefixIcon('heroicon-m-calendar-days'),
                             ]),
-                        Forms\Components\Section::make('Códigos QR Generados')
-                            ->icon('heroicon-o-qr-code')
-                            ->schema([
-                                Forms\Components\View::make('filament.qr-codes')
-                                    ->visible(fn ($record) => $record !== null && $record->qr_image_path)
-                                    ->viewData(fn ($record) => [
-                                        'qrUrls' => $record ? $record->getQrCodeUrls() : ['uuid' => null, 'legacy' => null],
-                                        'legacyId' => $record?->legacy_id,
-                                        'uuid' => $record?->id,
-                                    ]),
-                            ])
-                            ->visible(fn ($record) => $record !== null),
                     ]),
+
+                Forms\Components\Section::make('Alcance de Uso')
+                    ->description('Define dónde puede usarse este QR Code')
+                    ->icon('heroicon-o-map-pin')
+                    ->schema([
+                        Forms\Components\Select::make('scope')
+                            ->label('Tipo de Alcance')
+                            ->options(GiftCardScope::options())
+                            ->required()
+                            ->default('chain')
+                            ->live()
+                            ->prefixIcon('heroicon-o-globe-alt')
+                            ->helperText('Define el alcance geográfico del QR'),
+
+                        Forms\Components\Select::make('chain_id')
+                            ->label('Cadena')
+                            ->relationship('chain', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar cadena')
+                            ->prefixIcon('heroicon-o-globe-alt')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'chain')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'chain')
+                            ->helperText('El QR podrá usarse en todas las sucursales de esta cadena'),
+
+                        Forms\Components\Select::make('brand_id')
+                            ->label('Marca')
+                            ->relationship('brand', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar marca')
+                            ->prefixIcon('heroicon-o-building-storefront')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'brand')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'brand')
+                            ->helperText('El QR podrá usarse en todas las sucursales de esta marca'),
+
+                        Forms\Components\Select::make('branches')
+                            ->label('Sucursales')
+                            ->relationship('branches', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar sucursales')
+                            ->prefixIcon('heroicon-o-map-pin')
+                            ->visible(fn (Forms\Get $get) => $get('scope') === 'branch')
+                            ->required(fn (Forms\Get $get) => $get('scope') === 'branch')
+                            ->helperText('Selecciona una o varias sucursales donde podrá usarse el QR'),
+                    ])
+                    ->columns(1),
+
+                Forms\Components\Section::make('Códigos QR Generados')
+                    ->icon('heroicon-o-qr-code')
+                    ->schema([
+                        Forms\Components\View::make('filament.qr-codes')
+                            ->visible(fn ($record) => $record !== null && $record->qr_image_path)
+                            ->viewData(fn ($record) => [
+                                'qrUrls' => $record ? $record->getQrCodeUrls() : ['uuid' => null, 'legacy' => null],
+                                'legacyId' => $record?->legacy_id,
+                                'uuid' => $record?->id,
+                            ]),
+                    ])
+                    ->visible(fn ($record) => $record !== null),
             ]);
     }
 
@@ -99,6 +186,25 @@ class GiftCardResource extends Resource
                     ->label('ID Legacy')
                     ->searchable()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Categoría')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('warning'),
+                Tables\Columns\TextColumn::make('scope')
+                    ->label('Alcance')
+                    ->badge()
+                    ->color(fn (GiftCardScope $state): string => match ($state) {
+                        GiftCardScope::CHAIN => 'success',
+                        GiftCardScope::BRAND => 'warning',
+                        GiftCardScope::BRANCH => 'primary',
+                    })
+                    ->formatStateUsing(fn (GiftCardScope $state): string => match ($state) {
+                        GiftCardScope::CHAIN => 'Cadena',
+                        GiftCardScope::BRAND => 'Marca',
+                        GiftCardScope::BRANCH => 'Sucursal',
+                    }),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuario')
                     ->searchable()
@@ -138,6 +244,22 @@ class GiftCardResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('gift_card_category_id')
+                    ->label('Categoría')
+                    ->relationship('category', 'name')
+                    ->placeholder('Todas las categorías'),
+                Tables\Filters\SelectFilter::make('scope')
+                    ->label('Alcance')
+                    ->options(GiftCardScope::options())
+                    ->placeholder('Todos los alcances'),
+                Tables\Filters\SelectFilter::make('chain_id')
+                    ->label('Cadena')
+                    ->relationship('chain', 'name')
+                    ->placeholder('Todas las cadenas'),
+                Tables\Filters\SelectFilter::make('brand_id')
+                    ->label('Marca')
+                    ->relationship('brand', 'name')
+                    ->placeholder('Todas las marcas'),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
@@ -152,7 +274,7 @@ class GiftCardResource extends Resource
                     ->color('primary'),
             ])
             ->bulkActions([
-                // No bulk actions - QR Empleados can only be activated/deactivated
+                // No bulk actions
             ]);
     }
 
@@ -171,8 +293,6 @@ class GiftCardResource extends Resource
             'edit' => Pages\EditGiftCard::route('/{record}/edit'),
         ];
     }
-
-    // Removed soft delete query scope - QR Empleados cannot be deleted
 
     public static function canDelete($record): bool
     {

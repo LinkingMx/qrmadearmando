@@ -7,6 +7,8 @@ use App\Services\UserImportService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 uses(RefreshDatabase::class);
 
@@ -27,7 +29,7 @@ test('can import users from excel without photos', function () {
 
     // Create temp Excel file
     $filePath = storage_path('app/public/test_import.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -36,10 +38,10 @@ test('can import users from excel without photos', function () {
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
-    $importService = new UserImportService();
+    $importService = new UserImportService;
     $import = new UsersImport($importService, false);
 
     Excel::import($import, $filePath);
@@ -65,7 +67,7 @@ test('import validates required fields', function () {
     ];
 
     $filePath = storage_path('app/public/test_import_invalid.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -74,10 +76,10 @@ test('import validates required fields', function () {
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
-    $importService = new UserImportService();
+    $importService = new UserImportService;
     $import = new UsersImport($importService, false);
 
     Excel::import($import, $filePath);
@@ -102,7 +104,7 @@ test('import does not create duplicate emails', function () {
     ];
 
     $filePath = storage_path('app/public/test_import_duplicate.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -111,10 +113,10 @@ test('import does not create duplicate emails', function () {
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
-    $importService = new UserImportService();
+    $importService = new UserImportService;
     $import = new UsersImport($importService, false);
 
     Excel::import($import, $filePath);
@@ -143,7 +145,7 @@ test('import can update existing users when flag is set', function () {
     ];
 
     $filePath = storage_path('app/public/test_import_update.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -152,10 +154,10 @@ test('import can update existing users when flag is set', function () {
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
-    $importService = new UserImportService();
+    $importService = new UserImportService;
     $import = new UsersImport($importService, true); // Enable update
 
     Excel::import($import, $filePath);
@@ -180,7 +182,7 @@ test('import assigns branch correctly', function () {
     ];
 
     $filePath = storage_path('app/public/test_import_branch.xlsx');
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet;
     $sheet = $spreadsheet->getActiveSheet();
 
     foreach ($data as $rowIndex => $row) {
@@ -189,10 +191,10 @@ test('import assigns branch correctly', function () {
         }
     }
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $writer = new Xlsx($spreadsheet);
     $writer->save($filePath);
 
-    $importService = new UserImportService();
+    $importService = new UserImportService;
     $import = new UsersImport($importService, false);
 
     Excel::import($import, $filePath);

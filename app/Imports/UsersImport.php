@@ -8,22 +8,24 @@ use App\Services\UserImportService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class UsersImport implements ToCollection, WithHeadingRow, WithChunkReading, SkipsOnError
+class UsersImport implements SkipsOnError, ToCollection, WithChunkReading, WithHeadingRow
 {
     use SkipsErrors;
 
     protected UserImportService $importService;
+
     protected array $importErrors = [];
+
     protected array $created = [];
+
     protected array $updated = [];
+
     protected bool $updateExisting;
 
     public function __construct(UserImportService $importService, bool $updateExisting = false)
@@ -45,44 +47,48 @@ class UsersImport implements ToCollection, WithHeadingRow, WithChunkReading, Ski
                         'error' => 'Nombre y email son requeridos',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
                 // Validate email format
-                if (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+                if (! filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'error' => 'Email inválido',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
                 // Check if user exists
                 $existingUser = User::withTrashed()->where('email', $row['email'])->first();
 
-                if ($existingUser && !$this->updateExisting) {
+                if ($existingUser && ! $this->updateExisting) {
                     $this->importErrors[] = [
                         'row' => $rowNumber,
                         'error' => 'El email ya existe',
                         'data' => $row->toArray(),
                     ];
+
                     continue;
                 }
 
                 // Find branch if specified
                 $branchId = null;
-                if (!empty($row['sucursal'])) {
+                if (! empty($row['sucursal'])) {
                     $branch = Branch::where('name', $row['sucursal'])
                         ->orWhere('id', $row['sucursal'])
                         ->first();
 
-                    if (!$branch) {
+                    if (! $branch) {
                         $this->importErrors[] = [
                             'row' => $rowNumber,
                             'error' => "Sucursal '{$row['sucursal']}' no encontrada",
                             'data' => $row->toArray(),
                         ];
+
                         continue;
                     }
 
@@ -91,9 +97,9 @@ class UsersImport implements ToCollection, WithHeadingRow, WithChunkReading, Ski
 
                 // Handle password
                 $password = null;
-                if (!empty($row['contrasena'])) {
+                if (! empty($row['contrasena'])) {
                     $password = Hash::make($row['contrasena']);
-                } elseif (!$existingUser) {
+                } elseif (! $existingUser) {
                     // Generate random password for new users
                     $generatedPassword = Str::random(12);
                     $password = Hash::make($generatedPassword);
@@ -102,7 +108,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithChunkReading, Ski
 
                 // Handle photo
                 $avatarPath = null;
-                if (!empty($row['foto'])) {
+                if (! empty($row['foto'])) {
                     $photoPath = $this->importService->findPhotoForUser(
                         $row['foto'],
                         $row['email'],

@@ -10,9 +10,6 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Notifications\Notification;
 
 class BranchResource extends Resource
 {
@@ -22,10 +19,16 @@ class BranchResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?string $navigationGroup = 'Administración de sistema';
+
+    protected static ?string $navigationGroup = 'Organización';
+
     protected static ?string $navigationLabel = 'Sucursales';
+
     protected static ?string $pluralModelLabel = 'Sucursales';
+
     protected static ?string $modelLabel = 'Sucursal';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -34,12 +37,24 @@ class BranchResource extends Resource
                 Forms\Components\Section::make('Información de la Sucursal')
                     ->icon('heroicon-o-building-office-2')
                     ->schema([
+                        Forms\Components\Select::make('brand_id')
+                            ->label('Marca')
+                            ->relationship('brand', 'name')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Seleccionar marca')
+                            ->prefixIcon('heroicon-o-building-storefront')
+                            ->helperText('Marca a la que pertenece esta sucursal'),
+
                         Forms\Components\TextInput::make('name')
                             ->label('Nombre')
                             ->required()
                             ->maxLength(255)
+                            ->placeholder('Ej: Mochomos Monterrey, Don Carlos Centro')
                             ->prefixIcon('heroicon-m-building-office-2'),
-                    ]),
+                    ])
+                    ->columns(1),
             ]);
     }
 
@@ -48,53 +63,61 @@ class BranchResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Sucursal')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
+
+                Tables\Columns\TextColumn::make('brand.name')
+                    ->label('Marca')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('brand.chain.name')
+                    ->label('Cadena')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('primary')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('users_count')
+                    ->label('Usuarios')
+                    ->counts('users')
+                    ->sortable()
+                    ->alignCenter(),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Actualizado')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('brand_id')
+                    ->label('Marca')
+                    ->relationship('brand', 'name')
+                    ->placeholder('Todas las marcas'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
                     ->icon('heroicon-o-pencil-square')
-                    ->successNotification(
-                        fn (Branch $record) => Notification::make()
-                            ->success()
-                            ->title('Sucursal actualizada exitosamente')
-                            ->body("La sucursal '{$record->name}' ha sido actualizada correctamente.")
-                            ->icon('heroicon-o-check-circle')
-                    ),
-                Tables\Actions\DeleteAction::make()
-                    ->icon('heroicon-o-trash')
-                    ->successNotification(
-                        fn (Branch $record) => Notification::make()
-                            ->success()
-                            ->title('Sucursal eliminada exitosamente')
-                            ->body("La sucursal '{$record->name}' ha sido eliminada correctamente.")
-                            ->icon('heroicon-o-check-circle')
-                    ),
+                    ->color('primary'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->icon('heroicon-o-trash')
-                        ->successNotification(
-                            fn ($records) => Notification::make()
-                                ->success()
-                                ->title('Sucursales eliminadas exitosamente')
-                                ->body('Las sucursales seleccionadas han sido eliminadas correctamente.')
-                                ->icon('heroicon-o-check-circle')
-                        ),
-                ]),
+                // Bulk deletion disabled for branches
             ]);
     }
 

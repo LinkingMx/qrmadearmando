@@ -4,16 +4,16 @@ namespace App\Exports;
 
 use App\Models\GiftCard;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class BalanceTemplateExport implements FromArray, WithHeadings, WithStyles, WithColumnWidths, WithEvents
+class BalanceTemplateExport implements FromArray, WithColumnWidths, WithEvents, WithHeadings, WithStyles
 {
     public function array(): array
     {
@@ -115,7 +115,7 @@ class BalanceTemplateExport implements FromArray, WithHeadings, WithStyles, With
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 // Add instructions at the top
@@ -170,9 +170,9 @@ class BalanceTemplateExport implements FromArray, WithHeadings, WithStyles, With
                 $lastRow = count($this->array()) + 4;
                 for ($row = 5; $row <= $lastRow; $row++) {
                     $cellValue = $sheet->getCell("B{$row}")->getValue();
-                    if (!empty($cellValue) && is_numeric(str_replace(['+', '-', ' '], '', $cellValue))) {
+                    if (! empty($cellValue) && is_numeric(str_replace(['+', '-', ' '], '', $cellValue))) {
                         // Negative numbers (debits) - red
-                        if (strpos((string)$cellValue, '-') === 0) {
+                        if (strpos((string) $cellValue, '-') === 0) {
                             $sheet->getStyle("B{$row}")->applyFromArray([
                                 'font' => [
                                     'color' => ['rgb' => 'DC2626'],

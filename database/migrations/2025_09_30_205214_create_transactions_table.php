@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gift_card_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('gift_card_id')->constrained()->cascadeOnDelete();
             $table->enum('type', ['credit', 'debit', 'adjustment']);
             $table->decimal('amount', 10, 2);
             $table->decimal('balance_before', 10, 2);

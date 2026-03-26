@@ -1,27 +1,30 @@
-import { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
-import { GiftCardInfo } from '@/components/scanner/gift-card-info';
-import { DebitForm } from '@/components/scanner/debit-form';
-import { ReceiptModal } from '@/components/scanner/receipt-modal';
+import { OfflineStatusIndicator } from '@/components/offline-status-indicator';
 import { BranchTransactionList } from '@/components/scanner/branch-transaction-list';
-import { Button } from '@/components/ui/button';
+import { DebitForm } from '@/components/scanner/debit-form';
+import { GiftCardInfo } from '@/components/scanner/gift-card-info';
+import { QRScannerSelector } from '@/components/scanner/qr-scanner-selector';
+import { TransactionReceiptModal } from '@/components/scanner/transaction-receipt-modal';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { useScannerOffline, useSyncManager } from '@/hooks/use-scanner-offline';
+import AppLayout from '@/layouts/app-layout';
+import axios from '@/lib/axios';
+import { BreadcrumbItem } from '@/types';
+import { extractResponseData } from '@/types/api';
 import {
-    GiftCard,
     DebitFormData,
-    Transaction,
+    GiftCard,
     ScannerMode,
     ScannerPageProps,
+    Transaction,
 } from '@/types/scanner';
-import { BreadcrumbItem } from '@/types';
-import { ScanIcon, AlertCircleIcon, ArrowLeftIcon } from 'lucide-react';
-import axios from '@/lib/axios';
+import { Head } from '@inertiajs/react';
+import { AlertCircleIcon, ArrowLeftIcon, ScanIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Scanner',
+        title: 'Escáner',
         href: '/scanner',
     },
 ];
@@ -33,22 +36,96 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
     const [error, setError] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showReceipt, setShowReceipt] = useState(false);
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    // Offline-first hooks - DISABLED FOR TESTING
+    // const offlineScanner = useScannerOffline();
+    // const syncManager = useSyncManager();
+
+    // Monitor online/offline status
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Auto-sync when coming back online - DISABLED
+    // useEffect(() => {
+    //     if (isOnline && syncManager.lastSyncTime === null) {
+    //         syncManager.syncPending().catch(() => {
+    //             // Auto-sync failed silently
+    //         });
+    //     }
+    // }, [isOnline]);
 
     const handleScan = async (identifier: string) => {
         setError(null);
         setIsProcessing(true);
 
         try {
-            const response = await axios.post('/api/scanner/lookup', {
-                identifier,
-            });
+            // OFFLINE DISABLED - Use API directly
+            // const card = await offlineScanner.scan(identifier);
 
-            setGiftCard(response.data.gift_card);
-            setMode('viewing');
+            // if (!card) {
+                // Always use API
+                try {
+                    const response = await axios.post('/api/scanner/lookup', {
+                        identifier,
+                    });
+
+                    if (response?.data) {
+                        // Support both new format { data: GiftCard } and old format { gift_card: GiftCard }
+                        const giftCardData = extractResponseData<GiftCard>(
+                            response.data,
+                            'gift_card',
+                        );
+
+                        if (giftCardData) {
+                            setGiftCard(giftCardData);
+                            setMode('viewing');
+                        } else {
+                            setError('Formato de respuesta inválido');
+                        }
+                    } else {
+                        setError('Respuesta del servidor vacía');
+                    }
+                } catch (apiErr: any) {
+                    // Check both 'error' and 'message' fields in response
+                    let errorMsg = 'Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.';
+
+                    try {
+                        if (apiErr?.response?.data) {
+                            const errorData = apiErr.response.data;
+
+                            // Handle both string and object error formats
+                            if (typeof errorData.error === 'string') {
+                                errorMsg = errorData.error;
+                            } else if (typeof errorData.error === 'object' && errorData.error?.message) {
+                                errorMsg = errorData.error.message;
+                            } else if (typeof errorData.message === 'string') {
+                                errorMsg = errorData.message;
+                            }
+                        }
+                    } catch {
+                        // Ignore extraction errors, use default message
+                    }
+
+                    setError(errorMsg);
+                }
+            // } else {
+            //     setGiftCard(card as GiftCard);
+            //     setMode('viewing');
+            // }
         } catch (err: any) {
-            const errorMsg =
-                err.response?.data?.error || 'Error al buscar el QR. Intente nuevamente.';
-            setError(errorMsg);
+            // Catch any unexpected errors and show friendly message
+            setError('Tarjeta no encontrada. Verifica el código QR e intenta nuevamente.');
         } finally {
             setIsProcessing(false);
         }
@@ -61,20 +138,47 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
         setIsProcessing(true);
 
         try {
+            // OFFLINE DISABLED - Use API directly
             const response = await axios.post('/api/scanner/process-debit', {
                 gift_card_id: giftCard.id,
                 amount: data.amount,
-                reference: data.reference,
                 description: data.description,
+                reference: data.reference,
             });
 
-            setTransaction(response.data.transaction);
-            setMode('success');
-            setShowReceipt(true);
+            if (response?.data?.data) {
+                const transactionData = response.data.data as Transaction;
+
+                if (transactionData && transactionData.gift_card) {
+                    setTransaction(transactionData);
+                    setGiftCard(transactionData.gift_card);
+                    setMode('success');
+                    setShowReceipt(true);
+                } else {
+                    setError('Formato de respuesta inválido');
+                }
+            } else {
+                setError('Respuesta del servidor vacía');
+            }
         } catch (err: any) {
-            const errorMsg =
-                err.response?.data?.error ||
-                'Error al procesar el descuento. Intente nuevamente.';
+            let errorMsg = 'Error al procesar el descuento.';
+
+            try {
+                if (err?.response?.data) {
+                    const errorData = err.response.data;
+
+                    if (typeof errorData.error === 'string') {
+                        errorMsg = errorData.error;
+                    } else if (typeof errorData.error === 'object' && errorData.error?.message) {
+                        errorMsg = errorData.error.message;
+                    } else if (typeof errorData.message === 'string') {
+                        errorMsg = errorData.message;
+                    }
+                }
+            } catch {
+                // Ignore extraction errors, use default message
+            }
+
             setError(errorMsg);
         } finally {
             setIsProcessing(false);
@@ -98,22 +202,46 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Scanner" />
+            <Head title="Escáner" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto p-4 md:p-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-bold flex items-center gap-3">
+                        <h1 className="flex items-center gap-3 text-3xl font-bold">
                             <ScanIcon className="size-8" />
                             Scanner QR Empleados
                         </h1>
                         <p className="text-muted-foreground">
-                            Sucursal: <span className="font-semibold">{branch.name}</span> •
-                            Usuario: <span className="font-semibold">{user.name}</span>
+                            Sucursal:{' '}
+                            <span className="font-semibold">{branch.name}</span>{' '}
+                            • Usuario:{' '}
+                            <span className="font-semibold">{user.name}</span>
                         </p>
                     </div>
+                    {/* OFFLINE DISABLED
+                    {!isOnline && (
+                        <Button
+                            onClick={() => syncManager.syncPending()}
+                            disabled={syncManager.isSyncing}
+                            variant="outline"
+                            size="sm"
+                        >
+                            {syncManager.isSyncing
+                                ? 'Sincronizando...'
+                                : 'Sincronizar'}
+                        </Button>
+                    )}
+                    */}
                 </div>
+
+                {/* Offline Status Indicator - DISABLED
+                {(!isOnline ||
+                    syncManager.isSyncing ||
+                    offlineScanner.error?.includes('Sin conexión')) && (
+                    <OfflineStatusIndicator showPendingCount={true} />
+                )}
+                */}
 
                 {/* Error Alert */}
                 {error && (
@@ -163,10 +291,11 @@ export default function Scanner({ branch, user }: ScannerPageProps) {
                 </div>
 
                 {/* Receipt Modal */}
-                <ReceiptModal
+                <TransactionReceiptModal
                     transaction={transaction}
                     isOpen={showReceipt}
                     onClose={handleCloseReceipt}
+                    variant="success"
                 />
 
                 {/* Transaction History Section */}

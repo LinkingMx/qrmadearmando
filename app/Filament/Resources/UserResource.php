@@ -3,21 +3,17 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Group;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
-
 
 class UserResource extends Resource
 {
@@ -27,9 +23,13 @@ class UserResource extends Resource
      * Spanish menus and icons.
      */
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationGroup = 'Administración de sistema';
+
     protected static ?string $navigationLabel = 'Usuarios';
+
     protected static ?string $pluralModelLabel = 'Usuarios';
+
     protected static ?string $modelLabel = 'Usuario';
 
     public static function form(Form $form): Form
@@ -94,8 +94,7 @@ class UserResource extends Resource
                                             ->required(fn (string $operation): bool => $operation === 'create')
                                             ->prefixIcon('heroicon-m-lock-closed')
                                             ->live(onBlur: true)
-                                            ->helperText(fn (string $operation): string =>
-                                                $operation === 'create'
+                                            ->helperText(fn (string $operation): string => $operation === 'create'
                                                     ? 'Ingrese una contraseña segura (mínimo 8 caracteres).'
                                                     : 'Deja en blanco si no deseas cambiar la contraseña.'
                                             )
@@ -118,6 +117,24 @@ class UserResource extends Resource
                                     ->placeholder('Seleccionar sucursal')
                                     ->prefixIcon('heroicon-m-building-office-2')
                                     ->columnSpanFull(),
+                                Forms\Components\Select::make('roles')
+                                    ->label('Rol')
+                                    ->relationship('roles', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->required()
+                                    ->placeholder('Seleccionar rol')
+                                    ->prefixIcon('heroicon-m-shield-check')
+                                    ->helperText('Employee: Empleado humano | BranchTerminal: Terminal de sucursal (acceso a scanner)')
+                                    ->columnSpanFull(),
+                                Forms\Components\Toggle::make('is_active')
+                                    ->label('Usuario Activo')
+                                    ->default(true)
+                                    ->helperText('Los usuarios inactivos no podrán iniciar sesión')
+                                    ->disabled(fn ($record) => $record && $record->id === auth()->id())
+                                    ->dehydrated(fn ($record) => ! $record || $record->id !== auth()->id())
+                                    ->inline(false)
+                                    ->columnSpanFull(),
                             ])
                             ->columnSpan(2),
                     ]),
@@ -129,8 +146,8 @@ class UserResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('avatar')
-                ->label('Foto')
-                ->circular(),
+                    ->label('Foto')
+                    ->circular(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
@@ -140,6 +157,19 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->placeholder('Sin asignar'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Rol')
+                    ->badge()
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label('Estado')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
                     ->sortable()
@@ -164,8 +194,51 @@ class UserResource extends Resource
                     ->relationship('branch', 'name')
                     ->searchable()
                     ->preload(),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Estado')
+                    ->placeholder('Todos los usuarios')
+                    ->trueLabel('Solo usuarios activos')
+                    ->falseLabel('Solo usuarios inactivos')
+                    ->native(false),
             ])
             ->actions([
+                Tables\Actions\Action::make('toggle_active')
+                    ->label(fn (User $record): string => $record->is_active ? 'Desactivar' : 'Activar')
+                    ->icon(fn (User $record): string => $record->is_active ? 'heroicon-o-x-circle' : 'heroicon-o-check-circle')
+                    ->color(fn (User $record): string => $record->is_active ? 'danger' : 'success')
+                    ->hidden(fn (User $record): bool => $record->id === auth()->id())
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record): string => $record->is_active ? 'Desactivar Usuario' : 'Activar Usuario')
+                    ->modalDescription(fn (User $record): string => $record->is_active
+                        ? '¿Estás seguro de que deseas desactivar este usuario? No podrá iniciar sesión y todos sus QR codes serán desactivados hasta que sea reactivado.'
+                        : '¿Estás seguro de que deseas activar este usuario? Podrá iniciar sesión nuevamente y todos sus QR codes serán reactivados.')
+                    ->modalSubmitActionLabel(fn (User $record): string => $record->is_active ? 'Desactivar' : 'Activar')
+                    ->action(function (User $record) {
+                        if ($record->id === auth()->id()) {
+                            Notification::make()
+                                ->title('No puedes desactivar tu propia cuenta')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        $giftCardsCount = $record->giftCards()->count();
+                        $record->is_active = ! $record->is_active;
+                        $record->save();
+
+                        Notification::make()
+                            ->title($record->is_active
+                                ? 'Usuario activado correctamente'
+                                : 'Usuario desactivado correctamente')
+                            ->body($giftCardsCount > 0
+                                ? ($record->is_active
+                                    ? "{$giftCardsCount} QR code(s) activados"
+                                    : "{$giftCardsCount} QR code(s) desactivados")
+                                : 'Este usuario no tiene QR codes asignados')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make()
                     ->color('primary'),
             ])

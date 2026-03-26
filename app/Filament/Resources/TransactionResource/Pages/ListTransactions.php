@@ -5,8 +5,13 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 use App\Exports\BranchClosureExport;
 use App\Exports\TransactionsExport;
 use App\Filament\Resources\TransactionResource;
+use App\Models\Branch;
+use App\Models\GiftCard;
+use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -24,7 +29,7 @@ class ListTransactions extends ListRecords
                 ->form([
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
-                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->options(Branch::pluck('name', 'id'))
                         ->searchable()
                         ->required()
                         ->helperText('Seleccione la sucursal para generar el corte de lote'),
@@ -58,25 +63,26 @@ class ListTransactions extends ListRecords
                         ->native(false),
                     Forms\Components\Select::make('admin_user_id')
                         ->label('Usuario Admin')
-                        ->options(\App\Models\User::pluck('name', 'id'))
+                        ->options(User::pluck('name', 'id'))
                         ->searchable()
                         ->placeholder('Todos'),
                 ])
                 ->action(function (array $data) {
-                    $branch = \App\Models\Branch::find($data['branch_id']);
+                    $branch = Branch::find($data['branch_id']);
 
-                    if (!$branch) {
-                        \Filament\Notifications\Notification::make()
+                    if (! $branch) {
+                        Notification::make()
                             ->danger()
                             ->title('Error')
                             ->body('Sucursal no encontrada')
                             ->send();
+
                         return;
                     }
 
                     // Format branch name for filename (remove spaces and special chars)
                     $branchSlug = str_replace([' ', ',', '.'], '_', $branch->name);
-                    $date = \Carbon\Carbon::parse($data['date'])->format('Y-m-d');
+                    $date = Carbon::parse($data['date'])->format('Y-m-d');
 
                     $filename = "corte_lote_{$branchSlug}_{$date}.xlsx";
 
@@ -92,7 +98,7 @@ class ListTransactions extends ListRecords
                 ->form([
                     Forms\Components\Select::make('gift_card_id')
                         ->label('Tarjeta de Regalo')
-                        ->options(\App\Models\GiftCard::pluck('legacy_id', 'id'))
+                        ->options(GiftCard::pluck('legacy_id', 'id'))
                         ->searchable()
                         ->placeholder('Todas'),
                     Forms\Components\DatePicker::make('date_from')
@@ -112,24 +118,24 @@ class ListTransactions extends ListRecords
                         ->placeholder('Todos'),
                     Forms\Components\Select::make('branch_id')
                         ->label('Sucursal')
-                        ->options(\App\Models\Branch::pluck('name', 'id'))
+                        ->options(Branch::pluck('name', 'id'))
                         ->searchable()
                         ->placeholder('Todas'),
                     Forms\Components\Select::make('admin_user_id')
                         ->label('Usuario Admin')
-                        ->options(\App\Models\User::pluck('name', 'id'))
+                        ->options(User::pluck('name', 'id'))
                         ->searchable()
                         ->placeholder('Todos'),
                 ])
                 ->action(function (array $data) {
                     $giftCard = null;
-                    if (!empty($data['gift_card_id'])) {
-                        $giftCard = \App\Models\GiftCard::find($data['gift_card_id']);
+                    if (! empty($data['gift_card_id'])) {
+                        $giftCard = GiftCard::find($data['gift_card_id']);
                     }
 
-                    $filename = 'transacciones_' .
-                        ($giftCard ? $giftCard->legacy_id . '_' : '') .
-                        now()->format('Y-m-d') . '.xlsx';
+                    $filename = 'transacciones_'.
+                        ($giftCard ? $giftCard->legacy_id.'_' : '').
+                        now()->format('Y-m-d').'.xlsx';
 
                     return Excel::download(
                         new TransactionsExport($giftCard, $data),

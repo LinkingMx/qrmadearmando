@@ -1,16 +1,26 @@
 <?php
 
 use App\Models\Branch;
+use App\Models\Brand;
+use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\TransactionService;
 
 beforeEach(function () {
+    $this->chain = Chain::firstOrCreate(['name' => 'Test Chain']);
+    $this->brand = Brand::firstOrCreate(
+        ['chain_id' => $this->chain->id, 'name' => 'Test Brand'],
+    );
     $this->user = User::factory()->create();
-    $this->branch = Branch::create(['name' => 'Sucursal Test']);
-    $this->giftCard = GiftCard::factory()->create(['balance' => 100]);
-    $this->transactionService = new TransactionService();
+    $this->branch = Branch::create(['name' => 'Sucursal Test', 'brand_id' => $this->brand->id]);
+    $this->giftCard = GiftCard::factory()->create([
+        'balance' => 100,
+        'scope' => 'chain',
+        'chain_id' => $this->chain->id,
+    ]);
+    $this->transactionService = new TransactionService;
 });
 
 test('can credit balance to gift card', function () {

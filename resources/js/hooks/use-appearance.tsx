@@ -78,5 +78,11 @@ export function useAppearance() {
             );
     }, [updateAppearance]);
 
-    return { appearance, updateAppearance } as const;
+    // Compute resolved appearance (dark or light based on system preference if mode is 'system')
+    const resolvedAppearance: 'dark' | 'light' =
+        appearance === 'dark' || (appearance === 'system' && prefersDark())
+            ? 'dark'
+            : 'light';
+
+    return { appearance, updateAppearance, resolvedAppearance } as const;
 }

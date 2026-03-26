@@ -20,6 +20,7 @@ This is a **gift card management system** with QR code scanning capabilities. Th
 **Testing**: Pest PHP 4.1
 **Database**: SQLite (development)
 **Admin Panel**: Filament 3 (amber theme, activity logging via filament-logger)
+**Permissions**: Filament Shield (Spatie Laravel Permissions integration)
 **Excel Imports/Exports**: maatwebsite/excel (user imports, balance loading)
 **QR Code Generation**: endroid/qr-code
 
@@ -83,14 +84,21 @@ php artisan filament:upgrade  # Run after composer install/update
 
 **Backend Structure:**
 - `app/Models/` - Core domain models:
-  - `GiftCard` - Uses UUIDs, soft deletes, auto-generates QR codes on create/update
+  - `GiftCardCategory` - Gift card categories with unique prefix and nature (payment_method/discount)
+  - `GiftCard` - Uses UUIDs, soft deletes, belongs to category, auto-generates QR codes on create/update
   - `Transaction` - Tracks balance changes with before/after snapshots
-  - `Branch` - Locations with assigned employees
-  - `User` - Includes 2FA columns and branch assignment
+  - `Branch` - Locations with assigned employees (deletion disabled)
+  - `User` - Includes 2FA, branch assignment, and activation status with HasRoles trait
+- `app/Enums/` - Enum types:
+  - `GiftCardNature` - Enum for category nature (payment_method, discount)
 - `app/Http/Controllers/` - Controllers return `Inertia::render()` responses
   - `EmployeeDashboardController` - Employee transaction views
   - `ScannerController` - QR lookup and debit processing (requires `has.branch` middleware)
 - `app/Filament/Resources/` - Filament admin panel resources (warm color theme)
+- `app/Filament/Pages/Auth/` - Custom authentication pages:
+  - `Login.php` - Custom login with active user validation
+- `app/Http/Middleware/` - Custom middleware:
+  - `EnsureUserIsActive` - Blocks inactive users from accessing the system
 - `app/Services/` - Business logic services:
   - `QrCodeService` - QR code generation/deletion logic
   - `TransactionService` - Transaction processing with DB transactions and validation
@@ -103,7 +111,10 @@ php artisan filament:upgrade  # Run after composer install/update
 - **Inertia.js**: No separate API - return `Inertia::render()` from controllers
 - **Laravel Wayfinder**: Type-safe routing - generates TypeScript actions in `@/actions/`
 - **SSR**: Production rendering via `resources/js/ssr.tsx`
-- **Middleware**: `has.branch` checks employee branch assignment for scanner access
+- **Middleware**:
+  - `has.branch` - Checks employee branch assignment for scanner access
+  - `EnsureUserIsActive` - Applied to both web and Filament stacks
+- **Filament Shield**: Role-based permissions integrated with Spatie Laravel Permissions
 
 **Data Flow:**
 1. Gift cards created with UUID primary keys, legacy IDs for QR codes
@@ -147,11 +158,22 @@ php artisan filament:upgrade  # Run after composer install/update
 
 **Gift Card System:**
 - Gift cards use UUID primary keys (`HasUuids` trait)
-- `legacy_id` field auto-generated in format "EMCAD" + 6 digits (e.g., EMCAD000001)
+- Gift cards belong to a `GiftCardCategory` (required relationship)
+- `legacy_id` auto-generated using category prefix + 6-digit counter (e.g., EMCAD000001, RPCAD000001, CON000001)
+- Each category has an independent counter starting from 000001
 - Two QR codes generated per card: one with UUID, one with legacy_id
 - QR codes auto-generated via model events (`created`, `updating`)
 - QR image files stored in `storage/app/public/qr_codes/`
 - Soft deletes enabled - QR files cleaned up on force delete
+
+**Gift Card Categories:**
+- Categories define prefix (unique, uppercase letters only) and nature (payment_method or discount)
+- Nature types: `payment_method` ("Método de pago") and `discount` ("Descuento")
+- Categories cannot be deleted if they have gift cards assigned (FK restrict)
+- Prefix and nature are disabled for editing once gift cards exist in the category
+- Default category "Empleados" (EMCAD, payment_method) created during migration
+- Legacy ID generation delegated to `GiftCardCategory::generateNextLegacyId()`
+- Counter uses `withTrashed()` to prevent soft-deleted ID reuse
 
 **Import/Export Features:**
 - User import via Excel templates (download at `/download/users-template`)
@@ -173,3 +195,127 @@ php artisan filament:upgrade  # Run after composer install/update
   - `adjustment` - Add or subtract balance (branch required only for negative amounts)
 - All transactions record `balance_before` and `balance_after` snapshots
 - Debit transactions require branch_id and validate sufficient balance
+
+**User Activation System:**
+- Users have `is_active` boolean field (default: true)
+- Inactive users cannot log in to frontend or admin panel
+- Custom Filament login page validates user activation status
+- `EnsureUserIsActive` middleware automatically logs out inactive users
+- Frontend login (Fortify) validates activation in `FortifyServiceProvider`
+- Admin can activate/deactivate users from Filament panel with toggle action
+- Users cannot deactivate their own account (validation in form and action)
+- Filter available to view only active or inactive users
+
+**QR Code Synchronization:**
+- When user is deactivated, all their gift cards are automatically deactivated
+- When user is reactivated, all their gift cards are automatically reactivated
+- Synchronization handled by User model `booted()` event listening for `is_active` changes
+- Feedback notification shows count of affected QR codes
+
+**Branch Protection:**
+- Branch deletion is completely disabled in Filament admin
+- No delete button in edit page, table actions, or bulk actions
+- Prevents accidental deletion of critical organizational data
+
+## Claude Code Skills
+
+This project has specialized skills installed to enhance development efficiency. Skills are invoked automatically based on context or manually via `/skill-name`.
+
+### Available Skills
+
+**Core Development Skills:**
+
+1. **pest-testing** - Pest PHP 4.1 testing framework
+   - **Auto-activates:** When writing tests, debugging test failures, working with assertions
+   - **Manual invoke:** `/pest-testing` or when user mentions "test", "spec", "TDD"
+   - **Use for:** Creating unit/feature tests, browser testing, architecture tests
+   - **Key features:**
+     - Prefer specific assertions (`assertSuccessful()` over `assertStatus(200)`)
+     - Use datasets for repetitive validation tests
+     - Browser tests with real browser integration
+     - Architecture testing for code conventions
+   - **Run tests:** `composer test` or `vendor/bin/pest --watch`
+
+2. **inertia-react-development** - Inertia.js v2 + React 19
+   - **Auto-activates:** When working with React pages, forms, navigation, or `<Link>`, `<Form>`, `useForm`
+   - **Manual invoke:** `/inertia-react-development`
+   - **Use for:** Creating/modifying React page components, client-side forms, SPA navigation
+   - **Key features:**
+     - Use `<Form>` component for forms (auto CSRF, validation errors)
+     - Use `<Link>` for navigation (maintains SPA behavior)
+     - Deferred props for progressive loading
+     - Polling for real-time updates
+     - WhenVisible for infinite scroll
+   - **Common pitfall:** Don't use traditional `<a>` or `<form>` tags
+
+3. **wayfinder-development** - Laravel Wayfinder type-safe routing
+   - **Auto-activates:** When importing from `@/actions/` or `@/routes/`, calling Laravel routes from TypeScript
+   - **Manual invoke:** `/wayfinder-development`
+   - **Use for:** Type-safe route references in frontend
+   - **Key patterns:**
+     ```typescript
+     import { store } from '@/actions/App/Http/Controllers/PostController'
+     <Form {...store.form()}><input name="title" /></Form>
+     store.url() // "/posts"
+     show.get(1) // { url: "/posts/1", method: "get" }
+     ```
+   - **Regenerate routes:** `php artisan wayfinder:generate --with-form --no-interaction`
+
+4. **tailwindcss-development** - Tailwind CSS 4.0
+   - **Auto-activates:** When adding styles, working with responsive design, dark mode, or UI changes
+   - **Manual invoke:** `/tailwindcss-development`
+   - **Use for:** Styling components, responsive layouts, dark mode implementation
+   - **Tailwind v4 specifics:**
+     - Use `@import "tailwindcss"` not `@tailwind` directives
+     - Use CSS `@theme` for configuration, not `tailwind.config.js`
+     - Replaced utilities: `bg-black/50` not `bg-opacity-50`
+     - Use `gap` utilities instead of margins for spacing
+   - **Dark mode:** Always add `dark:` variants if project uses dark mode
+
+5. **filament-docs** - FilamentPHP v4 documentation reference
+   - **Auto-activates:** When working with Filament admin panel components
+   - **Manual invoke:** `/filament-docs`
+   - **Use for:** Looking up exact Filament implementations, method signatures, patterns
+   - **Documentation structure:**
+     - `forms/` - All form field types and configurations
+     - `tables/` - Column types, filters, actions
+     - `actions/` - Action buttons and modals
+     - `general/03-resources/` - CRUD resources patterns
+     - `general/10-testing/` - Filament testing guide
+   - **Workflow:** Read docs → Extract patterns → Apply to code
+
+**Advanced Skills:**
+
+6. **devteam-laravel-skill** - AI Development Team (Opus 4.6 Agent Teams)
+   - **Manual invoke:** `/devteam-laravel-skill` or describe complex feature
+   - **Use for:**
+     - ✅ Multi-component feature development
+     - ✅ Complex system builds requiring architecture
+     - ✅ Large refactoring (5+ files)
+     - ✅ Complex integrations (payment gateways, external APIs)
+     - ✅ Features needing comprehensive testing + documentation
+   - **NOT for:**
+     - ❌ Single-file changes or quick bug fixes
+     - ❌ Simple CRUD operations
+     - ❌ Minor documentation updates
+   - **Workflow:** Planning → Development → Testing → Documentation (with approval checkpoints)
+   - **Cost optimized:** Opus 4.6 with adaptive thinking, effort level tuning
+
+### Skill Usage Guidelines
+
+**When skills auto-activate:**
+- Skills automatically engage based on context (e.g., editing a test file activates pest-testing)
+- Multiple skills can be active simultaneously
+- Skills provide specialized knowledge and patterns for their domain
+
+**Manual skill invocation:**
+- Use `/skill-name` when you need specialized help
+- Example: `/pest-testing help me write browser tests for the scanner`
+- Skills listed in system are available for use
+
+**Best practices:**
+1. Let skills auto-activate - they know when they're needed
+2. Consult filament-docs before generating any Filament code
+3. Use devteam-laravel for ambitious features, not simple changes
+4. Always verify Wayfinder routes after backend route changes
+5. Follow Tailwind v4 patterns (no v3 utilities)

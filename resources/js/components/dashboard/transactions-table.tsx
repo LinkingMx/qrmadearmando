@@ -1,6 +1,14 @@
-import { useState, useEffect } from 'react';
-import { EmployeeTransaction, TransactionsPagination } from '@/types/employee-dashboard';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -9,20 +17,18 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import axios from '@/lib/axios';
+import { TransactionsPagination } from '@/types/employee-dashboard';
 import {
-    HistoryIcon,
+    AlertCircleIcon,
+    ArrowDownIcon,
+    ArrowUpIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    AlertCircleIcon,
-    ArrowUpIcon,
-    ArrowDownIcon,
     EditIcon,
+    HistoryIcon,
 } from 'lucide-react';
-import axios from '@/lib/axios';
+import { useEffect, useState } from 'react';
 
 export function TransactionsTable() {
     const [data, setData] = useState<TransactionsPagination | null>(null);
@@ -35,13 +41,15 @@ export function TransactionsTable() {
         setError(null);
 
         try {
-            const response = await axios.get(`/api/my-transactions?page=${page}`);
+            const response = await axios.get(
+                `/api/my-transactions?page=${page}`,
+            );
             setData(response.data);
             setCurrentPage(page);
         } catch (err: any) {
             setError(
                 err.response?.data?.error ||
-                    'Error al cargar las transacciones. Intente nuevamente.'
+                    'Error al cargar las transacciones. Intente nuevamente.',
             );
         } finally {
             setLoading(false);
@@ -95,7 +103,10 @@ export function TransactionsTable() {
                 );
             case 'adjustment':
                 return (
-                    <Badge variant="secondary" className="gap-1 bg-primary/80 text-primary-foreground">
+                    <Badge
+                        variant="secondary"
+                        className="gap-1 bg-primary/80 text-primary-foreground"
+                    >
                         {getTypeIcon(type)}
                         {label}
                     </Badge>
@@ -146,29 +157,37 @@ export function TransactionsTable() {
                 ) : data && data.data.length > 0 ? (
                     <>
                         {/* Mobile Card View */}
-                        <div className="md:hidden space-y-3 px-2">
+                        <div className="space-y-3 px-2 md:hidden">
                             {data.data.map((transaction) => (
                                 <div
                                     key={transaction.id}
-                                    className="p-3 rounded-lg border bg-card space-y-2"
+                                    className="space-y-2 rounded-lg border bg-card p-3"
                                 >
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-muted-foreground">
                                             {transaction.created_at}
                                         </span>
-                                        {getTypeBadge(transaction.type, transaction.type_label)}
+                                        {getTypeBadge(
+                                            transaction.type,
+                                            transaction.type_label,
+                                        )}
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span
                                             className={`text-xl font-bold tabular-nums ${getAmountColor(
-                                                transaction.type
+                                                transaction.type,
                                             )}`}
                                         >
-                                            {transaction.type === 'debit' ? '-' : '+'}$
-                                            {transaction.amount.toFixed(2)}
+                                            {transaction.type === 'debit'
+                                                ? '-'
+                                                : '+'}
+                                            ${transaction.amount.toFixed(2)}
                                         </span>
                                         <span className="text-sm text-muted-foreground">
-                                            Saldo: ${transaction.balance_after.toFixed(2)}
+                                            Saldo: $
+                                            {transaction.balance_after.toFixed(
+                                                2,
+                                            )}
                                         </span>
                                     </div>
                                     {transaction.branch_name !== 'N/A' && (
@@ -177,7 +196,7 @@ export function TransactionsTable() {
                                         </div>
                                     )}
                                     {transaction.description !== '-' && (
-                                        <div className="text-sm text-foreground/80 line-clamp-2">
+                                        <div className="line-clamp-2 text-sm text-foreground/80">
                                             {transaction.description}
                                         </div>
                                     )}
@@ -186,14 +205,18 @@ export function TransactionsTable() {
                         </div>
 
                         {/* Desktop Table View */}
-                        <div className="hidden md:block rounded-md border overflow-x-auto">
+                        <div className="hidden overflow-x-auto rounded-md border md:block">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Fecha/Hora</TableHead>
                                         <TableHead>Tipo</TableHead>
-                                        <TableHead className="text-right">Monto</TableHead>
-                                        <TableHead className="text-right">Saldo Después</TableHead>
+                                        <TableHead className="text-right">
+                                            Monto
+                                        </TableHead>
+                                        <TableHead className="text-right">
+                                            Saldo Después
+                                        </TableHead>
                                         <TableHead>Sucursal</TableHead>
                                         <TableHead>Descripción</TableHead>
                                     </TableRow>
@@ -207,19 +230,24 @@ export function TransactionsTable() {
                                             <TableCell>
                                                 {getTypeBadge(
                                                     transaction.type,
-                                                    transaction.type_label
+                                                    transaction.type_label,
                                                 )}
                                             </TableCell>
                                             <TableCell
                                                 className={`text-right font-bold tabular-nums ${getAmountColor(
-                                                    transaction.type
+                                                    transaction.type,
                                                 )}`}
                                             >
-                                                {transaction.type === 'debit' ? '-' : '+'}$
-                                                {transaction.amount.toFixed(2)}
+                                                {transaction.type === 'debit'
+                                                    ? '-'
+                                                    : '+'}
+                                                ${transaction.amount.toFixed(2)}
                                             </TableCell>
                                             <TableCell className="text-right font-semibold tabular-nums">
-                                                ${transaction.balance_after.toFixed(2)}
+                                                $
+                                                {transaction.balance_after.toFixed(
+                                                    2,
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-muted-foreground">
                                                 {transaction.branch_name}
@@ -234,14 +262,15 @@ export function TransactionsTable() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-3 px-2 md:px-0">
-                            <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
-                                Mostrando {data.meta.from || 0} a {data.meta.to || 0} de{' '}
-                                {data.meta.total} transacciones
+                        <div className="flex flex-col items-center justify-between gap-3 px-2 md:flex-row md:px-0">
+                            <p className="text-center text-xs text-muted-foreground md:text-left md:text-sm">
+                                Mostrando {data.meta.from || 0} a{' '}
+                                {data.meta.to || 0} de {data.meta.total}{' '}
+                                transacciones
                             </p>
                             <div className="flex gap-2">
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
                                     onClick={handlePrevious}
                                     disabled={currentPage === 1 || loading}
@@ -250,10 +279,13 @@ export function TransactionsTable() {
                                     Anterior
                                 </Button>
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     size="sm"
                                     onClick={handleNext}
-                                    disabled={currentPage === data.meta.last_page || loading}
+                                    disabled={
+                                        currentPage === data.meta.last_page ||
+                                        loading
+                                    }
                                 >
                                     Siguiente
                                     <ChevronRightIcon className="ml-1 size-4" />
@@ -262,9 +294,9 @@ export function TransactionsTable() {
                         </div>
                     </>
                 ) : (
-                    <div className="text-center py-12 px-4">
-                        <HistoryIcon className="size-12 mx-auto mb-4 text-muted-foreground/50" />
-                        <p className="text-muted-foreground text-sm md:text-base">
+                    <div className="px-4 py-12 text-center">
+                        <HistoryIcon className="mx-auto mb-4 size-12 text-muted-foreground/50" />
+                        <p className="text-sm text-muted-foreground md:text-base">
                             No tienes transacciones registradas aún
                         </p>
                     </div>

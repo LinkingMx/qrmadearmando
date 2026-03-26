@@ -7,7 +7,9 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class BalanceReportExport implements WithMultipleSheets
 {
     protected array $stats;
+
     protected array $processed;
+
     protected array $errors;
 
     public function __construct(array $stats, array $processed, array $errors)

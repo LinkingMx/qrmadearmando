@@ -8,6 +8,7 @@ use App\Filament\Resources\GiftCardResource;
 use App\Imports\BalanceImport;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Maatwebsite\Excel\Facades\Excel;
@@ -57,7 +58,7 @@ class ListGiftCards extends ListRecords
                     try {
                         // Import balances from Excel
                         $import = new BalanceImport(auth()->id(), $data['allow_multiple']);
-                        Excel::import($import, storage_path('app/public/' . $data['excel']));
+                        Excel::import($import, storage_path('app/public/'.$data['excel']));
 
                         // Get statistics
                         $stats = $import->getStats();
@@ -65,24 +66,24 @@ class ListGiftCards extends ListRecords
                         $errors = $import->getErrors();
 
                         // Generate detailed report
-                        $reportFilename = 'reporte_carga_saldos_' . now()->format('Y-m-d_His') . '.xlsx';
-                        $reportPath = storage_path('app/public/temp/' . $reportFilename);
+                        $reportFilename = 'reporte_carga_saldos_'.now()->format('Y-m-d_His').'.xlsx';
+                        $reportPath = storage_path('app/public/temp/'.$reportFilename);
 
-                        if (!file_exists(dirname($reportPath))) {
+                        if (! file_exists(dirname($reportPath))) {
                             mkdir(dirname($reportPath), 0755, true);
                         }
 
                         Excel::store(
                             new BalanceReportExport($stats, $processed, $errors),
-                            'temp/' . $reportFilename,
+                            'temp/'.$reportFilename,
                             'public'
                         );
 
                         // Build notification message
                         $message = "✅ Procesados: {$stats['processed']}\n";
-                        $message .= "💰 Total Cargado: $" . number_format($stats['total_credited'], 2) . "\n";
-                        $message .= "💸 Total Descontado: $" . number_format($stats['total_debited'], 2) . "\n";
-                        $message .= "📊 Cambio Neto: $" . number_format($stats['net_change'], 2);
+                        $message .= '💰 Total Cargado: $'.number_format($stats['total_credited'], 2)."\n";
+                        $message .= '💸 Total Descontado: $'.number_format($stats['total_debited'], 2)."\n";
+                        $message .= '📊 Cambio Neto: $'.number_format($stats['net_change'], 2);
 
                         if ($stats['errors'] > 0) {
                             $message .= "\n❌ Errores: {$stats['errors']}";
@@ -96,7 +97,7 @@ class ListGiftCards extends ListRecords
                                 ->body($message)
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_report')
+                                    Action::make('download_report')
                                         ->button()
                                         ->label('Descargar Reporte Completo')
                                         ->url(route('download.balance-report', ['file' => $reportFilename]))
@@ -110,7 +111,7 @@ class ListGiftCards extends ListRecords
                                 ->body($message)
                                 ->persistent()
                                 ->actions([
-                                    \Filament\Notifications\Actions\Action::make('download_report')
+                                    Action::make('download_report')
                                         ->button()
                                         ->label('Descargar Reporte Completo')
                                         ->url(route('download.balance-report', ['file' => $reportFilename]))
@@ -153,7 +154,7 @@ class ListGiftCards extends ListRecords
                         ->native(false),
                 ])
                 ->action(function (array $data) {
-                    $filename = 'qr_empleados_' . now()->format('Y-m-d_His') . '.xlsx';
+                    $filename = 'qr_empleados_'.now()->format('Y-m-d_His').'.xlsx';
 
                     return Excel::download(
                         new GiftCardsExport($data),

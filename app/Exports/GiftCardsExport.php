@@ -5,19 +5,20 @@ namespace App\Exports;
 use App\Models\GiftCard;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class GiftCardsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithColumnWidths, WithEvents
+class GiftCardsExport implements FromCollection, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     protected ?Collection $giftCards = null;
+
     protected array $filters;
 
     public function __construct(array $filters = [])
@@ -31,15 +32,15 @@ class GiftCardsExport implements FromCollection, WithHeadings, WithMapping, With
             ->withCount('transactions');
 
         // Apply filters
-        if (!empty($this->filters['status'])) {
+        if (! empty($this->filters['status'])) {
             $query->where('status', $this->filters['status'] === 'active');
         }
 
-        if (!empty($this->filters['user_id'])) {
+        if (! empty($this->filters['user_id'])) {
             $query->where('user_id', $this->filters['user_id']);
         }
 
-        if (!empty($this->filters['has_balance'])) {
+        if (! empty($this->filters['has_balance'])) {
             if ($this->filters['has_balance'] === 'yes') {
                 $query->where('balance', '>', 0);
             } elseif ($this->filters['has_balance'] === 'no') {
@@ -105,7 +106,7 @@ class GiftCardsExport implements FromCollection, WithHeadings, WithMapping, With
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
                 $lastRow = $sheet->getHighestRow();

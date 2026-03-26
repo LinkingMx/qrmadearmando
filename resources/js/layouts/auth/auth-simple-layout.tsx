@@ -1,3 +1,4 @@
+import { useAppearance } from '@/hooks/use-appearance';
 import { home } from '@/routes';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -13,6 +14,9 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: PropsWithChildren<AuthLayoutProps>) {
+    const { resolvedAppearance } = useAppearance();
+    const isDark = resolvedAppearance === 'dark';
+
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
             <div className="w-full max-w-sm">
@@ -24,7 +28,11 @@ export default function AuthSimpleLayout({
                         >
                             <div className="mb-4 flex items-center justify-center">
                                 <img
-                                    src="/logo.svg"
+                                    src={
+                                        isDark
+                                            ? '/logo_light.webp'
+                                            : '/logo_dark.webp'
+                                    }
                                     alt="Logo"
                                     className="h-16 w-auto"
                                 />

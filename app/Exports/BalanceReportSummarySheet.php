@@ -3,14 +3,13 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class BalanceReportSummarySheet implements FromArray, WithTitle, WithStyles, WithColumnWidths
+class BalanceReportSummarySheet implements FromArray, WithColumnWidths, WithStyles, WithTitle
 {
     protected array $stats;
 
@@ -32,9 +31,9 @@ class BalanceReportSummarySheet implements FromArray, WithTitle, WithStyles, Wit
             ['Total de Errores:', $this->stats['errors']],
             [''],
             ['MONTOS'],
-            ['Total Cargado (+):', '$' . number_format($this->stats['total_credited'], 2)],
-            ['Total Descontado (-):', '$' . number_format($this->stats['total_debited'], 2)],
-            ['Cambio Neto:', '$' . number_format($this->stats['net_change'], 2)],
+            ['Total Cargado (+):', '$'.number_format($this->stats['total_credited'], 2)],
+            ['Total Descontado (-):', '$'.number_format($this->stats['total_debited'], 2)],
+            ['Cambio Neto:', '$'.number_format($this->stats['net_change'], 2)],
             [''],
             ['Total de Filas Procesadas:', $this->stats['total']],
         ];

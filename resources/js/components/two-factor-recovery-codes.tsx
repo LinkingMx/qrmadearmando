@@ -57,11 +57,12 @@ export default function TwoFactorRecoveryCodes({
             <CardHeader>
                 <CardTitle className="flex gap-3">
                     <LockKeyhole className="size-4" aria-hidden="true" />
-                    2FA Recovery Codes
+                    Códigos de Recuperación 2FA
                 </CardTitle>
                 <CardDescription>
-                    Recovery codes let you regain access if you lose your 2FA
-                    device. Store them in a secure password manager.
+                    Los códigos de recuperación te permiten recuperar el acceso
+                    si pierdes tu dispositivo 2FA. Guárdalos en un administrador
+                    de contraseñas seguro.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -76,7 +77,8 @@ export default function TwoFactorRecoveryCodes({
                             className="size-4"
                             aria-hidden="true"
                         />
-                        {codesAreVisible ? 'Hide' : 'View'} Recovery Codes
+                        {codesAreVisible ? 'Ocultar' : 'Ver'} Códigos de
+                        Recuperación
                     </Button>
 
                     {canRegenerateCodes && (
@@ -92,7 +94,7 @@ export default function TwoFactorRecoveryCodes({
                                     disabled={processing}
                                     aria-describedby="regenerate-warning"
                                 >
-                                    <RefreshCw /> Regenerate Codes
+                                    <RefreshCw /> Regenerar Códigos
                                 </Button>
                             )}
                         </Form>
@@ -145,13 +147,14 @@ export default function TwoFactorRecoveryCodes({
 
                                 <div className="text-xs text-muted-foreground select-none">
                                     <p id="regenerate-warning">
-                                        Each recovery code can be used once to
-                                        access your account and will be removed
-                                        after use. If you need more, click{' '}
+                                        Cada código de recuperación puede usarse
+                                        una vez para acceder a tu cuenta y será
+                                        eliminado después de su uso. Si
+                                        necesitas más, haz clic en{' '}
                                         <span className="font-bold">
-                                            Regenerate Codes
+                                            Regenerar Códigos
                                         </span>{' '}
-                                        above.
+                                        arriba.
                                     </p>
                                 </div>
                             </>

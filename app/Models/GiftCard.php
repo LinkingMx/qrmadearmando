@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Enums\GiftCardScope;
 use App\Services\QrCodeService;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -15,11 +18,15 @@ class GiftCard extends Model
 
     protected $fillable = [
         'legacy_id',
+        'gift_card_category_id',
         'user_id',
         'status',
         'expiry_date',
         'qr_image_path',
         'balance',
+        'scope',
+        'chain_id',
+        'brand_id',
     ];
 
     protected function casts(): array
@@ -28,15 +35,24 @@ class GiftCard extends Model
             'status' => 'boolean',
             'expiry_date' => 'date',
             'balance' => 'decimal:2',
+            'scope' => GiftCardScope::class,
         ];
     }
 
     protected static function booted()
     {
         static::creating(function ($giftCard) {
-            // Auto-generar legacy_id si no se proporciona
+            // Category is required for legacy_id generation
+            if (empty($giftCard->gift_card_category_id)) {
+                throw new \InvalidArgumentException(
+                    'gift_card_category_id is required when creating a gift card.'
+                );
+            }
+
+            // Auto-generate legacy_id based on category prefix if not provided
             if (empty($giftCard->legacy_id)) {
-                $giftCard->legacy_id = static::generateLegacyId();
+                $category = GiftCardCategory::findOrFail($giftCard->gift_card_category_id);
+                $giftCard->legacy_id = $category->generateNextLegacyId();
             }
         });
 
@@ -51,14 +67,43 @@ class GiftCard extends Model
         });
 
         static::forceDeleted(function ($giftCard) {
-            $qrService = new QrCodeService();
+            $qrService = new QrCodeService;
             $qrService->deleteQrCodes($giftCard->qr_image_path);
         });
     }
 
-    public function user()
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(GiftCardCategory::class, 'gift_card_category_id');
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Chain this gift card is scoped to (when scope is 'chain').
+     */
+    public function chain(): BelongsTo
+    {
+        return $this->belongsTo(Chain::class);
+    }
+
+    /**
+     * Brand this gift card is scoped to (when scope is 'brand').
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    /**
+     * Specific branches this gift card can be used at (when scope is 'branch').
+     */
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class);
     }
 
     public function transactions(): HasMany
@@ -66,60 +111,57 @@ class GiftCard extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /**
+     * Check if this gift card can be used at the given branch based on its scope.
+     */
+    public function canBeUsedAtBranch(Branch $branch): bool
+    {
+        $branch->loadMissing('brand');
+
+        return match ($this->scope) {
+            GiftCardScope::CHAIN => $this->chain_id === $branch->brand->chain_id,
+            GiftCardScope::BRAND => $this->brand_id === $branch->brand_id,
+            GiftCardScope::BRANCH => $this->branches()->where('branches.id', $branch->id)->exists(),
+        };
+    }
+
     public function generateQrCodes(): void
     {
-        $qrService = new QrCodeService();
+        $qrService = new QrCodeService;
 
-        // Eliminar QR codes anteriores si existen
+        // Delete previous QR codes if they exist
         if ($this->qr_image_path) {
             $qrService->deleteQrCodes($this->qr_image_path);
         }
 
-        // Generar nuevos QR codes
+        // Generate new QR codes
         $qrImagePath = $qrService->generateQrCodes($this->id, $this->legacy_id);
 
-        // Actualizar el campo sin disparar eventos
+        // Update field without triggering events
         $this->updateQuietly(['qr_image_path' => $qrImagePath]);
     }
 
     public function getQrCodeUrls(): array
     {
-        $qrService = new QrCodeService();
+        $qrService = new QrCodeService;
+
         return $qrService->getQrCodeUrls($this->qr_image_path ?? '');
     }
 
     /**
-     * Genera un nuevo legacy_id único en formato EMCAD + 6 dígitos
+     * Scope to find a gift card by legacy_id or UUID.
      */
-    protected static function generateLegacyId(): string
+    public function scopeFindByIdentifier($query, string $identifier)
     {
-        // Buscar el último legacy_id con formato EMCAD
-        $lastLegacyId = static::withTrashed()
-            ->whereNotNull('legacy_id')
-            ->where('legacy_id', 'LIKE', 'EMCAD%')
-            ->orderByRaw('CAST(SUBSTRING(legacy_id, 6) AS INTEGER) DESC')
-            ->value('legacy_id');
+        return $query->where('legacy_id', $identifier)
+            ->orWhere('id', $identifier);
+    }
 
-        // Extraer el número y calcular el siguiente
-        if ($lastLegacyId) {
-            $lastNumber = (int) substr($lastLegacyId, 5);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            // Si no hay ninguno, empezar desde 1
-            $nextNumber = 1;
-        }
-
-        // Generar el nuevo legacy_id con padding de 6 dígitos
-        $newLegacyId = 'EMCAD' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-
-        // Verificar unicidad (por si acaso hay colisiones)
-        $attempts = 0;
-        while (static::withTrashed()->where('legacy_id', $newLegacyId)->exists() && $attempts < 100) {
-            $nextNumber++;
-            $newLegacyId = 'EMCAD' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
-            $attempts++;
-        }
-
-        return $newLegacyId;
+    /**
+     * Scope to find a gift card by legacy_id only.
+     */
+    public function scopeByLegacyId($query, string $legacyId)
+    {
+        return $query->where('legacy_id', $legacyId);
     }
 }

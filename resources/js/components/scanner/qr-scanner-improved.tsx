@@ -1,11 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CameraIcon, SearchIcon, AlertCircleIcon, InfoIcon, CheckCircleIcon } from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import {
+    AlertCircleIcon,
+    CameraIcon,
+    CheckCircleIcon,
+    InfoIcon,
+    SearchIcon,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface QRScannerImprovedProps {
     onScan: (result: string) => void;
@@ -13,12 +25,18 @@ interface QRScannerImprovedProps {
     isActive: boolean;
 }
 
-export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprovedProps) {
+export function QRScannerImproved({
+    onScan,
+    onError,
+    isActive,
+}: QRScannerImprovedProps) {
     const [isScanning, setIsScanning] = useState(false);
     const [manualSearch, setManualSearch] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
-    const [camerasAvailable, setCamerasAvailable] = useState<MediaDeviceInfo[]>([]);
+    const [camerasAvailable, setCamerasAvailable] = useState<MediaDeviceInfo[]>(
+        [],
+    );
     const [selectedCameraId, setSelectedCameraId] = useState<string>('');
 
     const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
@@ -26,8 +44,10 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
 
     // Add debug log
     const addDebugLog = (message: string) => {
-        console.log(`[QR Scanner] ${message}`);
-        setDebugInfo(prev => [...prev.slice(-4), `${new Date().toLocaleTimeString()}: ${message}`]);
+        setDebugInfo((prev) => [
+            ...prev.slice(-4),
+            `${new Date().toLocaleTimeString()}: ${message}`,
+        ]);
     };
 
     // Get available cameras
@@ -37,33 +57,45 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                 addDebugLog('Solicitando permisos de cámara...');
 
                 // Request camera permission first
-                await navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(stream => {
-                        stream.getTracks().forEach(track => track.stop());
+                await navigator.mediaDevices
+                    .getUserMedia({ video: true })
+                    .then((stream) => {
+                        stream.getTracks().forEach((track) => track.stop());
                         addDebugLog('Permisos de cámara concedidos');
                     });
 
                 addDebugLog('Enumerando dispositivos...');
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const videoDevices = devices.filter(
+                    (device) => device.kind === 'videoinput',
+                );
 
                 addDebugLog(`Encontradas ${videoDevices.length} cámaras`);
                 videoDevices.forEach((device, index) => {
-                    addDebugLog(`Cámara ${index + 1}: ${device.label || 'Camera ' + (index + 1)}`);
+                    addDebugLog(
+                        `Cámara ${index + 1}: ${device.label || 'Camera ' + (index + 1)}`,
+                    );
                 });
 
                 setCamerasAvailable(videoDevices);
                 if (videoDevices.length > 0) {
                     // Prefer back camera (usually contains 'back' or 'environment')
-                    const backCamera = videoDevices.find(device =>
-                        device.label.toLowerCase().includes('back') ||
-                        device.label.toLowerCase().includes('environment') ||
-                        device.label.toLowerCase().includes('rear')
+                    const backCamera = videoDevices.find(
+                        (device) =>
+                            device.label.toLowerCase().includes('back') ||
+                            device.label
+                                .toLowerCase()
+                                .includes('environment') ||
+                            device.label.toLowerCase().includes('rear'),
                     );
-                    setSelectedCameraId(backCamera?.deviceId || videoDevices[0].deviceId);
+                    setSelectedCameraId(
+                        backCamera?.deviceId || videoDevices[0].deviceId,
+                    );
                 }
             } catch (err: any) {
-                addDebugLog(`Error obteniendo cámaras: ${err.name} - ${err.message}`);
+                addDebugLog(
+                    `Error obteniendo cámaras: ${err.name} - ${err.message}`,
+                );
                 setError(`Error de cámara: ${err.message}`);
             }
         };
@@ -150,12 +182,11 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                 selectedCameraId,
                 config,
                 qrCodeSuccessCallback,
-                qrCodeErrorCallback
+                qrCodeErrorCallback,
             );
 
             addDebugLog('Cámara iniciada exitosamente');
             setIsScanning(true);
-
         } catch (err: any) {
             addDebugLog(`Error iniciando cámara: ${err.name} - ${err.message}`);
 
@@ -164,22 +195,24 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                 addDebugLog('Intentando método de respaldo...');
 
                 await html5QrCodeRef.current!.start(
-                    { facingMode: "environment" },
+                    { facingMode: 'environment' },
                     config,
                     qrCodeSuccessCallback,
-                    qrCodeErrorCallback
+                    qrCodeErrorCallback,
                 );
 
                 addDebugLog('Método de respaldo exitoso');
                 setIsScanning(true);
-
             } catch (fallbackErr: any) {
-                addDebugLog(`Error en método de respaldo: ${fallbackErr.name} - ${fallbackErr.message}`);
+                addDebugLog(
+                    `Error en método de respaldo: ${fallbackErr.name} - ${fallbackErr.message}`,
+                );
 
                 let errorMsg = 'Error desconocido';
 
                 if (fallbackErr.name === 'NotAllowedError') {
-                    errorMsg = 'Permisos de cámara denegados. Permita el acceso en su navegador.';
+                    errorMsg =
+                        'Permisos de cámara denegados. Permita el acceso en su navegador.';
                 } else if (fallbackErr.name === 'NotFoundError') {
                     errorMsg = 'No se encontró cámara en el dispositivo.';
                 } else if (fallbackErr.name === 'NotReadableError') {
@@ -214,7 +247,8 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                     Escáner QR Mejorado
                 </CardTitle>
                 <CardDescription>
-                    Escáner QR con diagnóstico avanzado y múltiples métodos de captura
+                    Escáner QR con diagnóstico avanzado y múltiples métodos de
+                    captura
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -242,11 +276,16 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                         <Label>Seleccionar Cámara:</Label>
                         <select
                             value={selectedCameraId}
-                            onChange={(e) => setSelectedCameraId(e.target.value)}
-                            className="w-full p-2 border rounded"
+                            onChange={(e) =>
+                                setSelectedCameraId(e.target.value)
+                            }
+                            className="w-full rounded border p-2"
                         >
                             {camerasAvailable.map((camera, index) => (
-                                <option key={camera.deviceId} value={camera.deviceId}>
+                                <option
+                                    key={camera.deviceId}
+                                    value={camera.deviceId}
+                                >
                                     {camera.label || `Cámara ${index + 1}`}
                                 </option>
                             ))}
@@ -258,12 +297,12 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                 <div className="space-y-4">
                     <div
                         id={elementId}
-                        className="w-full rounded-lg overflow-hidden border-2 border-dashed border-muted-foreground/25 min-h-[300px] flex items-center justify-center bg-muted/20"
+                        className="flex min-h-[300px] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/20"
                     >
                         {!isScanning && (
-                            <div className="text-center p-8">
-                                <CameraIcon className="size-16 mx-auto mb-4 text-muted-foreground/50" />
-                                <p className="text-muted-foreground text-sm">
+                            <div className="p-8 text-center">
+                                <CameraIcon className="mx-auto mb-4 size-16 text-muted-foreground/50" />
+                                <p className="text-sm text-muted-foreground">
                                     {camerasAvailable.length === 0
                                         ? 'Detectando cámaras...'
                                         : 'Presione "Activar Cámara" para comenzar'}
@@ -281,7 +320,9 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                                 disabled={camerasAvailable.length === 0}
                             >
                                 <CameraIcon className="mr-2" />
-                                {camerasAvailable.length === 0 ? 'Sin Cámaras' : 'Activar Cámara'}
+                                {camerasAvailable.length === 0
+                                    ? 'Sin Cámaras'
+                                    : 'Activar Cámara'}
                             </Button>
                         ) : (
                             <Button
@@ -301,10 +342,14 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
                     <Alert>
                         <InfoIcon />
                         <AlertDescription>
-                            <div className="font-medium mb-2">Información de Diagnóstico:</div>
-                            <div className="text-xs space-y-1 max-h-24 overflow-y-auto">
+                            <div className="mb-2 font-medium">
+                                Información de Diagnóstico:
+                            </div>
+                            <div className="max-h-24 space-y-1 overflow-y-auto text-xs">
                                 {debugInfo.map((log, index) => (
-                                    <div key={index} className="font-mono">{log}</div>
+                                    <div key={index} className="font-mono">
+                                        {log}
+                                    </div>
                                 ))}
                             </div>
                         </AlertDescription>
@@ -325,7 +370,9 @@ export function QRScannerImproved({ onScan, onError, isActive }: QRScannerImprov
 
                 <form onSubmit={handleManualSearch} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="manual-search">Buscar por ID o UUID</Label>
+                        <Label htmlFor="manual-search">
+                            Buscar por ID o UUID
+                        </Label>
                         <Input
                             id="manual-search"
                             type="text"

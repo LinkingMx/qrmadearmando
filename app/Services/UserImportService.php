@@ -10,18 +10,19 @@ use ZipArchive;
 class UserImportService
 {
     protected array $extractedPhotos = [];
+
     protected ?string $tempDirectory = null;
 
     /**
      * Extract photos from ZIP file and prepare them for import.
      *
-     * @param UploadedFile $zipFile
      * @return array Map of filename => temporary path
+     *
      * @throws \Exception
      */
     public function extractPhotosFromZip(UploadedFile $zipFile): array
     {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zipPath = $zipFile->getRealPath();
 
         if ($zip->open($zipPath) !== true) {
@@ -29,8 +30,8 @@ class UserImportService
         }
 
         // Create temp directory for extraction
-        $this->tempDirectory = storage_path('app/temp/imports/' . Str::random(20));
-        if (!file_exists($this->tempDirectory)) {
+        $this->tempDirectory = storage_path('app/temp/imports/'.Str::random(20));
+        if (! file_exists($this->tempDirectory)) {
             mkdir($this->tempDirectory, 0755, true);
         }
 
@@ -47,16 +48,17 @@ class UserImportService
             }
 
             // Only process image files
-            if (!isset($fileInfo['extension']) || !in_array(strtolower($fileInfo['extension']), $validExtensions)) {
+            if (! isset($fileInfo['extension']) || ! in_array(strtolower($fileInfo['extension']), $validExtensions)) {
                 continue;
             }
 
             // Extract file
-            $extractPath = $this->tempDirectory . '/' . $fileInfo['basename'];
+            $extractPath = $this->tempDirectory.'/'.$fileInfo['basename'];
             if (copy("zip://{$zipPath}#{$filename}", $extractPath)) {
                 // Check file size (max 5MB)
                 if (filesize($extractPath) > 5 * 1024 * 1024) {
                     unlink($extractPath);
+
                     continue;
                 }
 
@@ -74,16 +76,15 @@ class UserImportService
     /**
      * Download photo from URL.
      *
-     * @param string $url
      * @return string|null Path to downloaded file
      */
     public function downloadPhotoFromUrl(string $url): ?string
     {
         try {
             // Create temp directory if not exists
-            if (!$this->tempDirectory) {
-                $this->tempDirectory = storage_path('app/temp/imports/' . Str::random(20));
-                if (!file_exists($this->tempDirectory)) {
+            if (! $this->tempDirectory) {
+                $this->tempDirectory = storage_path('app/temp/imports/'.Str::random(20));
+                if (! file_exists($this->tempDirectory)) {
                     mkdir($this->tempDirectory, 0755, true);
                 }
             }
@@ -115,12 +116,12 @@ class UserImportService
                 default => null,
             };
 
-            if (!$extension) {
+            if (! $extension) {
                 return null;
             }
 
-            $filename = Str::random(20) . '.' . $extension;
-            $path = $this->tempDirectory . '/' . $filename;
+            $filename = Str::random(20).'.'.$extension;
+            $path = $this->tempDirectory.'/'.$filename;
 
             if (file_put_contents($path, $contents) === false) {
                 return null;
@@ -135,20 +136,18 @@ class UserImportService
     /**
      * Store photo in avatars directory.
      *
-     * @param string $sourcePath
-     * @param string $email
      * @return string|null Stored path relative to storage/app/public
      */
     public function storeAvatar(string $sourcePath, string $email): ?string
     {
         try {
             $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
-            $filename = Str::slug(explode('@', $email)[0]) . '_' . Str::random(8) . '.' . $extension;
+            $filename = Str::slug(explode('@', $email)[0]).'_'.Str::random(8).'.'.$extension;
 
             // Store in public disk under avatars directory
-            $destinationPath = 'avatars/' . $filename;
+            $destinationPath = 'avatars/'.$filename;
 
-            if (!Storage::disk('public')->put($destinationPath, file_get_contents($sourcePath))) {
+            if (! Storage::disk('public')->put($destinationPath, file_get_contents($sourcePath))) {
                 return null;
             }
 
@@ -161,9 +160,9 @@ class UserImportService
     /**
      * Find photo for user by different matching strategies.
      *
-     * @param string $photoReference Photo filename or URL from Excel
-     * @param string $email User email
-     * @param string|null $name User name
+     * @param  string  $photoReference  Photo filename or URL from Excel
+     * @param  string  $email  User email
+     * @param  string|null  $name  User name
      * @return string|null Path to photo file
      */
     public function findPhotoForUser(string $photoReference, string $email, ?string $name = null): ?string
@@ -188,15 +187,15 @@ class UserImportService
         // Try matching by email username
         $emailUsername = explode('@', $email)[0];
         foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-            $strategies[] = $emailUsername . '.' . $ext;
-            $strategies[] = strtolower($emailUsername) . '.' . $ext;
+            $strategies[] = $emailUsername.'.'.$ext;
+            $strategies[] = strtolower($emailUsername).'.'.$ext;
         }
 
         // Try matching by name
         if ($name) {
             $nameSlug = Str::slug($name);
             foreach (['jpg', 'jpeg', 'png', 'gif'] as $ext) {
-                $strategies[] = $nameSlug . '.' . $ext;
+                $strategies[] = $nameSlug.'.'.$ext;
             }
         }
 
@@ -217,7 +216,7 @@ class UserImportService
     public function cleanup(): void
     {
         if ($this->tempDirectory && file_exists($this->tempDirectory)) {
-            $files = glob($this->tempDirectory . '/*');
+            $files = glob($this->tempDirectory.'/*');
             foreach ($files as $file) {
                 if (is_file($file)) {
                     unlink($file);
@@ -232,8 +231,6 @@ class UserImportService
 
     /**
      * Get list of extracted photo filenames.
-     *
-     * @return array
      */
     public function getExtractedPhotoNames(): array
     {

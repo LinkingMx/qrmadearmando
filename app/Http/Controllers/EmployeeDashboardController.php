@@ -2,92 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GiftCard;
-use Illuminate\Http\Request;
+use App\Models\Transaction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class EmployeeDashboardController extends Controller
 {
     /**
-     * Display the employee dashboard
+     * Display the employee dashboard with their gift card data
      */
     public function index()
     {
-        $giftCard = GiftCard::where('user_id', auth()->id())
-            ->with('user')
-            ->first();
+        $user = auth()->user();
+        $giftCard = $user->giftCards()->first();
 
-        if (!$giftCard) {
-            return Inertia::render('dashboard', [
-                'giftCard' => null,
-                'error' => 'No tienes una tarjeta QR asignada.'
-            ]);
-        }
+        // Prepare gift card data for rendering
+        $giftCardData = null;
+        if ($giftCard) {
+            // Check for QR image files - prefer legacy_id QR
+            $qrImagePath = null;
+            if ($giftCard->qr_image_path) {
+                $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
+                $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
 
-        // Generate QR image path - prefer UUID QR
-        $qrImagePath = null;
-        if ($giftCard->qr_image_path) {
-            $uuidQrPath = 'qr-codes/' . $giftCard->id . '_uuid.svg';
-            $legacyQrPath = 'qr-codes/' . $giftCard->id . '_legacy.svg';
-
-            if (Storage::disk('public')->exists($uuidQrPath)) {
-                $qrImagePath = Storage::url($uuidQrPath);
-            } elseif (Storage::disk('public')->exists($legacyQrPath)) {
-                $qrImagePath = Storage::url($legacyQrPath);
+                if (Storage::disk('public')->exists($legacyQrPath)) {
+                    $qrImagePath = Storage::url($legacyQrPath);
+                } elseif (Storage::disk('public')->exists($uuidQrPath)) {
+                    $qrImagePath = Storage::url($uuidQrPath);
+                }
             }
-        }
 
-        return Inertia::render('dashboard', [
-            'giftCard' => [
+            $giftCardData = [
                 'id' => $giftCard->id,
                 'legacy_id' => $giftCard->legacy_id,
                 'balance' => (float) $giftCard->balance,
                 'status' => $giftCard->status,
                 'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
                 'qr_image_path' => $qrImagePath,
-                'user' => [
-                    'name' => $giftCard->user->name,
-                    'email' => $giftCard->user->email,
-                    'avatar' => $giftCard->user->avatar
-                        ? Storage::url($giftCard->user->avatar)
-                        : null,
+                'category' => [
+                    'id' => $giftCard->category->id,
+                    'name' => $giftCard->category->name,
                 ],
-            ],
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar_url,
+                ],
+            ];
+        }
+
+        return Inertia::render('dashboard', [
+            'giftCard' => $giftCardData,
         ]);
     }
 
     /**
      * Get paginated transactions for the authenticated user's gift card
      */
-    public function transactions(Request $request)
+    public function transactions(): JsonResponse
     {
-        $giftCard = GiftCard::where('user_id', auth()->id())->first();
+        $user = auth()->user();
+        $giftCard = $user->giftCards()->first();
 
-        if (!$giftCard) {
+        if (! $giftCard) {
             return response()->json([
-                'error' => 'No tienes una tarjeta QR asignada.'
-            ], 404);
+                'data' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => 10,
+                    'total' => 0,
+                    'from' => null,
+                    'to' => null,
+                ],
+            ]);
         }
 
-        $transactions = $giftCard->transactions()
-            ->with(['branch', 'admin'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $transactions = Transaction::where('gift_card_id', $giftCard->id)
+            ->with('branch')
+            ->latest()
+            ->paginate(10);
+
+        $typeLabels = [
+            'credit' => 'Crédito',
+            'debit' => 'Débito',
+            'adjustment' => 'Ajuste',
+        ];
 
         return response()->json([
-            'data' => $transactions->map(function ($transaction) {
+            'data' => $transactions->map(function ($transaction) use ($typeLabels) {
                 return [
                     'id' => $transaction->id,
-                    'created_at' => $transaction->created_at->format('d/m/Y H:i'),
+                    'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
                     'type' => $transaction->type,
-                    'type_label' => $this->getTypeLabel($transaction->type),
+                    'type_label' => $typeLabels[$transaction->type] ?? $transaction->type,
                     'amount' => (float) $transaction->amount,
                     'balance_after' => (float) $transaction->balance_after,
                     'branch_name' => $transaction->branch?->name ?? 'N/A',
                     'description' => $transaction->description ?? '-',
                 ];
-            }),
+            })->values()->toArray(),
             'meta' => [
                 'current_page' => $transactions->currentPage(),
                 'last_page' => $transactions->lastPage(),
@@ -97,18 +113,5 @@ class EmployeeDashboardController extends Controller
                 'to' => $transactions->lastItem(),
             ],
         ]);
-    }
-
-    /**
-     * Get human-readable type label
-     */
-    private function getTypeLabel(string $type): string
-    {
-        return match($type) {
-            'credit' => 'Carga',
-            'debit' => 'Descuento',
-            'adjustment' => 'Ajuste',
-            default => $type,
-        };
     }
 }

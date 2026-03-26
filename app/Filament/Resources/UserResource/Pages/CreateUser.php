@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class CreateUser extends CreateRecord
 {
@@ -30,6 +30,23 @@ class CreateUser extends CreateRecord
         unset($data['password_confirmation']);
 
         return $data;
+    }
+
+    /**
+     * Asignar rol por defecto después de crear el usuario
+     */
+    protected function afterCreate(): void
+    {
+        $user = $this->record;
+
+        // Si no tiene roles asignados, asignar el rol "Employee" por defecto
+        if ($user->roles()->count() === 0) {
+            $employeeRole = Role::where('name', 'Employee')->first();
+
+            if ($employeeRole) {
+                $user->assignRole('Employee');
+            }
+        }
     }
 
     /**

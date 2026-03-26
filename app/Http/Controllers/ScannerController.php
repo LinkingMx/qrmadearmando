@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GiftCardScope;
 use App\Http\Requests\ProcessDebitRequest;
+use App\Http\Traits\ApiResponse;
+use App\Models\Branch;
 use App\Models\GiftCard;
 use App\Models\Transaction;
 use App\Services\TransactionService;
@@ -12,6 +15,8 @@ use Inertia\Inertia;
 
 class ScannerController extends Controller
 {
+    use ApiResponse;
+
     protected TransactionService $transactionService;
 
     public function __construct(TransactionService $transactionService)
@@ -41,32 +46,61 @@ class ScannerController extends Controller
 
         $identifier = trim($request->identifier);
 
-        // Search by legacy_id or UUID (only search by UUID if it looks like one)
-        $query = GiftCard::where('legacy_id', $identifier);
+        // Search by legacy_id or UUID
+        $giftCard = GiftCard::findByIdentifier($identifier)
+            ->with('user')
+            ->first();
 
-        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $identifier)) {
-            $query->orWhere('id', $identifier);
+        if (! $giftCard) {
+            return $this->notFound(
+                'QR',
+                'Verifique el código e intente nuevamente'
+            );
         }
 
-        $giftCard = $query->with('user')->first();
-
-        if (!$giftCard) {
-            return response()->json([
-                'error' => 'QR no encontrado. Verifique el código e intente nuevamente.'
-            ], 404);
+        if (! $giftCard->status) {
+            return $this->error(
+                'INACTIVE_CARD',
+                'Este QR está inactivo y no puede ser utilizado.',
+                422
+            );
         }
 
-        if (!$giftCard->status) {
-            return response()->json([
-                'error' => 'Este QR está inactivo y no puede ser utilizado.'
-            ], 422);
+        // Validate gift card scope against current branch
+        $branch = auth()->user()->branch;
+        if ($branch) {
+            $branch->loadMissing('brand');
+            if (! $giftCard->canBeUsedAtBranch($branch)) {
+                // Get valid branch names for this QR
+                $validBranches = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => Branch::whereHas('brand', fn ($q) => $q->where('chain_id', $giftCard->chain_id))->pluck('name'),
+                    GiftCardScope::BRAND => Branch::where('brand_id', $giftCard->brand_id)->pluck('name'),
+                    GiftCardScope::BRANCH => $giftCard->branches()->pluck('branches.name'),
+                };
+
+                $branchList = $validBranches->isEmpty()
+                    ? ''
+                    : ' Sucursales válidas: '.$validBranches->join(', ', ' y ').'.';
+
+                $scopeMessage = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => 'Este QR no pertenece a esta cadena.'.$branchList,
+                    GiftCardScope::BRAND => 'Este QR no pertenece a esta marca.'.$branchList,
+                    GiftCardScope::BRANCH => 'Este QR no es válido en esta sucursal.'.$branchList,
+                };
+
+                return $this->error(
+                    'INVALID_SCOPE',
+                    $scopeMessage,
+                    422
+                );
+            }
         }
 
         // Generate QR image path - prefer UUID QR
         $qrImagePath = null;
         if ($giftCard->qr_image_path) {
-            $uuidQrPath = 'qr-codes/' . $giftCard->id . '_uuid.svg';
-            $legacyQrPath = 'qr-codes/' . $giftCard->id . '_legacy.svg';
+            $uuidQrPath = 'qr-codes/'.$giftCard->id.'_uuid.svg';
+            $legacyQrPath = 'qr-codes/'.$giftCard->id.'_legacy.svg';
 
             if (Storage::disk('public')->exists($uuidQrPath)) {
                 $qrImagePath = Storage::url($uuidQrPath);
@@ -75,21 +109,17 @@ class ScannerController extends Controller
             }
         }
 
-        return response()->json([
-            'gift_card' => [
-                'id' => $giftCard->id,
-                'legacy_id' => $giftCard->legacy_id,
-                'user' => $giftCard->user ? [
-                    'name' => $giftCard->user->name,
-                    'avatar' => $giftCard->user->avatar
-                        ? Storage::url($giftCard->user->avatar)
-                        : null,
-                ] : null,
-                'balance' => (float) $giftCard->balance,
-                'status' => $giftCard->status,
-                'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
-                'qr_image_path' => $qrImagePath,
-            ],
+        return $this->success([
+            'id' => $giftCard->id,
+            'legacy_id' => $giftCard->legacy_id,
+            'user' => $giftCard->user ? [
+                'name' => $giftCard->user->name,
+                'avatar' => $giftCard->user->avatar_url,
+            ] : null,
+            'balance' => floatval($giftCard->balance),
+            'status' => $giftCard->status,
+            'expiry_date' => $giftCard->expiry_date?->format('d/m/Y'),
+            'qr_image_path' => $qrImagePath,
         ]);
     }
 
@@ -103,69 +133,88 @@ class ScannerController extends Controller
             $branch = auth()->user()->branch;
 
             // Check if gift card is active
-            if (!$giftCard->status) {
-                return response()->json([
-                    'error' => 'Este QR está inactivo y no puede ser utilizado.'
-                ], 422);
+            if (! $giftCard->status) {
+                return $this->error(
+                    'INACTIVE_CARD',
+                    'Este QR está inactivo y no puede ser utilizado.',
+                    422
+                );
+            }
+
+            // Validate gift card scope against current branch
+            $branch->loadMissing('brand');
+            if (! $giftCard->canBeUsedAtBranch($branch)) {
+                $scopeMessage = match ($giftCard->scope) {
+                    GiftCardScope::CHAIN => 'Este QR es tipo Cadena y no puede usarse en esta sucursal.',
+                    GiftCardScope::BRAND => 'Este QR es tipo Marca y solo funciona en sucursales de la marca asignada.',
+                    GiftCardScope::BRANCH => 'Este QR es tipo Sucursal y no está asignado a esta ubicación.',
+                };
+
+                return $this->error(
+                    'INVALID_SCOPE',
+                    $scopeMessage,
+                    422
+                );
             }
 
             // Validate sufficient balance
             if ($giftCard->balance < $request->amount) {
-                return response()->json([
-                    'error' => 'Saldo insuficiente. Saldo disponible: $' . number_format($giftCard->balance, 2)
-                ], 422);
+                return $this->error(
+                    'INSUFFICIENT_BALANCE',
+                    'Saldo insuficiente. Saldo disponible: $'.number_format($giftCard->balance, 2),
+                    422
+                );
             }
 
             // Process debit using TransactionService
             $transaction = $this->transactionService->debit(
                 $giftCard,
                 $request->amount,
+                auth()->user(),
                 $request->description ?? 'Descuento desde Scanner',
-                auth()->id(),
                 $branch->id
             );
 
             // Generate unique folio
-            $folio = 'TRX-' . now()->format('Ymd') . '-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+            $folio = 'TRX-'.now()->format('Ymd').'-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
             // Refresh gift card to get updated balance
             $giftCard->refresh();
 
-            return response()->json([
-                'success' => true,
-                'transaction' => [
-                    'id' => $transaction->id,
-                    'folio' => $folio,
-                    'gift_card' => [
-                        'id' => $giftCard->id,
-                        'legacy_id' => $giftCard->legacy_id,
-                        'user' => $giftCard->user ? [
-                            'name' => $giftCard->user->name,
-                            'avatar' => $giftCard->user->avatar
-                                ? Storage::url($giftCard->user->avatar)
-                                : null,
-                        ] : null,
-                        'balance' => (float) $giftCard->balance,
-                        'status' => $giftCard->status,
-                    ],
-                    'amount' => (float) $transaction->amount,
-                    'balance_before' => (float) $transaction->balance_before,
-                    'balance_after' => (float) $transaction->balance_after,
-                    'reference' => $request->reference,
-                    'description' => $transaction->description,
-                    'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
-                    'branch_name' => $branch->name,
-                    'cashier_name' => auth()->user()->name,
+            return $this->success([
+                'id' => $transaction->id,
+                'folio' => $folio,
+                'gift_card' => [
+                    'id' => $giftCard->id,
+                    'legacy_id' => $giftCard->legacy_id,
+                    'user' => $giftCard->user ? [
+                        'name' => $giftCard->user->name,
+                        'avatar' => $giftCard->user->avatar_url,
+                    ] : null,
+                    'balance' => (float) $giftCard->balance,
+                    'status' => $giftCard->status,
                 ],
+                'amount' => (float) $transaction->amount,
+                'balance_before' => (float) $transaction->balance_before,
+                'balance_after' => (float) $transaction->balance_after,
+                'reference' => $request->reference,
+                'description' => $transaction->description,
+                'created_at' => $transaction->created_at->timestamp * 1000, // Timestamp in milliseconds for JavaScript
+                'branch_name' => $branch->name,
+                'cashier_name' => auth()->user()->name,
             ]);
         } catch (\InvalidArgumentException $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 422);
+            return $this->error(
+                'VALIDATION_ERROR',
+                $e->getMessage(),
+                422
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al procesar la transacción. Por favor intente nuevamente.'
-            ], 500);
+            return $this->error(
+                'PROCESSING_ERROR',
+                'Error al procesar la transacción. Por favor intente nuevamente.',
+                500
+            );
         }
     }
 
@@ -181,47 +230,49 @@ class ScannerController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return response()->json([
-            'data' => $transactions->map(function ($transaction) {
-                // Generate folio same way as processDebit
-                $folio = 'TRX-' . $transaction->created_at->format('Ymd') . '-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+        $mappedTransactions = $transactions->map(function ($transaction) {
+            // Generate folio same way as processDebit
+            $folio = 'TRX-'.$transaction->created_at->format('Ymd').'-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
-                // Generate reference same way as processDebit
-                $reference = 'REF-' . str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
+            // Generate reference same way as processDebit
+            $reference = 'REF-'.str_pad($transaction->id, 6, '0', STR_PAD_LEFT);
 
-                return [
-                    'id' => $transaction->id,
-                    'folio' => $folio,
-                    'gift_card' => [
-                        'id' => $transaction->giftCard->id,
-                        'legacy_id' => $transaction->giftCard->legacy_id,
-                        'user' => $transaction->giftCard->user ? [
-                            'name' => $transaction->giftCard->user->name,
-                            'avatar' => $transaction->giftCard->user->avatar
-                                ? Storage::url($transaction->giftCard->user->avatar)
-                                : null,
-                        ] : null,
-                        'balance' => (float) $transaction->giftCard->balance,
-                        'status' => $transaction->giftCard->status,
-                    ],
-                    'amount' => (float) $transaction->amount,
-                    'balance_before' => (float) $transaction->balance_before,
-                    'balance_after' => (float) $transaction->balance_after,
-                    'reference' => $reference,
-                    'description' => $transaction->description,
-                    'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
-                    'branch_name' => $transaction->branch->name,
-                    'cashier_name' => $transaction->admin->name,
-                ];
-            }),
-            'meta' => [
-                'current_page' => $transactions->currentPage(),
-                'last_page' => $transactions->lastPage(),
-                'per_page' => $transactions->perPage(),
-                'total' => $transactions->total(),
-                'from' => $transactions->firstItem(),
-                'to' => $transactions->lastItem(),
-            ],
-        ]);
+            return [
+                'id' => $transaction->id,
+                'folio' => $folio,
+                'gift_card' => [
+                    'id' => $transaction->giftCard->id,
+                    'legacy_id' => $transaction->giftCard->legacy_id,
+                    'user' => $transaction->giftCard->user ? [
+                        'name' => $transaction->giftCard->user->name,
+                        'avatar' => $transaction->giftCard->user->avatar_url,
+                    ] : null,
+                    'balance' => (float) $transaction->giftCard->balance,
+                    'status' => $transaction->giftCard->status,
+                ],
+                'amount' => (float) $transaction->amount,
+                'balance_before' => (float) $transaction->balance_before,
+                'balance_after' => (float) $transaction->balance_after,
+                'reference' => $reference,
+                'description' => $transaction->description,
+                'created_at' => $transaction->created_at->format('d/m/Y H:i:s'),
+                'branch_name' => $transaction->branch->name,
+                'cashier_name' => $transaction->admin->name,
+            ];
+        });
+
+        return $this->success(
+            $mappedTransactions->toArray(),
+            [
+                'pagination' => [
+                    'current_page' => $transactions->currentPage(),
+                    'last_page' => $transactions->lastPage(),
+                    'per_page' => $transactions->perPage(),
+                    'total' => $transactions->total(),
+                    'from' => $transactions->firstItem(),
+                    'to' => $transactions->lastItem(),
+                ],
+            ]
+        );
     }
 }

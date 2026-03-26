@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\GiftCardResource\Pages;
 
 use App\Filament\Resources\GiftCardResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreateGiftCard extends CreateRecord
 {
@@ -20,8 +19,8 @@ class CreateGiftCard extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('QR Empleado creado exitosamente')
-            ->body("El QR Empleado '{$this->getRecord()->legacy_id}' ha sido creado correctamente.")
+            ->title('QR Code creado exitosamente')
+            ->body("El QR Code '{$this->getRecord()->legacy_id}' ha sido creado correctamente.")
             ->icon('heroicon-o-check-circle');
     }
 }

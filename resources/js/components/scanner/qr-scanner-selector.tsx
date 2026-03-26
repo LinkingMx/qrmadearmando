@@ -1,11 +1,6 @@
+import { CameraIcon, SearchIcon, SettingsIcon, VideoIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { QRScanner } from './qr-scanner';
-import { QRScannerImproved } from './qr-scanner-improved';
 import { QRScannerNative } from './qr-scanner-native';
-import { SettingsIcon, CameraIcon, VideoIcon, SearchIcon } from 'lucide-react';
 
 interface QRScannerSelectorProps {
     onScan: (result: string) => void;
@@ -15,8 +10,13 @@ interface QRScannerSelectorProps {
 
 type ScannerType = 'original' | 'improved' | 'native' | 'manual-only';
 
-export function QRScannerSelector({ onScan, onError, isActive }: QRScannerSelectorProps) {
-    const [selectedScanner, setSelectedScanner] = useState<ScannerType>('native');
+export function QRScannerSelector({
+    onScan,
+    onError,
+    isActive,
+}: QRScannerSelectorProps) {
+    const [selectedScanner, setSelectedScanner] =
+        useState<ScannerType>('native');
     const [manualInput, setManualInput] = useState('');
 
     const handleManualScan = (e: React.FormEvent) => {
@@ -32,26 +32,26 @@ export function QRScannerSelector({ onScan, onError, isActive }: QRScannerSelect
             type: 'improved' as ScannerType,
             name: 'Scanner Mejorado',
             description: 'Con diagnóstico y múltiples métodos',
-            icon: <CameraIcon className="size-4" />
+            icon: <CameraIcon className="size-4" />,
         },
         {
             type: 'native' as ScannerType,
             name: 'Scanner Nativo',
             description: 'API directa del navegador',
-            icon: <VideoIcon className="size-4" />
+            icon: <VideoIcon className="size-4" />,
         },
         {
             type: 'original' as ScannerType,
             name: 'Scanner Original',
             description: 'Versión original html5-qrcode',
-            icon: <SettingsIcon className="size-4" />
+            icon: <SettingsIcon className="size-4" />,
         },
         {
             type: 'manual-only' as ScannerType,
             name: 'Solo Manual',
             description: 'Sin cámara, búsqueda directa',
-            icon: <SearchIcon className="size-4" />
-        }
+            icon: <SearchIcon className="size-4" />,
+        },
     ];
 
     return (
