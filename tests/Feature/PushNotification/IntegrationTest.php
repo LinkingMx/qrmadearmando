@@ -51,8 +51,8 @@ describe('Push Notification Transaction Integration', function () {
         $transaction = $this->transactionService->credit(
             $this->giftCard,
             50,
-            'Test credit',
-            $this->user->id
+            $this->user,
+            'Test credit'
         );
 
         expect($transaction)->not->toBeNull();
@@ -68,8 +68,8 @@ describe('Push Notification Transaction Integration', function () {
         $transaction = $this->transactionService->debit(
             $this->giftCard,
             30,
+            $this->user,
             'Test debit',
-            $this->user->id,
             $this->branch->id
         );
 
@@ -86,8 +86,8 @@ describe('Push Notification Transaction Integration', function () {
         $transaction = $this->transactionService->adjustment(
             $this->giftCard,
             25,
-            'Test adjustment',
-            $this->user->id
+            $this->user,
+            'Test adjustment'
         );
 
         expect($transaction)->not->toBeNull();
@@ -100,9 +100,9 @@ describe('Push Notification Transaction Integration', function () {
     test('multiple transactions update balance correctly', function () {
         $initialBalance = (float) $this->giftCard->balance;
 
-        $this->transactionService->credit($this->giftCard, 50, 'Credit 1', $this->user->id);
-        $this->transactionService->debit($this->giftCard, 30, 'Debit 1', $this->user->id, $this->branch->id);
-        $this->transactionService->adjustment($this->giftCard, 10, 'Adjustment 1', $this->user->id);
+        $this->transactionService->credit($this->giftCard, 50, $this->user, 'Credit 1');
+        $this->transactionService->debit($this->giftCard, 30, $this->user, 'Debit 1', $this->branch->id);
+        $this->transactionService->adjustment($this->giftCard, 10, $this->user, 'Adjustment 1');
 
         $expectedBalance = $initialBalance + 50 - 30 + 10;
         expect((float) $this->giftCard->fresh()->balance)->toBe($expectedBalance);
@@ -120,8 +120,8 @@ describe('Push Notification Transaction Integration', function () {
         $transaction = $this->transactionService->credit(
             $giftCard,
             50,
-            'Test credit',
-            $userWithoutSubscription->id
+            $userWithoutSubscription,
+            'Test credit'
         );
 
         expect($transaction)->not->toBeNull();
@@ -132,8 +132,8 @@ describe('Push Notification Transaction Integration', function () {
         $transaction = $this->transactionService->debit(
             $this->giftCard,
             30,
+            $this->user,
             'Test debit',
-            $this->user->id,
             $this->branch->id
         );
 
@@ -148,8 +148,8 @@ describe('Push Notification Transaction Integration', function () {
             $this->transactionService->credit(
                 $this->giftCard,
                 10,
-                "Credit $i",
-                $this->user->id
+                $this->user,
+                "Credit $i"
             );
         }
 

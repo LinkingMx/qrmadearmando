@@ -36,8 +36,8 @@ describe('TransactionCreated Event & Listener', function () {
         $transaction = $this->transactionService->credit(
             $this->giftCard,
             50,
+            $this->user,
             'Test credit',
-            $this->user->id
         );
 
         Event::assertDispatched(TransactionCreated::class);
@@ -49,8 +49,8 @@ describe('TransactionCreated Event & Listener', function () {
         $transaction = $this->transactionService->debit(
             $this->giftCard,
             30,
+            $this->user,
             'Test debit',
-            $this->user->id,
             $this->branch->id
         );
 
@@ -63,8 +63,8 @@ describe('TransactionCreated Event & Listener', function () {
         $transaction = $this->transactionService->adjustment(
             $this->giftCard,
             25,
+            $this->user,
             'Test adjustment',
-            $this->user->id
         );
 
         Event::assertDispatched(TransactionCreated::class);
@@ -77,8 +77,8 @@ describe('TransactionCreated Event & Listener', function () {
         $transaction = $this->transactionService->credit(
             $this->giftCard,
             50,
+            $this->user,
             'Test credit',
-            $this->user->id
         );
 
         // Allow the event to actually fire (don't use Event::fake())

@@ -70,14 +70,14 @@ describe('Gift Card API', function () {
         $response = $this->getJson('/api/v1/public/gift-cards/search?legacy_id=APITST000002');
 
         expect($response->status())->toBe(403)
-            ->and($response->json('error'))->toContain('inactivo');
+            ->and($response->json('error.message'))->toContain('inactivo');
     });
 
     it('returns 400 when legacy_id is missing', function () {
         $response = $this->getJson('/api/v1/public/gift-cards/search');
 
         expect($response->status())->toBe(400)
-            ->and($response->json('error'))->toContain('requiere');
+            ->and($response->json('error.message'))->toContain('requiere');
     });
 
     it('lists gift cards when authenticated', function () {

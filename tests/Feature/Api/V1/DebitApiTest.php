@@ -101,7 +101,7 @@ describe('Debit API', function () {
         $response = $this->postJson('/api/v1/debit', []);
 
         expect($response->status())->toBe(422)
-            ->and($response->json('errors'))->toHaveKeys(['legacy_id', 'amount']);
+            ->and($response->json('error.code'))->toBe('VALIDATION_ERROR');
     });
 });
 

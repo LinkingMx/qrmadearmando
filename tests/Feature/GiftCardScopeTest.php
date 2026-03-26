@@ -6,10 +6,7 @@ use App\Models\Brand;
 use App\Models\Chain;
 use App\Models\GiftCard;
 use App\Models\GiftCardCategory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');

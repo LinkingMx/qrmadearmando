@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Branch;
 use App\Models\GiftCard;
+use App\Models\User;
 use App\Services\TransactionService;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
@@ -196,12 +197,14 @@ class BalanceImport implements SkipsOnError, ToCollection, WithChunkReading, Wit
 
                 // Execute transaction
                 try {
+                    $adminUser = User::find($this->adminUserId);
+
                     if ($isCredit) {
                         $transaction = $this->transactionService->credit(
                             $giftCard,
                             $absoluteAmount,
+                            $adminUser,
                             $description,
-                            $this->adminUserId,
                             $branchId
                         );
                         $this->totalCredited += $absoluteAmount;
@@ -209,8 +212,8 @@ class BalanceImport implements SkipsOnError, ToCollection, WithChunkReading, Wit
                         $transaction = $this->transactionService->debit(
                             $giftCard,
                             $absoluteAmount,
+                            $adminUser,
                             $description,
-                            $this->adminUserId,
                             $branchId
                         );
                         $this->totalDebited += $absoluteAmount;

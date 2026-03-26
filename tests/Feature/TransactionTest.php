@@ -27,8 +27,8 @@ test('can credit balance to gift card', function () {
     $transaction = $this->transactionService->credit(
         $this->giftCard,
         50,
-        'Test credit',
-        $this->user->id
+        $this->user,
+        'Test credit'
     );
 
     expect($transaction)->toBeInstanceOf(Transaction::class)
@@ -43,8 +43,8 @@ test('can debit balance from gift card', function () {
     $transaction = $this->transactionService->debit(
         $this->giftCard,
         30,
+        $this->user,
         'Test debit',
-        $this->user->id,
         $this->branch->id
     );
 
@@ -61,8 +61,8 @@ test('debit requires branch', function () {
     $this->transactionService->debit(
         $this->giftCard,
         30,
+        $this->user,
         'Test debit without branch',
-        $this->user->id,
         null
     );
 })->throws(InvalidArgumentException::class, 'Branch is required');
@@ -71,8 +71,8 @@ test('cannot debit more than available balance', function () {
     $this->transactionService->debit(
         $this->giftCard,
         150,
+        $this->user,
         'Test overdraft',
-        $this->user->id,
         $this->branch->id
     );
 })->throws(InvalidArgumentException::class, 'Insufficient balance');
@@ -81,8 +81,8 @@ test('can make positive adjustment', function () {
     $transaction = $this->transactionService->adjustment(
         $this->giftCard,
         25,
-        'Test positive adjustment',
-        $this->user->id
+        $this->user,
+        'Test positive adjustment'
     );
 
     expect($transaction)->toBeInstanceOf(Transaction::class)
@@ -97,8 +97,8 @@ test('can make negative adjustment', function () {
     $transaction = $this->transactionService->adjustment(
         $this->giftCard,
         -40,
+        $this->user,
         'Test negative adjustment',
-        $this->user->id,
         $this->branch->id
     );
 
@@ -115,8 +115,8 @@ test('negative adjustment requires branch', function () {
     $this->transactionService->adjustment(
         $this->giftCard,
         -40,
+        $this->user,
         'Test negative adjustment without branch',
-        $this->user->id,
         null
     );
 })->throws(InvalidArgumentException::class, 'Branch is required');
@@ -125,8 +125,8 @@ test('positive adjustment does not require branch', function () {
     $transaction = $this->transactionService->adjustment(
         $this->giftCard,
         50,
+        $this->user,
         'Test positive adjustment without branch',
-        $this->user->id,
         null
     );
 
@@ -138,8 +138,8 @@ test('cannot make adjustment that results in negative balance', function () {
     $this->transactionService->adjustment(
         $this->giftCard,
         -150,
+        $this->user,
         'Test overdraft adjustment',
-        $this->user->id,
         $this->branch->id
     );
 })->throws(InvalidArgumentException::class, 'negative balance');
@@ -148,8 +148,8 @@ test('cannot credit with zero or negative amount', function () {
     $this->transactionService->credit(
         $this->giftCard,
         0,
-        'Test zero credit',
-        $this->user->id
+        $this->user,
+        'Test zero credit'
     );
 })->throws(InvalidArgumentException::class, 'greater than zero');
 
@@ -157,8 +157,8 @@ test('cannot debit with zero or negative amount', function () {
     $this->transactionService->debit(
         $this->giftCard,
         -10,
-        'Test negative debit',
-        $this->user->id
+        $this->user,
+        'Test negative debit'
     );
 })->throws(InvalidArgumentException::class, 'greater than zero');
 
@@ -166,8 +166,8 @@ test('transaction stores admin user id', function () {
     $transaction = $this->transactionService->credit(
         $this->giftCard,
         50,
-        'Test admin tracking',
-        $this->user->id
+        $this->user,
+        'Test admin tracking'
     );
 
     expect($transaction->admin_user_id)->toBe($this->user->id)
@@ -179,8 +179,8 @@ test('transaction can be created without admin user', function () {
     $transaction = $this->transactionService->credit(
         $this->giftCard,
         50,
-        'Test no admin',
-        null
+        null,
+        'Test no admin'
     );
 
     expect($transaction->admin_user_id)->toBeNull();
@@ -190,8 +190,8 @@ test('transaction belongs to gift card', function () {
     $transaction = $this->transactionService->credit(
         $this->giftCard,
         50,
-        'Test relationship',
-        $this->user->id
+        $this->user,
+        'Test relationship'
     );
 
     expect($transaction->giftCard)->toBeInstanceOf(GiftCard::class)
@@ -199,9 +199,9 @@ test('transaction belongs to gift card', function () {
 });
 
 test('gift card has many transactions', function () {
-    $this->transactionService->credit($this->giftCard, 50, 'Credit 1', $this->user->id);
-    $this->transactionService->debit($this->giftCard, 20, 'Debit 1', $this->user->id, $this->branch->id);
-    $this->transactionService->adjustment($this->giftCard, 10, 'Adjustment 1', $this->user->id);
+    $this->transactionService->credit($this->giftCard, 50, $this->user, 'Credit 1');
+    $this->transactionService->debit($this->giftCard, 20, $this->user, 'Debit 1', $this->branch->id);
+    $this->transactionService->adjustment($this->giftCard, 10, $this->user, 'Adjustment 1');
 
     expect($this->giftCard->transactions()->count())->toBe(3)
         ->and($this->giftCard->transactions)->toHaveCount(3);
@@ -211,8 +211,8 @@ test('transaction belongs to branch', function () {
     $transaction = $this->transactionService->debit(
         $this->giftCard,
         30,
+        $this->user,
         'Test relationship',
-        $this->user->id,
         $this->branch->id
     );
 
@@ -224,8 +224,8 @@ test('transaction has soft deletes', function () {
     $transaction = $this->transactionService->credit(
         $this->giftCard,
         50,
-        'Test soft delete',
-        $this->user->id
+        $this->user,
+        'Test soft delete'
     );
 
     $transaction->delete();

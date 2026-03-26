@@ -50,7 +50,7 @@ test('debit allows chain-scoped QR at branch within same chain', function () {
     ]);
 
     $transaction = $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchA->id
+        $giftCard, 50, $this->user, 'Test', $this->branchA->id
     );
 
     expect($transaction->amount)->toBe('50.00')
@@ -67,7 +67,7 @@ test('debit rejects chain-scoped QR at branch from different chain', function ()
     ]);
 
     $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchC->id
+        $giftCard, 50, $this->user, 'Test', $this->branchC->id
     );
 })->throws(InvalidArgumentException::class, 'cadena asignada');
 
@@ -81,7 +81,7 @@ test('debit allows brand-scoped QR at branch of same brand', function () {
     ]);
 
     $transaction = $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchA->id
+        $giftCard, 50, $this->user, 'Test', $this->branchA->id
     );
 
     expect($transaction->amount)->toBe('50.00');
@@ -97,7 +97,7 @@ test('debit rejects brand-scoped QR at branch of different brand', function () {
     ]);
 
     $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchB->id
+        $giftCard, 50, $this->user, 'Test', $this->branchB->id
     );
 })->throws(InvalidArgumentException::class, 'marca asignada');
 
@@ -111,7 +111,7 @@ test('debit allows branch-scoped QR at assigned branch', function () {
     $giftCard->branches()->attach($this->branchA->id);
 
     $transaction = $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchA->id
+        $giftCard, 50, $this->user, 'Test', $this->branchA->id
     );
 
     expect($transaction->amount)->toBe('50.00');
@@ -127,7 +127,7 @@ test('debit rejects branch-scoped QR at non-assigned branch', function () {
     $giftCard->branches()->attach($this->branchA->id);
 
     $this->transactionService->debit(
-        $giftCard, 50, 'Test', $this->user->id, $this->branchB->id
+        $giftCard, 50, $this->user, 'Test', $this->branchB->id
     );
 })->throws(InvalidArgumentException::class, 'sucursales específicas');
 
@@ -158,7 +158,7 @@ test('scanner rejects brand-scoped QR used at branch of different brand', functi
         ]);
 
     $response->assertStatus(422)
-        ->assertJsonPath('error', fn ($msg) => str_contains($msg, 'Marca'));
+        ->assertJsonPath('error.message', fn ($msg) => str_contains($msg, 'Marca'));
 });
 
 test('scanner accepts brand-scoped QR used at branch of same brand', function () {
@@ -186,7 +186,7 @@ test('scanner accepts brand-scoped QR used at branch of same brand', function ()
         ]);
 
     $response->assertStatus(200)
-        ->assertJsonPath('success', true);
+        ->assertJsonStructure(['data']);
 });
 
 test('scanner rejects branch-scoped QR used at non-assigned branch', function () {
@@ -214,7 +214,7 @@ test('scanner rejects branch-scoped QR used at non-assigned branch', function ()
         ]);
 
     $response->assertStatus(422)
-        ->assertJsonPath('error', fn ($msg) => str_contains($msg, 'Sucursal'));
+        ->assertJsonPath('error.message', fn ($msg) => str_contains($msg, 'Sucursal'));
 });
 
 test('scanner accepts branch-scoped QR used at assigned branch', function () {
@@ -242,7 +242,7 @@ test('scanner accepts branch-scoped QR used at assigned branch', function () {
         ]);
 
     $response->assertStatus(200)
-        ->assertJsonPath('success', true);
+        ->assertJsonStructure(['data']);
 });
 
 test('scanner accepts chain-scoped QR at any branch within chain', function () {
@@ -270,5 +270,5 @@ test('scanner accepts chain-scoped QR at any branch within chain', function () {
         ]);
 
     $response->assertStatus(200)
-        ->assertJsonPath('success', true);
+        ->assertJsonStructure(['data']);
 });

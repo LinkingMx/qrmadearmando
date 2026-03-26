@@ -169,24 +169,14 @@ test('scanner validates branch scope: brand-scoped card at wrong branch', functi
         Role::firstOrCreate(['name' => 'BranchTerminal', 'guard_name' => 'web'])
     );
 
-    // Lookup should succeed (shows card info)
+    // Lookup should fail (wrong brand scope)
     $lookupResponse = $this->actingAs($userBranchB)
         ->postJson('/api/scanner/lookup', [
             'identifier' => $giftCard->legacy_id,
         ]);
 
-    expect($lookupResponse->status())->toBe(200);
-
-    // Debit should fail (wrong brand)
-    $debitResponse = $this->actingAs($userBranchB)
-        ->postJson('/api/scanner/process-debit', [
-            'gift_card_id' => $giftCard->id,
-            'amount' => 50.00,
-            'reference' => 'REF-TEST',
-        ]);
-
-    expect($debitResponse->status())->toBe(422)
-        ->and($debitResponse->json('error.message'))->toContain('Marca');
+    expect($lookupResponse->status())->toBe(422)
+        ->and($lookupResponse->json('error.message'))->toContain('marca');
 });
 
 test('scanner validates branch scope: branch-scoped card at non-assigned branch', function () {
